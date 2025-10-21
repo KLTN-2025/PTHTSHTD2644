@@ -48,6 +48,8 @@ E:\SmartTable\SmartTable\bin\roslyn\vbc.rsp
 E:\SmartTable\SmartTable\bin\roslyn\VBCSCompiler.exe
 E:\SmartTable\SmartTable\bin\roslyn\VBCSCompiler.exe.config
 E:\SmartTable\SmartTable\bin\Antlr3.Runtime.dll
+E:\SmartTable\SmartTable\bin\EntityFramework.dll
+E:\SmartTable\SmartTable\bin\EntityFramework.SqlServer.dll
 E:\SmartTable\SmartTable\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll
 E:\SmartTable\SmartTable\bin\Microsoft.Web.Infrastructure.dll
 E:\SmartTable\SmartTable\bin\Newtonsoft.Json.dll
@@ -59,6 +61,8 @@ E:\SmartTable\SmartTable\bin\System.Web.WebPages.Deployment.dll
 E:\SmartTable\SmartTable\bin\System.Web.WebPages.dll
 E:\SmartTable\SmartTable\bin\System.Web.WebPages.Razor.dll
 E:\SmartTable\SmartTable\bin\WebGrease.dll
+E:\SmartTable\SmartTable\bin\EntityFramework.xml
+E:\SmartTable\SmartTable\bin\EntityFramework.SqlServer.xml
 E:\SmartTable\SmartTable\bin\System.Web.Helpers.xml
 E:\SmartTable\SmartTable\bin\System.Web.Mvc.xml
 E:\SmartTable\SmartTable\bin\System.Web.Optimization.xml
@@ -69,8 +73,8 @@ E:\SmartTable\SmartTable\bin\System.Web.WebPages.Razor.xml
 E:\SmartTable\SmartTable\bin\Newtonsoft.Json.xml
 E:\SmartTable\SmartTable\bin\Antlr3.Runtime.pdb
 E:\SmartTable\SmartTable\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.xml
-E:\SmartTable\SmartTable\obj\Debug\SmartTable.csprojAssemblyReference.cache
 E:\SmartTable\SmartTable\obj\Debug\SmartTable.csproj.CoreCompileInputs.cache
 E:\SmartTable\SmartTable\obj\Debug\SmartTable.csproj.CopyComplete
 E:\SmartTable\SmartTable\obj\Debug\SmartTable.dll
 E:\SmartTable\SmartTable\obj\Debug\SmartTable.pdb
+E:\SmartTable\SmartTable\obj\Debug\SmartTable.csprojAssemblyReference.cache

@@ -1,0 +1,294 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="SmartTableSystemModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+  <EntityType Name="Bookings">
+    <Key>
+      <PropertyRef Name="booking_id" />
+    </Key>
+    <Property Name="booking_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="user_id" Type="int" />
+    <Property Name="restaurant_id" Type="int" />
+    <Property Name="booking_time" Type="datetime" Nullable="false" />
+    <Property Name="number_of_guests" Type="int" Nullable="false" />
+    <Property Name="status" Type="nvarchar" MaxLength="50" />
+    <Property Name="special_request" Type="nvarchar(max)" />
+  </EntityType>
+  <EntityType Name="LoyaltyPoints">
+    <Key>
+      <PropertyRef Name="user_id" />
+    </Key>
+    <Property Name="user_id" Type="int" Nullable="false" />
+    <Property Name="points" Type="int" />
+  </EntityType>
+  <EntityType Name="MenuItems">
+    <Key>
+      <PropertyRef Name="menu_item_id" />
+    </Key>
+    <Property Name="menu_item_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="restaurant_id" Type="int" />
+    <Property Name="name" Type="nvarchar" MaxLength="255" Nullable="false" />
+    <Property Name="description" Type="nvarchar(max)" />
+    <Property Name="price" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+    <Property Name="category" Type="nvarchar" MaxLength="50" />
+    <Property Name="is_available" Type="bit" />
+    <Property Name="Image" Type="nvarchar" MaxLength="255" />
+  </EntityType>
+  <EntityType Name="Orders">
+    <Key>
+      <PropertyRef Name="order_id" />
+    </Key>
+    <Property Name="order_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="booking_id" Type="int" />
+    <Property Name="menu_item_id" Type="int" />
+    <Property Name="quantity" Type="int" Nullable="false" />
+    <Property Name="note" Type="nvarchar(max)" />
+  </EntityType>
+  <EntityType Name="Payments">
+    <Key>
+      <PropertyRef Name="payment_id" />
+    </Key>
+    <Property Name="payment_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="booking_id" Type="int" />
+    <Property Name="amount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+    <Property Name="payment_method" Type="nvarchar" MaxLength="50" />
+    <Property Name="status" Type="nvarchar" MaxLength="50" />
+    <Property Name="transaction_id" Type="nvarchar" MaxLength="100" />
+  </EntityType>
+  <EntityType Name="Restaurants">
+    <Key>
+      <PropertyRef Name="restaurant_id" />
+    </Key>
+    <Property Name="restaurant_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="user_id" Type="int" />
+    <Property Name="name" Type="nvarchar" MaxLength="255" Nullable="false" />
+    <Property Name="address" Type="nvarchar" MaxLength="255" />
+    <Property Name="latitude" Type="decimal" Precision="9" Scale="6" />
+    <Property Name="longitude" Type="decimal" Precision="9" Scale="6" />
+    <Property Name="description" Type="nvarchar(max)" />
+    <Property Name="max_tables" Type="int" />
+    <Property Name="opening_hours" Type="nvarchar" MaxLength="50" />
+    <Property Name="is_approved" Type="bit" />
+    <Property Name="created_at" Type="datetime" />
+    <Property Name="Image" Type="nvarchar" MaxLength="255" />
+  </EntityType>
+  <EntityType Name="Reviews">
+    <Key>
+      <PropertyRef Name="review_id" />
+    </Key>
+    <Property Name="review_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="user_id" Type="int" />
+    <Property Name="restaurant_id" Type="int" />
+    <Property Name="rating" Type="tinyint" Nullable="false" />
+    <Property Name="comment" Type="nvarchar(max)" />
+    <Property Name="created_at" Type="datetime" />
+  </EntityType>
+  <EntityType Name="Tables">
+    <Key>
+      <PropertyRef Name="table_id" />
+    </Key>
+    <Property Name="table_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="restaurant_id" Type="int" />
+    <Property Name="table_number" Type="nvarchar" MaxLength="50" />
+    <Property Name="capacity" Type="int" />
+    <Property Name="type" Type="nvarchar" MaxLength="50" />
+    <Property Name="is_available" Type="bit" />
+  </EntityType>
+  <EntityType Name="Users">
+    <Key>
+      <PropertyRef Name="user_id" />
+    </Key>
+    <Property Name="user_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="email" Type="nvarchar" MaxLength="255" Nullable="false" />
+    <Property Name="password_hash" Type="nvarchar" MaxLength="255" Nullable="false" />
+    <Property Name="full_name" Type="nvarchar" MaxLength="255" Nullable="false" />
+    <Property Name="phone" Type="nvarchar" MaxLength="20" Nullable="false" />
+    <Property Name="role" Type="nvarchar" MaxLength="50" Nullable="false" />
+    <Property Name="created_at" Type="datetime" />
+  </EntityType>
+  <Association Name="FK_Bookings_Restaurants">
+    <End Role="Restaurants" Type="Self.Restaurants" Multiplicity="0..1" />
+    <End Role="Bookings" Type="Self.Bookings" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Restaurants">
+        <PropertyRef Name="restaurant_id" />
+      </Principal>
+      <Dependent Role="Bookings">
+        <PropertyRef Name="restaurant_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Bookings_User">
+    <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
+    <End Role="Bookings" Type="Self.Bookings" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Users">
+        <PropertyRef Name="user_id" />
+      </Principal>
+      <Dependent Role="Bookings">
+        <PropertyRef Name="user_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_LoyaltyPoints_User">
+    <End Role="Users" Type="Self.Users" Multiplicity="1" />
+    <End Role="LoyaltyPoints" Type="Self.LoyaltyPoints" Multiplicity="0..1" />
+    <ReferentialConstraint>
+      <Principal Role="Users">
+        <PropertyRef Name="user_id" />
+      </Principal>
+      <Dependent Role="LoyaltyPoints">
+        <PropertyRef Name="user_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_MenuItems_Restaurants">
+    <End Role="Restaurants" Type="Self.Restaurants" Multiplicity="0..1" />
+    <End Role="MenuItems" Type="Self.MenuItems" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Restaurants">
+        <PropertyRef Name="restaurant_id" />
+      </Principal>
+      <Dependent Role="MenuItems">
+        <PropertyRef Name="restaurant_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Orders_Bookings">
+    <End Role="Bookings" Type="Self.Bookings" Multiplicity="0..1" />
+    <End Role="Orders" Type="Self.Orders" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Bookings">
+        <PropertyRef Name="booking_id" />
+      </Principal>
+      <Dependent Role="Orders">
+        <PropertyRef Name="booking_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Orders_MenuItems">
+    <End Role="MenuItems" Type="Self.MenuItems" Multiplicity="0..1" />
+    <End Role="Orders" Type="Self.Orders" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="MenuItems">
+        <PropertyRef Name="menu_item_id" />
+      </Principal>
+      <Dependent Role="Orders">
+        <PropertyRef Name="menu_item_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Payments_Bookings">
+    <End Role="Bookings" Type="Self.Bookings" Multiplicity="0..1" />
+    <End Role="Payments" Type="Self.Payments" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Bookings">
+        <PropertyRef Name="booking_id" />
+      </Principal>
+      <Dependent Role="Payments">
+        <PropertyRef Name="booking_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Restaurants_User">
+    <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
+    <End Role="Restaurants" Type="Self.Restaurants" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Users">
+        <PropertyRef Name="user_id" />
+      </Principal>
+      <Dependent Role="Restaurants">
+        <PropertyRef Name="user_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Reviews_Restaurants">
+    <End Role="Restaurants" Type="Self.Restaurants" Multiplicity="0..1" />
+    <End Role="Reviews" Type="Self.Reviews" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Restaurants">
+        <PropertyRef Name="restaurant_id" />
+      </Principal>
+      <Dependent Role="Reviews">
+        <PropertyRef Name="restaurant_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Reviews_User">
+    <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
+    <End Role="Reviews" Type="Self.Reviews" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Users">
+        <PropertyRef Name="user_id" />
+      </Principal>
+      <Dependent Role="Reviews">
+        <PropertyRef Name="user_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Tables_Restaurants">
+    <End Role="Restaurants" Type="Self.Restaurants" Multiplicity="0..1" />
+    <End Role="Tables" Type="Self.Tables" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Restaurants">
+        <PropertyRef Name="restaurant_id" />
+      </Principal>
+      <Dependent Role="Tables">
+        <PropertyRef Name="restaurant_id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <EntityContainer Name="SmartTableSystemModelStoreContainer">
+    <EntitySet Name="Bookings" EntityType="Self.Bookings" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="LoyaltyPoints" EntityType="Self.LoyaltyPoints" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="MenuItems" EntityType="Self.MenuItems" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="Orders" EntityType="Self.Orders" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="Payments" EntityType="Self.Payments" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="Restaurants" EntityType="Self.Restaurants" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="Reviews" EntityType="Self.Reviews" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="Tables" EntityType="Self.Tables" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" store:Type="Tables" />
+    <AssociationSet Name="FK_Bookings_Restaurants" Association="Self.FK_Bookings_Restaurants">
+      <End Role="Restaurants" EntitySet="Restaurants" />
+      <End Role="Bookings" EntitySet="Bookings" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Bookings_User" Association="Self.FK_Bookings_User">
+      <End Role="Users" EntitySet="Users" />
+      <End Role="Bookings" EntitySet="Bookings" />
+    </AssociationSet>
+    <AssociationSet Name="FK_LoyaltyPoints_User" Association="Self.FK_LoyaltyPoints_User">
+      <End Role="Users" EntitySet="Users" />
+      <End Role="LoyaltyPoints" EntitySet="LoyaltyPoints" />
+    </AssociationSet>
+    <AssociationSet Name="FK_MenuItems_Restaurants" Association="Self.FK_MenuItems_Restaurants">
+      <End Role="Restaurants" EntitySet="Restaurants" />
+      <End Role="MenuItems" EntitySet="MenuItems" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Orders_Bookings" Association="Self.FK_Orders_Bookings">
+      <End Role="Bookings" EntitySet="Bookings" />
+      <End Role="Orders" EntitySet="Orders" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Orders_MenuItems" Association="Self.FK_Orders_MenuItems">
+      <End Role="MenuItems" EntitySet="MenuItems" />
+      <End Role="Orders" EntitySet="Orders" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Payments_Bookings" Association="Self.FK_Payments_Bookings">
+      <End Role="Bookings" EntitySet="Bookings" />
+      <End Role="Payments" EntitySet="Payments" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Restaurants_User" Association="Self.FK_Restaurants_User">
+      <End Role="Users" EntitySet="Users" />
+      <End Role="Restaurants" EntitySet="Restaurants" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Reviews_Restaurants" Association="Self.FK_Reviews_Restaurants">
+      <End Role="Restaurants" EntitySet="Restaurants" />
+      <End Role="Reviews" EntitySet="Reviews" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Reviews_User" Association="Self.FK_Reviews_User">
+      <End Role="Users" EntitySet="Users" />
+      <End Role="Reviews" EntitySet="Reviews" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Tables_Restaurants" Association="Self.FK_Tables_Restaurants">
+      <End Role="Restaurants" EntitySet="Restaurants" />
+      <End Role="Tables" EntitySet="Tables" />
+    </AssociationSet>
+  </EntityContainer>
+</Schema>
