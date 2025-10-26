@@ -1,0 +1,267 @@
+﻿@model SmartTable.Models.User
+@{
+    ViewBag.Title = "Đăng ký tài khoản";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // <-- Đảm bảo dòng này có và không bị // ở đầu
+}
+
+<style>
+    /* --- Nền gradient nhẹ, tạo cảm giác sang trọng --- */
+    body.register-page-bg {
+        background: linear-gradient(135deg, #fff7e6 0%, #fde8cd 100%);
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding-top: 60px; /* Hoặc dùng flexbox để căn giữa */
+        padding-bottom: 60px; /* Hoặc dùng flexbox để căn giữa */
+        display: flex; /* Thêm flexbox để căn giữa tốt hơn */
+        align-items: center; /* Căn giữa theo chiều dọc */
+        justify-content: center; /* Căn giữa theo chiều ngang */
+    }
+
+    /* --- Container chính --- */
+    .register-container {
+        max-width: 430px;
+        width: 100%; /* Đảm bảo container chiếm đủ không gian */
+        margin: 0 auto;
+        background-color: #fffdf9;
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        padding: 2.5rem;
+        border: 1px solid #f1d6a7;
+        transition: all 0.3s ease;
+    }
+
+        .register-container:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+    .register-title {
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: #a5632d;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    /* --- Input --- */
+    .input-field {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+        .input-field i.fas, /* Chỉ áp dụng cho icon FontAwesome */
+        .input-field i.far { /* Thêm far cho mắt */
+            position: absolute;
+            top: 50%;
+            left: 14px;
+            transform: translateY(-50%);
+            color: #b08552;
+            width: 1em; /* Căn chỉnh icon */
+            text-align: center;
+            pointer-events: none; /* Icon không nhận click */
+        }
+
+        .input-field .form-control { /* Áp dụng style cho class .form-control bên trong .input-field */
+            width: 100%;
+            padding: 12px 12px 12px 40px; /* Thêm padding trái cho icon */
+            border: 1px solid #d1bfa3;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: border-color 0.25s, box-shadow 0.25s;
+            box-sizing: border-box; /* Quan trọng */
+            outline: none; /* Bỏ outline mặc định */
+        }
+
+            .input-field .form-control:focus {
+                border-color: #e07a26;
+                box-shadow: 0 0 0 3px rgba(224, 122, 38, 0.15);
+            }
+
+        /* --- Mắt ẩn/hiện mật khẩu --- */
+        .input-field .toggle-password {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #a8855b;
+            padding: 5px; /* Tăng vùng bấm */
+            left: auto; /* Ghi đè left từ style icon chung */
+            pointer-events: auto; /* Cho phép click vào mắt */
+        }
+
+            .input-field .toggle-password:hover {
+                color: #8c6b4a;
+            }
+        /* Điều chỉnh padding phải cho input password để không bị đè lên mắt */
+        .input-field input#password { /* ID cụ thể của input password */
+            padding-right: 40px;
+        }
+
+
+    /* --- Button đăng ký --- */
+    .register-btn {
+        width: 100%;
+        background: linear-gradient(90deg, #e07a26, #f2b33d);
+        border: none;
+        color: #fff;
+        padding: 12px 0;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(224, 122, 38, 0.3);
+        display: inline-flex; /* Để căn icon */
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+        .register-btn:hover {
+            background: linear-gradient(90deg, #f09a3f, #ffd36b);
+            box-shadow: 0 6px 14px rgba(224, 122, 38, 0.4);
+            transform: translateY(-2px); /* Thêm hiệu ứng nhấc nhẹ */
+        }
+
+    /* --- Link đăng nhập --- */
+    .text-small {
+        text-align: center;
+        font-size: 0.9rem;
+        color: #6b4f3b;
+        margin-top: 1.2rem;
+    }
+
+        .text-small a {
+            color: #e07a26;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+            .text-small a:hover {
+                color: #c55b00;
+                text-decoration: underline;
+            }
+
+    /* --- Style cho Validation Messages --- */
+    .field-validation-error { /* Lỗi từng field */
+        color: #dc2626; /* Màu đỏ */
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        display: block;
+        padding-left: 5px; /* Căn lề nhẹ */
+    }
+
+    .validation-summary-errors { /* Lỗi chung */
+        color: #b91c1c;
+        background-color: #fee2e2;
+        border: 1px solid #fecaca;
+        padding: 0.75rem;
+        border-radius: 8px; /* Giống input */
+        margin-bottom: 1rem;
+    }
+
+        .validation-summary-errors ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+    /* Style cho input bị lỗi */
+    .input-validation-error { /* Class tự động thêm bởi MVC */
+        border-color: #dc2626 !important;
+    }
+
+    .input-field:has(.input-validation-error) i.fas, /* Đổi màu icon khi lỗi */
+    .input-field:has(.input-validation-error) i.far {
+        color: #dc2626;
+    }
+
+    .input-field:has(.input-validation-error) .form-control:focus { /* Focus khi lỗi */
+        border-color: #dc2626 !important;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+    }
+</style>
+@{
+    Layout = null;
+}
+<div class="register-container">
+    <h2 class="register-title">Tạo tài khoản mới</h2>
+
+    @* ValidationSummary sẽ được style bằng CSS mới *@
+    @Html.ValidationSummary(true) @* Bỏ class *@
+
+    @using (Html.BeginForm("Register", "Account", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="input-field">
+            <i class="fas fa-user"></i>
+            @Html.TextBoxFor(m => m.full_name, new { @class = "form-control", placeholder = "Họ và tên", required = "required" })
+        </div>
+        @Html.ValidationMessageFor(m => m.full_name) @* Bỏ class *@
+
+        <div class="input-field">
+            <i class="fas fa-envelope"></i>
+            @Html.TextBoxFor(m => m.email, new { @class = "form-control", placeholder = "Địa chỉ email (vd: abc@gmail.com)", type = "email", required = "required" })
+        </div>
+        @Html.ValidationMessageFor(m => m.email) @* Bỏ class *@
+
+        <div class="input-field">
+            <i class="fas fa-lock"></i>
+            @Html.PasswordFor(m => m.password_hash, new { @class = "form-control", placeholder = "Mật khẩu (ít nhất 6 ký tự)", id = "password", required = "required" })
+            <i class="far fa-eye toggle-password" id="togglePassword"></i>
+        </div>
+        @Html.ValidationMessageFor(m => m.password_hash) @* Bỏ class *@
+
+        <div class="input-field">
+            <i class="fas fa-phone"></i>
+            @Html.TextBoxFor(m => m.phone, new { @class = "form-control", placeholder = "Số điện thoại (vd: 09...)", type = "tel", required = "required" })
+        </div>
+        @Html.ValidationMessageFor(m => m.phone) @* Bỏ class *@
+
+        @* (Tùy chọn) Thêm Xác nhận mật khẩu nếu cần *@
+        @* <div class="input-field">
+                <i class="fas fa-lock"></i>
+                @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control", placeholder = "Xác nhận mật khẩu", id = "confirmPassword", required = "required" })
+                 <i class="far fa-eye toggle-password" id="toggleConfirmPassword"></i>
+            </div>
+            @Html.ValidationMessageFor(m => m.ConfirmPassword) *@
+
+
+        <button type="submit" class="register-btn mt-4">
+            @* Thêm khoảng cách trên *@
+            <i class="fas fa-user-plus"></i> Đăng ký
+        </button>
+
+        <p class="text-small">
+            Đã có tài khoản? <a href="@Url.Action("Login", "Account")">Đăng nhập ngay</a>
+        </p>
+    }
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        // Thêm class vào body để áp dụng nền gradient
+        document.body.classList.add('register-page-bg');
+
+        // Toggle hiện / ẩn mật khẩu
+        function setupPasswordToggle(toggleId, inputId) {
+            const toggleButton = document.getElementById(toggleId);
+            const passwordInput = document.getElementById(inputId);
+            if (toggleButton && passwordInput) {
+                toggleButton.addEventListener('click', function () {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    this.classList.toggle('fa-eye');
+                    this.classList.toggle('fa-eye-slash');
+                });
+            }
+        }
+
+        setupPasswordToggle('togglePassword', 'password');
+        // setupPasswordToggle('toggleConfirmPassword', 'confirmPassword'); // Bỏ comment nếu dùng Confirm Password
+    </script>
+}
