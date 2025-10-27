@@ -1,0 +1,73 @@
+﻿/* ~/Content/Account/register.css */
+
+/* --- Nền gradient động nhẹ (Giống Login) --- */
+.animated-bg {
+    background: linear-gradient(-45deg, #ff9966, #ff5e62, #4facfe, #00f2fe);
+    background-size: 400% 400%;
+    animation: gradientShift 12s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* --- Card form (Giống Login) --- */
+.register-card { /* Đổi tên class để rõ ràng hơn */
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    border-radius: 1.2rem;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 420px;
+}
+
+/* --- Input (Giống Login) --- */
+.input-box {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1.5px solid #e2e8f0; /* Tailwind gray-200 */
+    border-radius: 0.75rem;
+    padding: 0.6rem 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.25s ease;
+}
+
+    .input-box:focus-within {
+        border-color: #4facfe; /* Màu xanh focus */
+        box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.2);
+    }
+
+    .input-box i.fas, /* Áp dụng cho FontAwesome Solid */
+    .input-box i.far { /* Áp dụng cho FontAwesome Regular (mắt) */
+        color: #9ca3af; /* Tailwind gray-400 */
+        margin-right: 0.6rem;
+        width: 1em; /* Giữ chiều rộng cố định cho icon */
+        text-align: center;
+    }
+
+    .input-box input[type="email"],
+    .input-box input[type="password"],
+    .input-box input[type="text"],
+    .input-box input[type="tel"] /* Thêm type="tel" cho phone */ {
+        flex: 1;
+        border: none;
+        outline: none;
+        font-size: 0.95rem;
+        background: transparent;
+        color: #1f2937; /* Tailwind gray-800 */
+        padding: 0; /* Xóa padding mặc định */
+    }
+    /* Style riêng cho nút toggle password */
+    .input-box .

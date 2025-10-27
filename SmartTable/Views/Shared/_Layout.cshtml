@@ -83,11 +83,11 @@
                         }
                         else
                         {
-                            var user = (SmartTable.Models.Users)Session["user"];
+                            var users = (SmartTable.Models.Users)Session["user"];
                     <div class="relative">
                         <button id="profileMenuToggle" class="flex items-center space-x-2 hover:text-amber-300 transition-colors duration-300">
                             <i class="fas fa-user-circle text-2xl"></i>
-                            <span>@user.full_name</span>
+                            <span>@users.full_name</span>
                             <i class="fas fa-chevron-down text-xs ml-1"></i>
                         </button>
                         <ul id="dropdownMenu" class="hidden absolute bg-white border rounded-lg shadow-lg mt-2 py-2 right-0 w-48 text-gray-800">
