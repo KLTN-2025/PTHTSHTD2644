@@ -7,12 +7,12 @@ namespace SmartTable.Controllers
 {
     public class AccountController : Controller
     {
-        private SmartTableEntities db = new SmartTableEntities();
+        private Entities db = new Entities();
 
         [HttpGet]
         public ActionResult Register()
         {
-            return View(new User());
+            return View(new Users());
         }
 
         public ActionResult Logout()
@@ -23,7 +23,7 @@ namespace SmartTable.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Register(User model)
+        public ActionResult Register(Users model)
         {
             if (string.IsNullOrEmpty(model.email))
                 ModelState.AddModelError("email", "Email không được để trống.");
@@ -65,11 +65,11 @@ namespace SmartTable.Controllers
         [HttpGet]
         public ActionResult Login()
         {
-            return View(new User());
+            return View(new Users());
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Login(User model)
+        public ActionResult Login(Users model)
         {
             if (ModelState.IsValid)
             {
@@ -139,7 +139,7 @@ namespace SmartTable.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult UpdateAccount(User model, string newPassword, string confirmPassword)
+        public ActionResult UpdateAccount(Users model, string newPassword, string confirmPassword)
         {
             var userId = Session["user_id"] != null ? (int)Session["user_id"] : 0;
             if (userId == 0)
@@ -229,7 +229,7 @@ namespace SmartTable.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
 
-        public ActionResult ForgotPassword(User model)
+        public ActionResult ForgotPassword(Users model)
         {
             if (!string.IsNullOrEmpty(model.email))
             {

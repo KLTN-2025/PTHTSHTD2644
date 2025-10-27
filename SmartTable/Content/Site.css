@@ -1,20 +1,70 @@
-﻿/* Set padding to keep content from hitting the edges */
-.body-content {
-    margin-top: 15px;
-    padding-left: 15px;
-    padding-right: 15px;
+﻿/* ~/Content/site.css */
+
+/* Có thể thêm CSS reset cơ bản nếu không dùng Tailwind Preflight */
+/* html, body { margin: 0; padding: 0; box-sizing: border-box; } */
+
+body {
+    /* Thiết lập font mặc định nếu cần */
+    /* font-family: 'Roboto', sans-serif; */
+}
+.menu-gap > *:not(:last-child) {
+    margin-right: 3vw; /* cách nhau 3% chiều rộng màn hình */
+}
+/* 🌟 Hiệu ứng underline cho menu trong Header */
+.menu-link-header { /* Đổi tên class */
+    position: relative;
+    transition: color 0.3s;
+    padding-bottom: 5px; /* Tăng padding bottom để đường kẻ không quá sát */
+    text-decoration: none; /* Bỏ gạch chân mặc định */
+    color: inherit; /* Kế thừa màu */
+    cursor: pointer; /* Đảm bảo con trỏ đúng */
+    background: none; /* Reset cho button */
+    border: none; /* Reset cho button */
+    font: inherit; /* Reset cho button */
+    display: inline-flex; /* Giúp căn chỉnh icon nếu có */
+    align-items: center; /* Giúp căn chỉnh icon nếu có */
 }
 
-/* Override the default bootstrap behavior where horizontal description lists 
-   will truncate terms that are too long to fit in the left column 
-*/
-.dl-horizontal dt {
-    white-space: normal;
+    /* Đường gạch chân */
+    .menu-link-header::after {
+        content: "";
+        position: absolute;
+        bottom: 0px; /* Sát đáy padding */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 2px;
+        background-color: #fbbf24; /* Tailwind amber-300 */
+        transition: width 0.3s ease-in-out; /* Hiệu ứng mượt mà hơn */
+    }
+
+    /* Hiệu ứng khi hover */
+    .menu-link-header:hover {
+        color: #fbbf24; /* Tailwind amber-300 */
+    }
+
+        .menu-link-header:hover::after {
+            width: 100%;
+        }
+
+/* --- CSS bổ sung (nếu cần) --- */
+
+
+
+/* Đảm bảo icon Font Awesome luôn là inline-block */
+header .fa-search { /* Hoặc một selector cụ thể hơn nếu cần */
+    display: inline-block !important; /* Dùng !important để ghi đè */
+}
+/* Ví dụ: style cho select city trong header cho đẹp hơn */
+.header-city-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2rem; /* Chừa chỗ cho mũi tên */
 }
 
-/* Set width on the form input elements since they're 100% wide by default */
-input,
-select,
-textarea {
-    max-width: 280px;
+/* Ẩn mũi tên mặc định của select trên một số trình duyệt */
+select.header-city-select::-ms-expand {
+    display: none;
 }

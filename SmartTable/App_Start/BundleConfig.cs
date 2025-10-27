@@ -16,13 +16,17 @@ namespace SmartTable
             bundles.Add(new ScriptBundle("~/bundles/modernizr").Include(
                         "~/Scripts/modernizr-*"));
 
-            // Vẫn giữ lại Bootstrap JS nếu bạn cần các tính năng JS của nó
-            bundles.Add(new ScriptBundle("~/bundles/bootstrap").Include(
-                      "~/Scripts/bootstrap.js"));
+            // bundles.Add(new ScriptBundle("~/bundles/bootstrap").Include(
+            //           "~/Scripts/bootstrap.js")); // Tạm comment out nếu không dùng JS của Bootstrap
 
-            // Bundle CSS bây giờ CHỈ còn lại site.css (nếu bạn có dùng)
+            // THÊM BUNDLE NÀY ĐỂ GỌI FILE JAVASCRIPT CỦA BẠN
+            bundles.Add(new ScriptBundle("~/bundles/main").Include(
+                      "~/Scripts/site.js")); // <-- Đảm bảo tên file này đúng (site.js, main.js, app.js?)
+
+            // STYLE BUNDLE CẦN CÓ OUTPUT.CSS (NẾU DÙNG BUILD)
             bundles.Add(new StyleBundle("~/Content/css").Include(
-                      "~/Content/site.css")); // ĐÃ XÓA bootstrap.css
+                      "~/Content/site.css",
+                      "~/Content/output.css")); // <-- Thêm output.css vào đây
         }
     }
 }
