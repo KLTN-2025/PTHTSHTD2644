@@ -225,6 +225,8 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\main.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Views\Account\AccountInfo.cshtml" />
+    <Content Include="Views\Account\ForgotPassword.cshtml" />
     <None Include="Views\Account\Login.cshtml" />
     <None Include="Views\Account\register.cshtml" />
     <Content Include="Web.config">

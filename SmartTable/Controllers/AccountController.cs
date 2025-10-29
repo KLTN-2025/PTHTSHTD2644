@@ -265,23 +265,45 @@ namespace SmartTable.Controllers
             return View();
         }
 
+        // SỬA LẠI TRONG HÀM SendEmail
         private void SendEmail(string toEmail, string subject, string body)
         {
-            var fromEmail = "mymy12345phong@gmail.com";
-            var fromPassword = "tisyqyhjhljtiopk"; // App password
+            // Đọc từ Web.config hoặc để trực tiếp
+            var fromEmail = "phamhuynhduyphong0308@gmail.com";
+            var fromPassword = "rpxrrencvhiekcxf"; // <-- DÙNG MẬT KHẨU MỚI VIẾT LIỀN
 
-            var smtp = new System.Net.Mail.SmtpClient
+            try // <-- GIỮ LẠI TRY...CATCH NÀY
             {
-                Host = "smtp.gmail.com",
-                Port = 587,
-                EnableSsl = true,
-                DeliveryMethod = System.Net.Mail.SmtpDeliveryMethod.Network,
-                UseDefaultCredentials = false,
-                Credentials = new System.Net.NetworkCredential(fromEmail, fromPassword)
-            };
+                var smtp = new System.Net.Mail.SmtpClient
+                {
+                    Host = "smtp.gmail.com",
+                    Port = 587,
+                    EnableSsl = true,
+                    DeliveryMethod = System.Net.Mail.SmtpDeliveryMethod.Network,
+                    UseDefaultCredentials = false,
+                    Credentials = new System.Net.NetworkCredential(fromEmail, fromPassword)
+                };
 
-            // ✅ Thêm tên người gửi ở đây
-            var fromAddress = new System.Net.Mail.MailAddress(fromEmail, "BookingRestaurantSystem");
+                // ... (Phần code còn lại của SendEmail) ...
+
+                using (var message = new System.Net.Mail.MailMessage(...)
+        {
+            ...
+        })
+                {
+                    smtp.Send(message);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Đặt breakpoint (F9) ở đây để xem lỗi nếu vẫn còn
+                System.Diagnostics.Debug.WriteLine("LỖI GỬI EMAIL: " + ex.Message);
+                throw ex; // Ném lỗi ra để Controller (action ForgotPassword) biết
+            }
+        }
+
+        // ✅ Thêm tên người gửi ở đây
+        var fromAddress = new System.Net.Mail.MailAddress(fromEmail, "BookingRestaurantSystem");
             var toAddress = new System.Net.Mail.MailAddress(toEmail);
 
             using (var message = new System.Net.Mail.MailMessage(fromAddress, toAddress)
