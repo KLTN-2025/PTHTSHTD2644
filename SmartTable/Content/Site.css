@@ -49,7 +49,64 @@ body {
 
 /* --- CSS bổ sung (nếu cần) --- */
 
+/* ~/Content/site.css */
 
+/* 🌟 Hiệu ứng underline cho menu trong Header */
+.menu-link-header {
+    position: relative;
+    transition: color 0.3s;
+    padding-bottom: 5px;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font: inherit;
+    display: inline-flex;
+    align-items: center;
+}
+
+    .menu-link-header::after {
+        content: "";
+        position: absolute;
+        bottom: 0px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 2px;
+        background-color: #fbbf24; /* amber-300 */
+        transition: width 0.3s ease-in-out;
+    }
+
+    .menu-link-header:hover {
+        color: #fbbf24;
+    }
+
+        .menu-link-header:hover::after {
+            width: 100%;
+        }
+
+button.menu-link-header {
+    padding: 0 0 5px 0;
+}
+
+/* CSS cho icon dropdown của select */
+.header-city-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2rem;
+}
+
+select.header-city-select::-ms-expand {
+    display: none;
+}
+
+.text-xxs {
+    font-size: 0.65rem;
+    line-height: 0.9rem;
+}
 
 /* Đảm bảo icon Font Awesome luôn là inline-block */
 header .fa-search { /* Hoặc một selector cụ thể hơn nếu cần */

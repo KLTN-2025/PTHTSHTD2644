@@ -8,9 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"> @* Cập nhật FontAwesome nếu cần *@
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-    @Styles.Render("~/Content/css")
+    @Styles.Render("~/Content/css") @* Đảm bảo BundleConfig nạp output.css và site.css *@
 
     @Scripts.Render("~/bundles/modernizr")
     @RenderSection("styles", required: false)
@@ -21,17 +21,15 @@
     @if (!(ViewContext.RouteData.Values["controller"]?.ToString() == "Account" &&
            new[] { "Login", "Register", "ForgotPassword" }.Contains(ViewContext.RouteData.Values["action"]?.ToString())))
     {
-        <header class="bg-blue-600 text-white shadow-md sticky top-0 z-3 text-sm">
-            <div class="container mx-auto max-w-7xl px-6 py-2 flex justify-between items-center h-16 border-b border-blue-500 border-opacity-50">
-                <!-- Logo -->
-                <a href="@Url.Action("Index", "Home")"
-                   class="text-2xl font-extrabold hover:text-amber-300 transition-all duration-300 flex-shrink-0 mr-8 transform hover:scale-105">
-                    Smart-Table
-                </a>
+        <header class="bg-blue-600 text-white shadow-md sticky top-0 z-50 text-sm">
+            <div class="container mx-auto max-w-7xl px-6 h-10 flex justify-between items-center border-b border-blue-500 border-opacity-50">
 
-                <!-- Menu chính -->
+                <a href="@Url.Action("Index", "Home")"
+                   class="text-2xl font-extrabold hover:text-amber-300 transition-all duration-300 flex-shrink-0 mr-8 transform hover:scale-105 tracking-tight">
+                    Smart-Table
+                </a> @* <-- ĐÃ ĐÓNG THẺ <a> Ở ĐÂY *@
+
                 <nav class="menu-gap flex flex-grow justify-start items-center font-medium text-sm">
-                    @* Added menu-gap, removed space/gap *@ 
                     <a href="@Url.Action("Index","Home")" class="menu-link-header whitespace-nowrap">Trang chủ</a>
                     <button id="nearbyBtnDesktop" class="menu-link-header flex items-center space-x-1 whitespace-nowrap">
                         <i class="fas fa-location-dot text-xs"></i>
@@ -42,7 +40,6 @@
                     <a href="@Url.Action("Index","Business")" class="menu-link-header whitespace-nowrap">Đăng ký đối tác</a>
                 </nav>
 
-                <!-- Khu vực đăng nhập / đăng ký -->
                 <div class="flex items-center space-x-3 flex-shrink-0">
                     @if (Session["user"] == null)
                     {
@@ -74,13 +71,11 @@
                 </div>
             </div>
 
-            <!-- Thanh tìm kiếm (nằm dưới menu) -->
-            <script src="https://cdn.tailwindcss.com"></script>
-
             <div class="bg-blue-600">
                 <div class="container mx-auto max-w-7xl px-6 py-3 flex justify-center items-center">
                     <form method="get" action="@Url.Action("Index", "Home")"
-                          class="flex items-center overflow-hidden rounded-md bg-white shadow-inner border border-transparent h-10 w-full max-w-7xl relative">
+                          class="flex items-center overflow-hidden rounded-md bg-white shadow-inner border border-transparent h-10 w-full max-w-3xl relative">
+                        @* Giảm max-w *@
 
                         <div class="relative h-full">
                             <select name="city"
@@ -89,6 +84,7 @@
                                 <option selected>HCM</option>
                                 <option>ĐN</option>
                             </select>
+                            <i class="fas fa-chevron-down text-gray-400 text-xs absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"></i>
                         </div>
 
                         <input type="text" name="search" placeholder="Bạn muốn đặt chỗ ở đâu?"
@@ -96,21 +92,17 @@
                                autocomplete="off" id="searchBox">
 
                         <button type="submit"
-                                class="w-25 h-10  px-5 bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors flex items-center justify-center text-sm flex-shrink-0 rounded-r-md">
-                            @* Đã đổi w-14 thành w-32 và thêm px-5 *@
-                            <i class="fas fa-search mr-2 text-2"></i> Tìm kiếm
+                                class="w-32 h-10 px-5 bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors flex items-center justify-center text-sm flex-shrink-0 rounded-r-md">
+                            <i class="fas fa-search mr-2 text-xs"></i> Tìm kiếm
                         </button>
                     </form>
                 </div>
             </div>
-
-
-
         </header>
 
-    }
+    } @* Đóng @if chính *@
 
-    <main class="container mx-auto max-w-7xl py-8 px-6">
+    <main class="container mx-auto max-w-7xl pt-8 pb-8 px-6">
         @RenderBody()
     </main>
 
@@ -147,7 +139,7 @@
     </div>
 
     @Scripts.Render("~/bundles/jquery")
-    @Scripts.Render("~/bundles/main")
+    @Scripts.Render("~/bundles/main") @* Đảm bảo main bundle chứa site.js *@
     @RenderSection("Scripts", required: false)
 
 </body>
