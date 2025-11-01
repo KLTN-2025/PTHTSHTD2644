@@ -231,6 +231,7 @@
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Views\Account\AccountInfo.cshtml" />
     <Content Include="Views\Account\ForgotPassword.cshtml" />
+    <Content Include="Views\Account\ChangePassword.cshtml" />
     <None Include="Views\Account\Login.cshtml" />
     <None Include="Views\Account\register.cshtml" />
     <Content Include="Web.config">
@@ -249,6 +250,8 @@
     <Content Include="Views\Home\About.cshtml" />
     <Content Include="Views\Home\Contact.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
+    <Content Include="Views\Account\UpdateAccount.cshtml" />
+    <Content Include="Views\Shared\_ProfileLayout.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

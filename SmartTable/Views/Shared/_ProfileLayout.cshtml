@@ -1,0 +1,90 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml"; // File này lại dùng layout chính
+    var user = (SmartTable.Models.Users)Session["user"];
+    string currentAction = ViewContext.RouteData.Values["action"].ToString();
+    string currentController = ViewContext.RouteData.Values["controller"].ToString();
+}
+
+@* Thêm CSS tùy chỉnh cho các link menu *@
+@section styles {
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+
+        .heading { font-family: 'Playfair Display', serif; }
+
+
+        .profile-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem; /* p-3 */
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* font-medium */
+            color: rgb(55 65 81); /* text-gray-700 */
+            border-radius: 0.5rem; /* rounded-lg */
+            transition-property: color, background-color; /* transition-colors */
+            transition-duration: 200ms; /* duration-200 */
+        }
+        .profile-link.active { /* Khi link được chọn */
+            background-color: rgb(239 246 255); /* bg-blue-50 */
+            color: rgb(37 99 235); /* text-blue-600 */
+            box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05); /* shadow-inner */
+        }
+        .profile-link:not(.active):hover { /* Khi di chuột qua */
+            background-color: rgb(243 244 246); /* bg-gray-100 */
+        }
+        .profile-link i {
+            width: 1.5rem; /* w-6 */
+            text-align: center;
+            margin-right: 0.5rem; /* mr-2 */
+            color: rgb(107 114 128); /* text-gray-500 */
+        }
+        .profile-link.active i {
+            color: rgb(37 99 235); /* text-blue-600 */
+        }
+        @RenderSection("styles", required: false) @* <-- THÊM DÒNG NÀY *@
+    </style>
+}
+
+<div class="container mx-auto max-w-7xl py-8 px-6">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-lg p-5">
+                <div class="flex flex-col items-center border-b pb-4 mb-4">
+                    <i class="fas fa-user-circle text-6xl text-gray-400"></i>
+                    <h3 class="mt-3 text-lg font-semibold text-gray-900">@user.full_name</h3>
+                    <p class="text-sm text-gray-500">@user.phone</p>
+                </div>
+
+                <nav class="space-y-2">
+                    <a href="@Url.Action("UpdateAccount", "Account")"
+                       class="profile-link @(currentAction == "UpdateAccount" || currentAction == "AccountInfo" ? "active" : "")">
+                        <i class="fas fa-user-edit"></i> Thông tin tài khoản
+                    </a>
+                    <a href="@Url.Action("ChangePassword", "Account")"
+                       class="profile-link @(currentAction == "ChangePassword" ? "active" : "")">
+                        <i class="fas fa-key"></i> Quản lý mật khẩu
+                    </a>
+                    <a href="@Url.Action("DanhSachBanDaDat", "DatBan")"
+                       class="profile-link @(currentController == "DatBan" ? "active" : "")">
+                        <i class="fas fa-calendar-check"></i> Lịch sử đặt chỗ
+                    </a>
+
+                    <hr class="my-2 pt-2 border-gray-200" />
+
+                    <a href="@Url.Action("Logout", "Account")"
+                       class="profile-link text-red-600 hover:bg-red-50 hover:text-red-700">
+                        <i class="fas fa-sign-out-alt"></i> Thoát
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                @RenderBody()
+            </div>
+        </div>
+
+    </div>
+</div>

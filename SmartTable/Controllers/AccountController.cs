@@ -5,6 +5,7 @@ using System.Web.Mvc;
 using System.Configuration; // Thêm
 using System.Net.Mail; // Thêm
 using SmartTable.Filters; // Thêm (nếu bạn dùng AuthorizeUser)
+using BCrypt.Net; // Thêm BCrypt
 
 namespace SmartTable.Controllers
 {
@@ -16,14 +17,14 @@ namespace SmartTable.Controllers
         [HttpGet]
         public ActionResult Register()
         {
-            return View(new Users()); // Sử dụng Users (số nhiều) nếu đó là tên lớp Model của bạn
+            return View(new Users());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Register(Users model)
         {
-            // Kiểm tra validation thủ công (Nên dùng Data Annotations trên Model)
+            // (Validation thủ công)
             if (string.IsNullOrEmpty(model.email))
                 ModelState.AddModelError("email", "Email không được để trống.");
             else if (!System.Text.RegularExpressions.Regex.IsMatch(model.email, @"^[a-zA-Z0-9._%+-]+@gmail\.com$"))
@@ -47,9 +48,8 @@ namespace SmartTable.Controllers
 
             if (ModelState.IsValid)
             {
-                // Băm mật khẩu trước khi lưu (BẮT BUỘC BẢO MẬT)
+                // Băm mật khẩu
                 model.password_hash = BCrypt.Net.BCrypt.HashPassword(model.password_hash);
-
                 model.role = "User";
                 model.created_at = DateTime.Now;
 
@@ -74,10 +74,9 @@ namespace SmartTable.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Login(Users model)
         {
-            // TÌM USER BẰNG EMAIL
             var user = db.Users.FirstOrDefault(u => u.email == model.email);
 
-            // KIỂM TRA MẬT KHẨU ĐÃ BĂM
+            // So sánh mật khẩu đã băm
             if (user != null && BCrypt.Net.BCrypt.Verify(model.password_hash, user.password_hash))
             {
                 Session["user"] = user;
@@ -98,7 +97,6 @@ namespace SmartTable.Controllers
                 }
             }
 
-            // Chỉ trả về một lỗi chung chung
             ModelState.AddModelError("", "Email hoặc mật khẩu không đúng.");
             return View(model);
         }
@@ -110,20 +108,12 @@ namespace SmartTable.Controllers
             return RedirectToAction("Login", "Account");
         }
 
-        // --- THÔNG TIN TÀI KHOẢN ---
-        [AuthorizeUser] // <-- Dùng Filter (nếu có) hoặc kiểm tra Session
+        // --- THÔNG TIN TÀI KHOẢN (Chuyển hướng) ---
+        [AuthorizeUser]
         public ActionResult AccountInfo()
         {
-            if (Session["user_id"] == null) return RedirectToAction("Login"); // Kiểm tra thủ công nếu không dùng Filter
-            var userId = (int)Session["user_id"];
-
-            var user = db.Users.FirstOrDefault(u => u.user_id == userId);
-            if (user == null)
-            {
-                return HttpNotFound();
-            }
-
-            return View(user);
+            // Trang này giờ chính là trang UpdateAccount
+            return RedirectToAction("UpdateAccount");
         }
 
         // --- CẬP NHẬT TÀI KHOẢN (GET) ---
@@ -163,15 +153,10 @@ namespace SmartTable.Controllers
                 // Cập nhật họ và tên
                 if (!string.IsNullOrEmpty(model.full_name) && model.full_name != user.full_name)
                 {
-                    if (model.full_name.Length > 100)
-                    {
-                        ViewBag.ErrorMessage = "Họ và tên không được vượt quá 100 ký tự.";
-                        return View("UpdateAccount", user);
-                    }
                     user.full_name = model.full_name;
                 }
 
-                // Cập nhật email
+                // Cập nhật email (Nếu bạn cho phép)
                 if (!string.IsNullOrEmpty(model.email) && model.email != user.email)
                 {
                     if (db.Users.Any(u => u.email == model.email && u.user_id != userId))
@@ -185,11 +170,6 @@ namespace SmartTable.Controllers
                 // Cập nhật số điện thoại
                 if (!string.IsNullOrEmpty(model.phone) && model.phone != user.phone)
                 {
-                    if (!System.Text.RegularExpressions.Regex.IsMatch(model.phone, @"^\+?\d{10,15}$")) // Nới lỏng Regex
-                    {
-                        ViewBag.ErrorMessage = "Số điện thoại không hợp lệ.";
-                        return View("UpdateAccount", user);
-                    }
                     user.phone = model.phone;
                 }
 
@@ -206,13 +186,13 @@ namespace SmartTable.Controllers
                         ViewBag.PasswordError = "Mật khẩu phải có ít nhất 6 ký tự.";
                         return View("UpdateAccount", user);
                     }
-                    // Băm mật khẩu mới
                     user.password_hash = BCrypt.Net.BCrypt.HashPassword(newPassword);
                 }
 
                 db.SaveChanges();
                 ViewBag.SuccessMessage = "Cập nhật thông tin tài khoản thành công.";
-                return RedirectToAction("AccountInfo");
+                // Sửa: Trả về View() để hiển thị thông báo thành công
+                return View("UpdateAccount", user);
             }
             catch (Exception ex)
             {
@@ -231,7 +211,7 @@ namespace SmartTable.Controllers
         // --- QUÊN MẬT KHẨU (POST) ---
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult ForgotPassword(Users model) // Dùng Model để lấy Email
+        public ActionResult ForgotPassword(Users model)
         {
             if (!string.IsNullOrEmpty(model.email))
             {
@@ -240,13 +220,10 @@ namespace SmartTable.Controllers
                 {
                     try
                     {
-                        // Tạo mật khẩu mới
                         string newPassword = GenerateRandomPassword();
-                        // Băm mật khẩu mới
                         user.password_hash = BCrypt.Net.BCrypt.HashPassword(newPassword);
                         db.SaveChanges();
 
-                        // Gửi email MẬT KHẨU GỐC
                         string subject = "Mật khẩu mới từ hệ thống đặt bàn";
                         string body = $"Chào {user.full_name},\n\nMật khẩu mới của bạn là: {newPassword}\n" +
                                       $"Vui lòng đăng nhập và đổi mật khẩu sau khi đăng nhập.\n\nTrân trọng.";
@@ -254,12 +231,10 @@ namespace SmartTable.Controllers
                     }
                     catch (Exception ex)
                     {
-                        // Hiển thị lỗi nếu gửi mail thất bại
                         ModelState.AddModelError("", "Không thể gửi email. Lỗi: " + ex.Message);
                         return View(model);
                     }
                 }
-
                 TempData["RegisterSuccess"] = "Nếu email của bạn tồn tại, một mật khẩu mới sẽ được gửi.";
                 return RedirectToAction("Login", "Account");
             }
@@ -267,6 +242,52 @@ namespace SmartTable.Controllers
             TempData["Message"] = "Email không hợp lệ.";
             return View(model);
         }
+
+        // --- ĐỔI MẬT KHẨU (GET) --- (ĐÃ DI CHUYỂN LÊN TRÊN)
+        [AuthorizeUser]
+        [HttpGet]
+        public ActionResult ChangePassword()
+        {
+            return View();
+        }
+
+        // --- ĐỔI MẬT KHẨU (POST) --- (ĐÃ DI CHUYỂN LÊN TRÊN)
+        [AuthorizeUser]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ChangePassword(string oldPassword, string newPassword, string confirmPassword)
+        {
+            if (Session["user_id"] == null) return RedirectToAction("Login");
+            var userId = (int)Session["user_id"];
+            var user = db.Users.Find(userId);
+
+            if (user == null) return HttpNotFound();
+
+            if (!BCrypt.Net.BCrypt.Verify(oldPassword, user.password_hash))
+            {
+                ViewBag.ErrorMessage = "Mật khẩu cũ không chính xác.";
+                return View();
+            }
+
+            if (newPassword != confirmPassword)
+            {
+                ViewBag.ErrorMessage = "Mật khẩu xác nhận không khớp.";
+                return View();
+            }
+
+            if (newPassword.Length < 6)
+            {
+                ViewBag.ErrorMessage = "Mật khẩu mới phải có ít nhất 6 ký tự.";
+                return View();
+            }
+
+            user.password_hash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            db.SaveChanges();
+
+            ViewBag.SuccessMessage = "Đổi mật khẩu thành công!";
+            return View();
+        }
+
 
         // --- HÀM HỖ TRỢ ---
         private string GenerateRandomPassword(int length = 8)
@@ -279,15 +300,13 @@ namespace SmartTable.Controllers
 
         private void SendEmail(string toEmail, string subject, string body)
         {
-            // Đọc từ Web.config
             var fromEmail = ConfigurationManager.AppSettings["FromEmailAddress"];
             var fromPassword = ConfigurationManager.AppSettings["FromEmailPassword"];
             var displayName = ConfigurationManager.AppSettings["FromEmailDisplayName"];
 
-            // Mật khẩu MỚI (đúng)
             if (string.IsNullOrEmpty(fromPassword))
             {
-                fromPassword = "bjtpwkkuqllpllzo"; // Thay thế bằng mật khẩu App mới
+                fromPassword = "rpxrrencvhiekcxf"; // Mật khẩu App mới
             }
             if (string.IsNullOrEmpty(fromEmail))
             {
@@ -297,7 +316,6 @@ namespace SmartTable.Controllers
             {
                 displayName = "Smart Table";
             }
-
 
             try
             {
@@ -326,7 +344,7 @@ namespace SmartTable.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("LỖI GỬI EMAIL: " + ex.Message);
-                throw; // Ném lỗi ra để action ForgotPassword bắt được
+                throw;
             }
         }
 
