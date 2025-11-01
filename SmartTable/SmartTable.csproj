@@ -133,12 +133,14 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Content Include="Content\Account\register.css" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\BusinessController.cs" />
     <Compile Include="Controllers\ChatController.cs" />
     <Compile Include="Controllers\Filters\AuthorizeUserAttribute.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\EmailHelper.cs" />
     <Compile Include="Models\Bookings.cs">
       <DependentUpon>SmartTableSystem2.tt</DependentUpon>
     </Compile>
@@ -182,6 +184,7 @@
       <DependentUpon>SmartTableSystem2.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\ViewModels\BookingViewMode.cs" />
+    <Compile Include="Models\ViewModels\PartnerRegistrationViewModel.cs" />
     <Compile Include="Models\ViewModels\SmartTableDetailViewModel.cs" />
     <Compile Include="Models\ViewModels\StatisticsViewModelController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -252,11 +255,14 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Account\UpdateAccount.cshtml" />
     <Content Include="Views\Shared\_ProfileLayout.cshtml" />
+    <Content Include="Views\Business\Index.cshtml" />
+    <Content Include="Views\Business\RegisterPartner.cshtml" />
+    <Content Include="Views\Business\Login.cshtml" />
+    <None Include="Views\Shared\_BusinessLayout.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Views\BusinessHome\" />
-    <Folder Include="Views\Businesss\" />
     <Folder Include="Views\Chat\" />
     <Folder Include="Views\DatBan\" />
     <Folder Include="Views\DetailNhaHang\" />

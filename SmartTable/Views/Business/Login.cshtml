@@ -1,0 +1,89 @@
+﻿@model SmartTable.Models.Users
+@{
+    ViewBag.Title = "Đăng nhập Đối tác";
+    Layout = "~/Views/Shared/_BusinessLayout.cshtml"; // Dùng layout Business
+}
+
+@* Không cần CSS tùy chỉnh trong @section styles nữa *@
+@* Mọi thứ đã có trong output.css (Tailwind) *@
+
+<div class="min-h-[calc(100vh-128px)] flex items-center justify-center py-12 px-4">
+    <div class="bg-white rounded-xl shadow-lg p-8 sm:p-10 w-full max-w-md">
+
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-blue-600">
+                Smart-Table for Business
+            </h1>
+            <p class="text-gray-500 text-sm mt-2">Đăng nhập tài khoản Đối tác</p>
+        </div>
+
+        @Html.ValidationSummary(true, "", new { @class = "text-red-600 text-sm bg-red-100 p-3 rounded-md mb-4" })
+
+        @using (Html.BeginForm("Login", "Account", FormMethod.Post, new { @class = "space-y-5" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <div class="flex items-center border border-gray-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-200">
+                    <span class="pl-3 pr-2 text-gray-400">
+                        <i class="fas fa-envelope"></i>
+                    </span>
+                    @Html.TextBoxFor(m => m.email, new { @class = "flex-1 px-3 py-2.5 border-none rounded-r-lg focus:outline-none focus:ring-0 text-sm", placeholder = "Email", type = "email", required = "required" })
+                </div>
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
+                <div class="flex items-center border border-gray-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-200">
+                    <span class="pl-3 pr-2 text-gray-400">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    @Html.PasswordFor(m => m.password_hash, new { @class = "flex-1 px-3 py-2.5 border-none focus:outline-none focus:ring-0 text-sm", placeholder = "Mật khẩu", id = "password", required = "required" })
+                    <i class="far fa-eye toggle-password cursor-pointer text-gray-500 hover:text-gray-700 mr-3" id="togglePassword"></i>
+                </div>
+                @Html.ValidationMessageFor(m => m.password_hash, "", new { @class = "text-red-600 text-xs italic mt-1" })
+            </div>
+
+            <div class="text-right">
+                <a href="@Url.Action("ForgotPassword", "Account")" class="text-sm font-medium text-blue-600 hover:text-blue-500">
+                    Quên mật khẩu?
+                </a>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-md transition duration-300 transform hover:scale-105">
+                <i class="fas fa-sign-in-alt mr-2"></i>
+                Đăng nhập
+            </button>
+
+            <p class="text-center text-sm text-gray-600 pt-2">Hoặc</p>
+
+
+
+            <p class="text-center text-sm text-gray-600 pt-4">
+                Chưa có tài khoản đối tác?
+                <a href="@Url.Action("RegisterPartner", "Business")" class="font-medium text-red-600 hover:text-red-500">
+                    Đăng ký ngay
+                </a>
+            </p>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        // Code ẩn/hiện mật khẩu
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener('click', function () {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
+    </script>
+}

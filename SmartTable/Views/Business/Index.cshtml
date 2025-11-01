@@ -1,0 +1,58 @@
+﻿@{
+    ViewBag.Title = "Smart-Table Dành Cho Đối Tác";
+    Layout = "~/Views/Shared/_BusinessLayout.cshtml"; // Sử dụng layout Business
+}
+
+@section styles {
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+    </style>
+}
+
+<div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg rounded-xl overflow-hidden">
+    <div class="container mx-auto max-w-7xl px-6 py-20 text-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold font-display mb-4">
+            Đưa nhà hàng của bạn đến với hàng ngàn thực khách
+        </h1>
+        <p class="text-xl text-blue-200 mb-8 max-w-3xl mx-auto">
+            Tham gia Smart-Table để tăng trưởng doanh thu, quản lý đặt bàn hiệu quả và tiếp cận khách hàng mới mỗi ngày.
+        </p>
+
+        <a href="@Url.Action("RegisterPartner", "Business")"
+           class="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-full shadow-md hover:from-orange-600 hover:to-red-600 transition-transform transform hover:scale-105 text-lg">
+            Đăng ký hợp tác
+        </a>
+    </div>
+</div>
+
+<div class="container mx-auto max-w-7xl py-20 px-6" id="benefits">
+    <h2 class="text-3xl font-bold text-center text-gray-800 mb-12 font-display">
+        Tại sao nên tham gia Smart-Table?
+    </h2>
+    <div class="grid md:grid-cols-3 gap-10">
+        <div class="bg-white p-6 rounded-lg shadow-md text-center transition-transform transform hover:-translate-y-2">
+            <i class="fas fa-users text-4xl text-blue-600 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Tiếp cận khách hàng mới</h3>
+            <p class="text-gray-600">
+                Hiển thị nhà hàng của bạn trước hàng ngàn người dùng đang có nhu cầu đặt bàn, tăng cơ hội lấp đầy bàn trống.
+            </p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md text-center transition-transform transform hover:-translate-y-2">
+            <i class="fas fa-cogs text-4xl text-blue-600 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Quản lý đặt bàn thông minh</h3>
+            <p class="text-gray-600">
+                Hệ thống quản lý trực quan giúp bạn theo dõi lịch đặt, sắp xếp bàn và giảm thiểu tình trạng "no-show".
+            </p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md text-center transition-transform transform hover:-translate-y-2">
+            <i class="fas fa-chart-line text-4xl text-blue-600 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Marketing Hiệu Quả</h3>
+            <p class="text-gray-600">
+                Chúng tôi giúp bạn quảng bá các chương trình ưu đãi, món ăn mới và sự kiện đặc biệt đến đúng đối tượng khách hàng.
+            </p>
+        </div>
+    </div>
+</div>

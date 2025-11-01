@@ -1,0 +1,70 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title - Smart Table for Business</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    @Styles.Render("~/Content/css")
+
+    @Scripts.Render("~/bundles/modernizr")
+    
+    <style>
+        .menu-link-business {
+            color: rgb(55 65 81); /* text-gray-700 */
+            font-weight: 500; /* font-medium */
+            font-size: 0.875rem; /* text-sm */
+            transition-property: color; /* transition-colors */
+            transition-duration: 200ms; /* duration-200 */
+        }
+        .menu-link-business:hover {
+            color: rgb(37 99 235); /* hover:text-blue-600 */
+        }
+    </style>
+
+    @RenderSection("styles", required: false)
+</head>
+
+<body class="bg-gray-100 font-roboto text-base text-gray-800 antialiased">
+
+    <header class="bg-white text-gray-800 shadow-sm sticky top-0 z-50 border-b border-gray-200">
+        <div class="container mx-auto max-w-7xl px-6 py-3 flex justify-between items-center h-16">
+            
+            <a href="@Url.Action("Index", "Business")" class="text-2xl font-bold tracking-tight">
+                <span class="text-blue-600">Smart-Table</span>
+                <span class="text-red-500 font-medium text-xl">for Business</span>
+            </a>
+
+            <nav class="flex items-center space-x-6 font-medium text-sm">
+                <a href="@Url.Action("Index", "Business")" class="menu-link-business">Trang chủ</a>
+                <a href="@Url.Action("Index", "Business")#benefits" class="menu-link-business">Lợi ích</a>
+                <a href="@Url.Action("RegisterPartner", "Business")" class="menu-link-business">Đăng ký</a>
+                <a href="@Url.Action("Login", "Business")" class="px-4 py-2 bg-blue-600 ..."> @* Đổi "Account" thành "Business" *@
+                    Đăng nhập Đối tác
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        @RenderBody() </main>
+
+    <footer class="bg-gray-800 text-gray-400 py-12">
+        <div class="container mx-auto max-w-7xl px-6 text-center">
+             <p class="text-lg font-semibold text-white mb-2">Smart-Table for Business</p>
+             <p class="text-sm">&copy; @DateTime.Now.Year Smart-Table. All rights reserved.</p>
+             <p class="text-sm mt-1">Hỗ trợ đối tác: 0941326591</p>
+        </div>
+    </footer>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/main")
+    @RenderSection("Scripts", required: false)
+
+</body>
+</html>
