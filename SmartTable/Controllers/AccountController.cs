@@ -6,6 +6,7 @@ using System.Configuration; // Thêm
 using System.Net.Mail; // Thêm
 using SmartTable.Filters; // Thêm (nếu bạn dùng AuthorizeUser)
 using BCrypt.Net; // Thêm BCrypt
+using System.Text; // Thêm
 
 namespace SmartTable.Controllers
 {
@@ -40,7 +41,6 @@ namespace SmartTable.Controllers
             if (string.IsNullOrEmpty(model.full_name))
                 ModelState.AddModelError("full_name", " không được để trống.");
 
-            // Kiểm tra email trùng
             if (db.Users.Any(u => u.email == model.email))
             {
                 ModelState.AddModelError("email", "Email đã được sử dụng.");
@@ -48,18 +48,14 @@ namespace SmartTable.Controllers
 
             if (ModelState.IsValid)
             {
-                // Băm mật khẩu
                 model.password_hash = BCrypt.Net.BCrypt.HashPassword(model.password_hash);
                 model.role = "User";
                 model.created_at = DateTime.Now;
-
                 db.Users.Add(model);
                 db.SaveChanges();
-
                 TempData["RegisterSuccess"] = "Đăng ký thành công! Vui lòng đăng nhập.";
                 return RedirectToAction("Login", "Account");
             }
-
             return View(model);
         }
 
@@ -76,7 +72,6 @@ namespace SmartTable.Controllers
         {
             var user = db.Users.FirstOrDefault(u => u.email == model.email);
 
-            // So sánh mật khẩu đã băm
             if (user != null && BCrypt.Net.BCrypt.Verify(model.password_hash, user.password_hash))
             {
                 Session["user"] = user;
@@ -85,20 +80,21 @@ namespace SmartTable.Controllers
 
                 if (user.role == "Admin")
                 {
-                    return RedirectToAction("Index", "Role", new { area = "Admin" });
+                    // SỬA LỖI: Chuyển "Role" thành "Dashboard"
+                    return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
                 }
                 else if (user.role == "business")
                 {
-                    return RedirectToAction("Index", "BusinessHome");
+                    // SỬA LỖI: Chuyển "BusinessHome" thành "Business" (hoặc "BusinessHome" nếu bạn đã tạo)
+                    return RedirectToAction("Index", "BusinessHome"); // Giả sử bạn đã tạo BusinessHomeController
                 }
                 else
                 {
                     return RedirectToAction("Index", "Home");
                 }
             }
-
             ModelState.AddModelError("", "Email hoặc mật khẩu không đúng.");
-            return View(model);
+            return View(model); 
         }
 
         // --- ĐĂNG XUẤT ---
@@ -109,6 +105,7 @@ namespace SmartTable.Controllers
         }
 
         // --- THÔNG TIN TÀI KHOẢN (Chuyển hướng) ---
+        // SỬA LỖI: Đã xóa hàm AccountInfo() cũ bị trùng
         [AuthorizeUser]
         public ActionResult AccountInfo()
         {
@@ -123,13 +120,11 @@ namespace SmartTable.Controllers
         {
             if (Session["user_id"] == null) return RedirectToAction("Login");
             var userId = (int)Session["user_id"];
-
             var user = db.Users.FirstOrDefault(u => u.user_id == userId);
             if (user == null)
             {
                 return HttpNotFound();
             }
-
             return View(user);
         }
 
@@ -141,7 +136,6 @@ namespace SmartTable.Controllers
         {
             if (Session["user_id"] == null) return RedirectToAction("Login");
             var userId = (int)Session["user_id"];
-
             var user = db.Users.FirstOrDefault(u => u.user_id == userId);
             if (user == null)
             {
@@ -150,13 +144,11 @@ namespace SmartTable.Controllers
 
             try
             {
-                // Cập nhật họ và tên
+                // (Code cập nhật họ tên, email, phone)
                 if (!string.IsNullOrEmpty(model.full_name) && model.full_name != user.full_name)
                 {
                     user.full_name = model.full_name;
                 }
-
-                // Cập nhật email (Nếu bạn cho phép)
                 if (!string.IsNullOrEmpty(model.email) && model.email != user.email)
                 {
                     if (db.Users.Any(u => u.email == model.email && u.user_id != userId))
@@ -166,14 +158,17 @@ namespace SmartTable.Controllers
                     }
                     user.email = model.email;
                 }
-
-                // Cập nhật số điện thoại
                 if (!string.IsNullOrEmpty(model.phone) && model.phone != user.phone)
                 {
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(model.phone, @"^\+?\d{10,15}$"))
+                    {
+                        ViewBag.ErrorMessage = "Số điện thoại không hợp lệ.";
+                        return View("UpdateAccount", user);
+                    }
                     user.phone = model.phone;
                 }
 
-                // Cập nhật mật khẩu
+                // (Code cập nhật mật khẩu)
                 if (!string.IsNullOrEmpty(newPassword))
                 {
                     if (newPassword != confirmPassword)
@@ -191,7 +186,7 @@ namespace SmartTable.Controllers
 
                 db.SaveChanges();
                 ViewBag.SuccessMessage = "Cập nhật thông tin tài khoản thành công.";
-                // Sửa: Trả về View() để hiển thị thông báo thành công
+                // SỬA LỖI: Trả về View() để hiển thị thông báo, thay vì Redirect
                 return View("UpdateAccount", user);
             }
             catch (Exception ex)
@@ -205,7 +200,7 @@ namespace SmartTable.Controllers
         [HttpGet]
         public ActionResult ForgotPassword()
         {
-            return View();
+            return View(); // Sửa lỗi: Phải trả về View() (hoặc View(new Users()))
         }
 
         // --- QUÊN MẬT KHẨU (POST) ---
@@ -223,7 +218,6 @@ namespace SmartTable.Controllers
                         string newPassword = GenerateRandomPassword();
                         user.password_hash = BCrypt.Net.BCrypt.HashPassword(newPassword);
                         db.SaveChanges();
-
                         string subject = "Mật khẩu mới từ hệ thống đặt bàn";
                         string body = $"Chào {user.full_name},\n\nMật khẩu mới của bạn là: {newPassword}\n" +
                                       $"Vui lòng đăng nhập và đổi mật khẩu sau khi đăng nhập.\n\nTrân trọng.";
@@ -238,12 +232,13 @@ namespace SmartTable.Controllers
                 TempData["RegisterSuccess"] = "Nếu email của bạn tồn tại, một mật khẩu mới sẽ được gửi.";
                 return RedirectToAction("Login", "Account");
             }
-
             TempData["Message"] = "Email không hợp lệ.";
             return View(model);
         }
 
-        // --- ĐỔI MẬT KHẨU (GET) --- (ĐÃ DI CHUYỂN LÊN TRÊN)
+        // --- SỬA LỖI CÚ PHÁP: CÁC HÀM SAU PHẢI NẰM BÊN TRONG CLASS ---
+
+        // --- ĐỔI MẬT KHẨU (GET) ---
         [AuthorizeUser]
         [HttpGet]
         public ActionResult ChangePassword()
@@ -251,7 +246,7 @@ namespace SmartTable.Controllers
             return View();
         }
 
-        // --- ĐỔI MẬT KHẨU (POST) --- (ĐÃ DI CHUYỂN LÊN TRÊN)
+        // --- ĐỔI MẬT KHẨU (POST) ---
         [AuthorizeUser]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -268,13 +263,11 @@ namespace SmartTable.Controllers
                 ViewBag.ErrorMessage = "Mật khẩu cũ không chính xác.";
                 return View();
             }
-
             if (newPassword != confirmPassword)
             {
                 ViewBag.ErrorMessage = "Mật khẩu xác nhận không khớp.";
                 return View();
             }
-
             if (newPassword.Length < 6)
             {
                 ViewBag.ErrorMessage = "Mật khẩu mới phải có ít nhất 6 ký tự.";
@@ -283,11 +276,9 @@ namespace SmartTable.Controllers
 
             user.password_hash = BCrypt.Net.BCrypt.HashPassword(newPassword);
             db.SaveChanges();
-
             ViewBag.SuccessMessage = "Đổi mật khẩu thành công!";
             return View();
         }
-
 
         // --- HÀM HỖ TRỢ ---
         private string GenerateRandomPassword(int length = 8)
@@ -328,10 +319,8 @@ namespace SmartTable.Controllers
                     UseDefaultCredentials = false,
                     Credentials = new System.Net.NetworkCredential(fromEmail, fromPassword)
                 };
-
                 var fromAddress = new MailAddress(fromEmail, displayName);
                 var toAddress = new MailAddress(toEmail);
-
                 using (var message = new MailMessage(fromAddress, toAddress)
                 {
                     Subject = subject,

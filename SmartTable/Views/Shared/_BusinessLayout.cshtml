@@ -1,4 +1,12 @@
-﻿<!DOCTYPE html>
+﻿@*
+    File: /Views/Shared/_BusinessLayout.cshtml
+    Layout chính cho khu vực "Đối tác - Business"
+*@
+@{
+    // THÊM: Lấy user từ Session 1 lần (nếu có)
+    var currentUser = Session["user"] as SmartTable.Models.Users;
+}
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -11,10 +19,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     @Styles.Render("~/Content/css")
-
     @Scripts.Render("~/bundles/modernizr")
-    
+
     <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+
         .menu-link-business {
             color: rgb(55 65 81); /* text-gray-700 */
             font-weight: 500; /* font-medium */
@@ -22,49 +33,95 @@
             transition-property: color; /* transition-colors */
             transition-duration: 200ms; /* duration-200 */
         }
-        .menu-link-business:hover {
-            color: rgb(37 99 235); /* hover:text-blue-600 */
+
+            .menu-link-business:hover {
+                color: rgb(37 99 235); /* hover:text-blue-600 */
+            }
+
+        .btn-login {
+            background-color: rgb(37 99 235); /* blue-600 */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease-in-out;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+            .btn-login:hover {
+                background-color: rgb(29 78 216); /* blue-700 */
+            }
+
+        .profile-btn-content {
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
         }
     </style>
 
     @RenderSection("styles", required: false)
 </head>
 
-<body class="bg-gray-100 font-roboto text-base text-gray-800 antialiased">
+<body class="bg-gray-100 text-gray-800 antialiased">
 
     <header class="bg-white text-gray-800 shadow-sm sticky top-0 z-50 border-b border-gray-200">
         <div class="container mx-auto max-w-7xl px-6 py-3 flex justify-between items-center h-16">
-            
+
             <a href="@Url.Action("Index", "Business")" class="text-2xl font-bold tracking-tight">
                 <span class="text-blue-600">Smart-Table</span>
                 <span class="text-red-500 font-medium text-xl">for Business</span>
             </a>
 
             <nav class="flex items-center space-x-6 font-medium text-sm">
-                <a href="@Url.Action("Index", "Business")" class="menu-link-business">Trang chủ</a>
+                <a href="@Url.Action("Index", "BusinessHome")" class="menu-link-business">Trang chủ</a>
                 <a href="@Url.Action("Index", "Business")#benefits" class="menu-link-business">Lợi ích</a>
-                <a href="@Url.Action("RegisterPartner", "Business")" class="menu-link-business">Đăng ký</a>
-                <a href="@Url.Action("Login", "Business")" class="px-4 py-2 bg-blue-600 ..."> @* Đổi "Account" thành "Business" *@
-                    Đăng nhập Đối tác
-                </a>
             </nav>
+
+            <div class="flex items-center space-x-3 ml-auto">
+                @if (currentUser == null)
+                {
+                    <a href="@Url.Action("RegisterPartner", "Business")"
+                       class="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-full shadow-sm hover:from-orange-600 hover:to-red-600 transition text-xs transform hover:scale-105">
+                        <i class="fas fa-user-plus mr-1"></i> <span>Đăng ký</span> 
+                    </a>
+                    <a href="@Url.Action("Login", "Business")" class="btn-login space-x-1.5 transform hover:scale-105">
+                        <i class="fas fa-sign-in-alt"></i> <span>Đăng nhập</span>
+                    </a>
+                }
+                else
+                {
+                    <div class="relative">
+                        <button id="profileMenuToggleDesktop" class="flex items-center space-x-2 font-semibold text-red-500 profile-btn-content">
+                            <i class="fas fa-user-circle text-xl"></i>
+                            <span>@currentUser.full_name</span>
+                            <i class="fas fa-chevron-down text-xs ml-1"></i>
+                        </button>
+
+                        <ul id="dropdownMenuDesktop" class="hidden absolute bg-white border rounded-lg shadow-xl mt-3 py-1 right-0 w-48 text-gray-800 z-10 text-sm">
+                            <li><a href="@Url.Action("Profile", "BusinessHome")" class="flex items-center px-3 py-1.5 hover:bg-gray-100 transition"><i class="fas fa-user-edit w-4 text-center mr-2 text-blue-500"></i><span>Hồ sơ của tôi</span></a></li>
+                            <li><a href="@Url.Action("Logout", "Account")" class="flex items-center px-3 py-1.5 hover:bg-gray-100 transition text-red-600"><i class="fas fa-sign-out-alt w-4 text-center mr-2"></i><span>Đăng xuất</span></a></li>
+                        </ul>
+                    </div>
+                }
+            </div>
         </div>
     </header>
 
-    <main>
-        @RenderBody() </main>
+    <main class="min-h-screen">
+        @RenderBody()
+    </main>
 
-    <footer class="bg-gray-800 text-gray-400 py-12">
+    <footer class="bg-gray-800 text-gray-400 py-12 mt-10">
         <div class="container mx-auto max-w-7xl px-6 text-center">
-             <p class="text-lg font-semibold text-white mb-2">Smart-Table for Business</p>
-             <p class="text-sm">&copy; @DateTime.Now.Year Smart-Table. All rights reserved.</p>
-             <p class="text-sm mt-1">Hỗ trợ đối tác: 0941326591</p>
+            <p class="text-lg font-semibold text-white mb-2">Smart-Table for Business</p>
+            <p class="text-sm">&copy; @DateTime.Now.Year Smart-Table. All rights reserved.</p>
+            <p class="text-sm mt-1">Hỗ trợ đối tác: 0941326591</p>
         </div>
     </footer>
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/main")
     @RenderSection("Scripts", required: false)
-
 </body>
 </html>

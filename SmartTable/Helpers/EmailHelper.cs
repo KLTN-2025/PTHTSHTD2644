@@ -3,22 +3,21 @@ using System.Configuration;
 using System.Net;
 using System.Net.Mail;
 
-// Namespace này (SmartTable.Helpers) sẽ khớp với 'using' trong Controller của bạn
 namespace SmartTable.Helpers
 {
     public static class EmailHelper
     {
         public static void SendEmail(string toEmail, string subject, string body)
         {
-            // Đọc thông tin từ Web.config
             var fromEmail = ConfigurationManager.AppSettings["FromEmailAddress"];
             var fromPassword = ConfigurationManager.AppSettings["FromEmailPassword"];
             var displayName = ConfigurationManager.AppSettings["FromEmailDisplayName"];
 
-            // Dự phòng nếu Web.config thiếu (dùng Mật khẩu ứng dụng mới nhất bạn cung cấp)
+            // SỬA LỖI Ở ĐÂY:
+            // Đảm bảo mật khẩu App mới (viết liền) được dùng
             if (string.IsNullOrEmpty(fromPassword))
             {
-                fromPassword = "rpxrrencvhiekcxf"; // Mật khẩu App mới nhất của bạn
+                fromPassword = "wxzchziuhthubgha"; // <-- MẬT KHẨU MỚI
             }
             if (string.IsNullOrEmpty(fromEmail))
             {
@@ -55,10 +54,8 @@ namespace SmartTable.Helpers
             }
             catch (Exception ex)
             {
-                // Ghi log lỗi để debug
                 System.Diagnostics.Debug.WriteLine("LỖI GỬI EMAIL HELPER: " + ex.Message);
-                // Ném lỗi ra để Controller bắt được
-                throw;
+                throw; // Ném lỗi ra để Controller (ApprovePartner) bắt được
             }
         }
     }

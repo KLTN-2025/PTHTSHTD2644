@@ -34,5 +34,6 @@ namespace SmartTable.Models
         public virtual DbSet<Reviews> Reviews { get; set; }
         public virtual DbSet<Tables> Tables { get; set; }
         public virtual DbSet<Users> Users { get; set; }
+        public virtual DbSet<PartnerLeads> PartnerLeads { get; set; }
     }
 }

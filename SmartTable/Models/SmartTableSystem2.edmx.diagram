@@ -25,6 +25,7 @@
         <AssociationConnector Association="SmartTableSystemModel.FK_Reviews_Restaurants" ManuallyRouted="false" />
         <AssociationConnector Association="SmartTableSystemModel.FK_Tables_Restaurants" ManuallyRouted="false" />
         <AssociationConnector Association="SmartTableSystemModel.FK_Reviews_User" ManuallyRouted="false" />
+        <EntityTypeShape EntityType="SmartTableSystemModel.PartnerLeads" Width="1.5" PointX="7.375" PointY="0.75" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

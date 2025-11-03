@@ -1,0 +1,66 @@
+﻿@model SmartTable.Models.Restaurants
+@{
+    ViewBag.Title = "Tổng quan Dashboard";
+    Layout = "~/Views/Shared/_BusinessLayout.cshtml";
+
+    // Tối ưu: Lấy user từ Session chỉ 1 lần
+    var currentUser = (SmartTable.Models.Users)Session["user"];
+}
+
+<h1 class="text-2xl font-bold text-gray-800">Chào mừng, @(currentUser?.full_name)!</h1>
+<p class="mt-2 text-gray-600">
+    Đây là trang tổng quan quản lý nhà hàng của bạn.
+</p>
+
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">
+        @ViewBag.ErrorMessage
+    </div>
+}
+@if (Model == null)
+{
+    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mt-4" role="alert">
+        Tài khoản của bạn chưa được liên kết với nhà hàng nào. Vui lòng liên hệ Admin để hoàn tất quá trình thiết lập.
+    </div>
+}
+else
+{
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-gray-500 text-sm font-medium">Nhà hàng đang quản lý</h3>
+            <p class="text-2xl font-bold text-blue-600 mt-2">@Model.name</p>
+            <p class="text-sm text-gray-500 mt-1">@Model.address</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-gray-500 text-sm font-medium">Lượt đặt bàn (Hôm nay)</h3>
+            <p class="text-3xl font-bold text-gray-900 mt-2">0</p> @* Sẵn sàng để hiển thị dữ liệu thật *@
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-gray-500 text-sm font-medium">Trạng thái</h3>
+            <p class="text-xl font-bold text-green-600 mt-2">Đang hoạt động</p>
+        </div>
+    </div>
+
+    <div class="mt-10 p-6 bg-white rounded-xl shadow-lg">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Các tác vụ nhanh</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            <a href="#" class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-blue-50 transition">
+                <i class="fas fa-calendar-alt text-3xl text-blue-600 mb-2"></i>
+                <span class="text-sm font-medium text-gray-700">Quản lý Đặt bàn</span>
+            </a>
+
+            <a href="#" class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-blue-50 transition">
+                <i class="fas fa-edit text-3xl text-red-600 mb-2"></i>
+                <span class="text-sm font-medium text-gray-700">Cập nhật Menu</span>
+            </a>
+
+            <a href="#" class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-blue-50 transition">
+                <i class="fas fa-store text-3xl text-orange-600 mb-2"></i>
+                <span class="text-sm font-medium text-gray-700">Thông tin Cơ sở</span>
+            </a>
+
+        </div>
+    </div>
+}

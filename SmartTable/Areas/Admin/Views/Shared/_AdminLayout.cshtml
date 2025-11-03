@@ -1,0 +1,81 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title - Admin Panel</title>
+
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+
+    <style>
+        /* Tạm thời ẩn thanh cuộn của sidebar trên Chrome/Safari */
+        #admin-sidebar::-webkit-scrollbar {
+            display: none;
+        }
+
+        #admin-sidebar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-roboto">
+    <div class="flex h-screen bg-gray-100">
+
+        <div id="admin-sidebar" class="w-64 bg-white shadow-lg overflow-y-auto flex-shrink-0">
+            <div class="p-6">
+                <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })"
+                   class="text-2xl font-bold text-blue-600 tracking-tight">
+                    Smart-Table <span class="font-medium text-red-500">Admin</span>
+                </a>
+            </div>
+            <nav class="mt-4 px-4 space-y-2">
+                <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })"
+                   class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-tachometer-alt w-6 text-center mr-2"></i>
+                    Dashboard
+                </a>
+
+                <a href="@Url.Action("PartnerLeads", "Dashboard", new { area = "Admin" })"
+                   class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-handshake w-6 text-center mr-2"></i>
+                    Duyệt Đối Tác
+                </a>
+
+                <a href="#" class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-users w-6 text-center mr-2"></i>
+                    Quản lý Users
+                </a>
+
+                <hr class="my-4" />
+
+                <a href="@Url.Action("Logout", "Account", new { area = "" })"
+                   class="flex items-center px-3 py-2 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
+                    <i class="fas fa-sign-out-alt w-6 text-center mr-2"></i>
+                    Đăng xuất
+                </a>
+            </nav>
+        </div>
+
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm h-14 flex items-center justify-end px-6">
+                @if (Session["user"] != null)
+                {
+                    <span class="text-gray-700 font-medium">
+                        Chào, @(((SmartTable.Models.Users)Session["user"]).full_name)!
+                    </span>
+                }
+            </header>
+
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/main")
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

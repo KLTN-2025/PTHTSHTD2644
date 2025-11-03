@@ -47,6 +47,50 @@
           <Property Name="quantity" Type="int" Nullable="false" />
           <Property Name="note" Type="nvarchar(max)" />
         </EntityType>
+        <EntityType Name="PartnerLeads">
+          <Key>
+            <PropertyRef Name="LeadId" />
+          </Key>
+          <Property Name="LeadId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Email" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="RestaurantName" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="City" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="Address" Type="nvarchar" MaxLength="500" Nullable="false" />
+          <Property Name="BranchCount" Type="int" Nullable="false" />
+          <Property Name="ServiceTypes" Type="nvarchar" MaxLength="500" />
+          <Property Name="ServiceTypeOther" Type="nvarchar" MaxLength="255" />
+          <Property Name="ServiceDescription" Type="nvarchar" MaxLength="500" Nullable="false" />
+          <Property Name="CuisineStyle" Type="nvarchar" MaxLength="500" Nullable="false" />
+          <Property Name="SignatureDishes" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="AverageBill" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="AverageBillOther" Type="nvarchar" MaxLength="255" />
+          <Property Name="TotalSeats" Type="int" Nullable="false" />
+          <Property Name="FloorCount" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="OpeningDate" Type="date" Nullable="false" />
+          <Property Name="OpeningTime" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="ClosingTime" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="SlowHours" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="BusyHours" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="PartnershipGoal" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="ServicePackage" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="ContactName" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="ContactRole" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="ContactPhone" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="Website" Type="nvarchar" MaxLength="500" />
+          <Property Name="SpaceDescription" Type="nvarchar(max)" />
+          <Property Name="SeatingType" Type="nvarchar" MaxLength="500" />
+          <Property Name="PrivateRoomCount" Type="nvarchar" MaxLength="50" />
+          <Property Name="Amenities" Type="nvarchar(max)" />
+          <Property Name="AmenitiesOther" Type="nvarchar" MaxLength="255" />
+          <Property Name="NearbyLandmark" Type="nvarchar" MaxLength="500" />
+          <Property Name="PhotoLink" Type="nvarchar(max)" />
+          <Property Name="PreviousPartnership" Type="nvarchar" MaxLength="255" />
+          <Property Name="PreviousPartnershipOther" Type="nvarchar" MaxLength="255" />
+          <Property Name="PreviousPartnershipName" Type="nvarchar" MaxLength="255" />
+          <Property Name="Questions" Type="nvarchar(max)" />
+          <Property Name="SubmittedDate" Type="datetime" Nullable="false" />
+          <Property Name="Status" Type="nvarchar" MaxLength="50" Nullable="false" />
+        </EntityType>
         <EntityType Name="Payments">
           <Key>
             <PropertyRef Name="payment_id" />
@@ -246,6 +290,7 @@
           <EntitySet Name="LoyaltyPoints" EntityType="Self.LoyaltyPoints" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="MenuItems" EntityType="Self.MenuItems" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Orders" EntityType="Self.Orders" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="PartnerLeads" EntityType="Self.PartnerLeads" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Payments" EntityType="Self.Payments" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Restaurants" EntityType="Self.Restaurants" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Reviews" EntityType="Self.Reviews" Schema="dbo" store:Type="Tables" />
@@ -612,7 +657,52 @@
             <End Role="Users" EntitySet="Users" />
             <End Role="Reviews" EntitySet="Reviews" />
           </AssociationSet>
+          <EntitySet Name="PartnerLeads" EntityType="SmartTableSystemModel.PartnerLeads" />
         </EntityContainer>
+        <EntityType Name="PartnerLeads">
+          <Key>
+            <PropertyRef Name="LeadId" />
+          </Key>
+          <Property Name="LeadId" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Email" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="RestaurantName" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="City" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="Address" Type="String" Nullable="false" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="BranchCount" Type="Int32" Nullable="false" />
+          <Property Name="ServiceTypes" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="ServiceTypeOther" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="ServiceDescription" Type="String" Nullable="false" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="CuisineStyle" Type="String" Nullable="false" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="SignatureDishes" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="AverageBill" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="AverageBillOther" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="TotalSeats" Type="Int32" Nullable="false" />
+          <Property Name="FloorCount" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="OpeningDate" Type="DateTime" Nullable="false" Precision="0" />
+          <Property Name="OpeningTime" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="ClosingTime" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="SlowHours" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="BusyHours" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="PartnershipGoal" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="ServicePackage" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="ContactName" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="ContactRole" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="ContactPhone" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="Website" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="SpaceDescription" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="SeatingType" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="PrivateRoomCount" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="Amenities" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="AmenitiesOther" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="NearbyLandmark" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="PhotoLink" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="PreviousPartnership" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="PreviousPartnershipOther" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="PreviousPartnershipName" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="Questions" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="SubmittedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="Status" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+        </EntityType>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -729,6 +819,51 @@
                 <ScalarProperty Name="phone" ColumnName="phone" />
                 <ScalarProperty Name="role" ColumnName="role" />
                 <ScalarProperty Name="created_at" ColumnName="created_at" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="PartnerLeads">
+            <EntityTypeMapping TypeName="SmartTableSystemModel.PartnerLeads">
+              <MappingFragment StoreEntitySet="PartnerLeads">
+                <ScalarProperty Name="Status" ColumnName="Status" />
+                <ScalarProperty Name="SubmittedDate" ColumnName="SubmittedDate" />
+                <ScalarProperty Name="Questions" ColumnName="Questions" />
+                <ScalarProperty Name="PreviousPartnershipName" ColumnName="PreviousPartnershipName" />
+                <ScalarProperty Name="PreviousPartnershipOther" ColumnName="PreviousPartnershipOther" />
+                <ScalarProperty Name="PreviousPartnership" ColumnName="PreviousPartnership" />
+                <ScalarProperty Name="PhotoLink" ColumnName="PhotoLink" />
+                <ScalarProperty Name="NearbyLandmark" ColumnName="NearbyLandmark" />
+                <ScalarProperty Name="AmenitiesOther" ColumnName="AmenitiesOther" />
+                <ScalarProperty Name="Amenities" ColumnName="Amenities" />
+                <ScalarProperty Name="PrivateRoomCount" ColumnName="PrivateRoomCount" />
+                <ScalarProperty Name="SeatingType" ColumnName="SeatingType" />
+                <ScalarProperty Name="SpaceDescription" ColumnName="SpaceDescription" />
+                <ScalarProperty Name="Website" ColumnName="Website" />
+                <ScalarProperty Name="ContactPhone" ColumnName="ContactPhone" />
+                <ScalarProperty Name="ContactRole" ColumnName="ContactRole" />
+                <ScalarProperty Name="ContactName" ColumnName="ContactName" />
+                <ScalarProperty Name="ServicePackage" ColumnName="ServicePackage" />
+                <ScalarProperty Name="PartnershipGoal" ColumnName="PartnershipGoal" />
+                <ScalarProperty Name="BusyHours" ColumnName="BusyHours" />
+                <ScalarProperty Name="SlowHours" ColumnName="SlowHours" />
+                <ScalarProperty Name="ClosingTime" ColumnName="ClosingTime" />
+                <ScalarProperty Name="OpeningTime" ColumnName="OpeningTime" />
+                <ScalarProperty Name="OpeningDate" ColumnName="OpeningDate" />
+                <ScalarProperty Name="FloorCount" ColumnName="FloorCount" />
+                <ScalarProperty Name="TotalSeats" ColumnName="TotalSeats" />
+                <ScalarProperty Name="AverageBillOther" ColumnName="AverageBillOther" />
+                <ScalarProperty Name="AverageBill" ColumnName="AverageBill" />
+                <ScalarProperty Name="SignatureDishes" ColumnName="SignatureDishes" />
+                <ScalarProperty Name="CuisineStyle" ColumnName="CuisineStyle" />
+                <ScalarProperty Name="ServiceDescription" ColumnName="ServiceDescription" />
+                <ScalarProperty Name="ServiceTypeOther" ColumnName="ServiceTypeOther" />
+                <ScalarProperty Name="ServiceTypes" ColumnName="ServiceTypes" />
+                <ScalarProperty Name="BranchCount" ColumnName="BranchCount" />
+                <ScalarProperty Name="Address" ColumnName="Address" />
+                <ScalarProperty Name="City" ColumnName="City" />
+                <ScalarProperty Name="RestaurantName" ColumnName="RestaurantName" />
+                <ScalarProperty Name="Email" ColumnName="Email" />
+                <ScalarProperty Name="LeadId" ColumnName="LeadId" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

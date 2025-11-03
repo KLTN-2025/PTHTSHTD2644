@@ -1,0 +1,161 @@
+﻿@model SmartTable.Models.ViewModels.SmartTableDetailViewModel
+@{
+    ViewBag.Title = Model.Restaurant.name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="bg-white rounded-xl shadow-lg overflow-hidden mb-10">
+    <div class="md:flex">
+        <div class="md:w-1/3">
+            <img src="@(Model.Restaurant.Image ?? "https://via.placeholder.com/400x300?text=SmartTable")"
+                 alt="@Model.Restaurant.name"
+                 class="w-full h-64 object-cover" />
+        </div>
+
+        <div class="p-8 flex flex-col justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">@Model.Restaurant.name</h1>
+
+                <p class="text-gray-600 text-sm mb-3 flex items-start">
+                    <i class="fas fa-map-marker-alt w-5 mt-1 text-blue-500"></i>
+                    <span class="ml-2">@Model.Restaurant.address</span>
+                </p>
+
+                <div class="flex items-center mb-2">
+                    <span class="text-yellow-500">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
+                    </span>
+                    <span class="ml-2 text-sm text-gray-500">(@Model.Reviews?.Count ?? 0 đánh giá)</span>
+                </div>
+
+                <p class="text-gray-600 text-sm">
+                    <i class="fas fa-clock text-blue-500 w-5"></i>
+                    <span class="ml-2">Mở cửa: @Model.Restaurant.opening_hours</span>
+                </p>
+            </div>
+
+            <a href="@Url.Action("DatBan", "DatBan", new { id = Model.Restaurant.restaurant_id })"
+               class="lg:hidden mt-6 w-full text-center px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500
+                      text-white font-semibold rounded-lg shadow hover:scale-105 transition">
+                Đặt bàn ngay
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container mx-auto max-w-7xl px-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Tabs + Nội dung -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-t-lg shadow">
+                <nav class="flex border-b border-gray-200 text-gray-500 text-lg font-medium">
+                    <button class="tab-link py-3 px-6 border-b-2 border-blue-600 text-blue-600" data-tab="gioi-thieu">Giới thiệu</button>
+                    <button class="tab-link py-3 px-6 hover:text-blue-500" data-tab="menu">Menu</button>
+                    <button class="tab-link py-3 px-6 hover:text-blue-500" data-tab="danh-gia">Đánh giá (@Model.Reviews?.Count ?? 0)</button>
+                </nav>
+            </div>
+
+            <div class="bg-white rounded-b-lg shadow p-6">
+                <!-- Giới thiệu -->
+                <div id="gioi-thieu" class="tab-content space-y-4">
+                    <h3 class="text-xl font-semibold text-gray-800">Về nhà hàng @Model.Restaurant.name</h3>
+                    <p class="text-gray-700 leading-relaxed">@Model.Restaurant.description</p>
+
+                    <div class="pt-4 border-t">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">Thông tin chi tiết</h4>
+                        <ul class="list-disc list-inside text-gray-700 space-y-1">
+                            <li><span class="font-medium">Địa chỉ:</span> @Model.Restaurant.address</li>
+                            <li><span class="font-medium">Giờ hoạt động:</span> @Model.Restaurant.opening_hours</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Menu -->
+                <div id="menu" class="tab-content hidden space-y-4">
+                    <h3 class="text-xl font-semibold text-gray-800">Thực đơn đặc sắc</h3>
+                    @if (Model.MenuItems == null || !Model.MenuItems.Any())
+                    {
+                        <p class="text-gray-500">Menu đang được cập nhật...</p>
+                    }
+                    else
+                    {
+                        <div class="space-y-3">
+                            @foreach (var item in Model.MenuItems)
+                            {
+                                <div class="border rounded-lg p-4 flex justify-between hover:shadow transition">
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800">@item.name</h4>
+                                        <p class="text-sm text-gray-500">@item.description</p>
+                                    </div>
+                                    <span class="font-semibold text-blue-600">@item.price.ToString("N0")đ</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <!-- Đánh giá -->
+                <div id="danh-gia" class="tab-content hidden space-y-6">
+                    <h3 class="text-xl font-semibold text-gray-800">Đánh giá từ khách hàng</h3>
+                    @if (Model.Reviews == null || !Model.Reviews.Any())
+                    {
+                        <p class="text-gray-500">Chưa có đánh giá nào.</p>
+                    }
+                    else
+                    {
+                        foreach (var review in Model.Reviews)
+                        {
+                            <div class="border-b pb-4">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-user-circle text-2xl text-gray-400 mr-2"></i>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800">@review.Users.full_name</h4>
+                                        <p class="text-xs text-gray-500">@review.created_at?.ToString("dd/MM/yyyy")</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center mb-1 text-yellow-500">
+                                    @for (int i = 0; i < review.rating; i++)
+                                    {<i class="fas fa-star"></i>}
+                                    @for (int i = 0; i < 5 - review.rating; i++)
+                                    {<i class="far fa-star"></i>}
+                                </div>
+                                <p class="text-gray-700">@review.comment</p>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Khối Đặt bàn (Desktop) -->
+        <div class="lg:col-span-1 hidden lg:block">
+            <div class="bg-white rounded-lg shadow-lg p-6 sticky top-28">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Tiến hành đặt bàn</h3>
+                <a href="@Url.Action("DatBan", "DatBan", new { id = Model.Restaurant.restaurant_id })"
+                   class="w-full text-center px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500
+                          text-white font-semibold rounded-lg shadow hover:scale-105 transition">
+                    <i class="fas fa-calendar-alt mr-2"></i> Đặt bàn ngay
+                </a>
+                <p class="text-xs text-gray-500 text-center mt-3">Đặt bàn miễn phí, xác nhận ngay qua Smart-Table.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const tabs = document.querySelectorAll(".tab-link");
+            const contents = document.querySelectorAll(".tab-content");
+            tabs.forEach(tab => {
+                tab.addEventListener("click", () => {
+                    tabs.forEach(t => t.classList.remove("border-blue-600", "text-blue-600"));
+                    contents.forEach(c => c.classList.add("hidden"));
+                    tab.classList.add("border-blue-600", "text-blue-600");
+                    document.getElementById(tab.dataset.tab).classList.remove("hidden");
+                });
+            });
+        });
+    </script>
+}

@@ -1,129 +1,134 @@
 ﻿@model SmartTable.Models.ViewModels.PartnerRegistrationViewModel
 @{
-    ViewBag.Title = "Biểu mẫu Đăng ký Đối tác";
-    Layout = "~/Views/Shared/_BusinessLayout.cshtml"; // Dùng layout Business
+    ViewBag.Title = "Biểu mẫu Đăng ký Đối tác - SmartTable";
+    Layout = "~/Views/Shared/_BusinessLayout.cshtml";
 }
 
 @section styles {
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        .font-display { font-family: 'Playfair Display', serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
 
-       
-        .form-radio {
-            height: 1rem; width: 1rem;
-            color: rgb(37 99 235); /* text-blue-600 */
-            border-color: rgb(209 213 219); /* border-gray-300 */
+        .font-display {
+            font-family: 'Playfair Display', serif;
         }
-        .form-radio:focus {
-             box-shadow: 0 0 0 3px rgb(59 130 246 / 0.5);
-             border-color: rgb(59 130 246);
-             outline: none;
-        }
-        .form-checkbox {
-            height: 1rem; width: 1rem;
-            color: rgb(37 99 235); /* text-blue-600 */
-            border-color: rgb(209 213 219); /* border-gray-300 */
-            border-radius: 0.25rem; /* rounded */
-        }
-        .form-checkbox:focus {
-             box-shadow: 0 0 0 3px rgb(59 130 246 / 0.5);
-             border-color: rgb(59 130 246);
-             outline: none;
+
+        /* Đã xóa các class lỗi (.input-icon-field, .label) và sẽ dùng trực tiếp trong HTML */
+        .required:after {
+            content: " *";
+            color: #ef4444;
         }
     </style>
 }
 
-<div class="bg-gray-100 py-12">
-    <div class="container mx-auto max-w-4xl px-4">
-        <div class="bg-white p-8 md:p-12 rounded-lg shadow-lg">
+<div class="bg-gray-50 py-12">
+    <div class="max-w-5xl mx-auto px-4">
 
-            <h1 class="font-display text-3xl font-bold text-gray-800 mb-4">
-                Cung cấp thông tin Nhà hàng của Bạn
-            </h1>
-            <p class="text-sm text-gray-600 mb-4">
-                Xin chào Bạn! Cảm ơn Bạn đã liên hệ tới Smart-Table, Nền tảng đặt bàn nhà hàng trực tuyến uy tín
-                top đầu tại Việt Nam hiện nay. Vui lòng cung cấp thông tin tóm tắt về Bạn và
-                Nhà hàng của Bạn cho chúng tôi bằng cách điền vào biểu mẫu dưới đây.
+        <div class="text-center mb-10">
+            <h1 class="font-display text-4xl font-bold text-gray-800 mb-3">Đăng ký Đối tác Smart-Table</h1>
+            <p class="text-gray-600 text-lg">
+                Hãy cùng Smart-Table phát triển thương hiệu ẩm thực của bạn.
             </p>
-            <p class="text-sm text-gray-600 mb-4">
-                Lưu ý: vui lòng điền đủ tối thiểu thông tin ở các dòng đánh dấu "<span class="text-red-500 font-bold">*</span>". Chúng tôi
-                sẽ liên hệ và phản hồi lại Bạn sớm nhất có thể, và tối đa không quá 03
-                ngày làm việc. Smart-Table xin cảm ơn!
-            </p>
+        </div>
 
-            <div class="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
-                <p class="font-semibold">BỘ PHẬN KINH DOANH & PHÁT TRIỂN THỊ TRƯỜNG Smart-Table</p>
-                <p><strong>Hotline:</strong> 0941326591</p>
-                <p><strong>Email:</strong> phamhuynhduyphong0308@gmail.com</p>
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6 max-w-lg mx-auto" role="alert">
+                @TempData["SuccessMessage"]
             </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 max-w-lg mx-auto" role="alert">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+        @Html.ValidationSummary(false, "", new { @class = "text-red-600 text-sm bg-red-100 p-3 rounded-md mb-6" })
 
-            @Html.ValidationSummary(false, "", new { @class = "text-red-600 text-sm bg-red-100 p-3 rounded-md mb-6" })
 
-            @using (Html.BeginForm("RegisterPartner", "Business", FormMethod.Post, new { @class = "space-y-6" }))
-            {
-                @Html.AntiForgeryToken()
+        @using (Html.BeginForm("RegisterPartner", "Business", FormMethod.Post, new { @class = "space-y-8" }))
+        {
+            @Html.AntiForgeryToken()
 
-                <div class="border-b pb-6 space-y-6">
-                    <p class="text-gray-500 text-xs">* Biểu thị câu hỏi bắt buộc</p>
+            <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 space-y-6">
+                <h2 class="text-xl font-semibold text-gray-800 border-b pb-4 mb-6">1. Thông tin liên hệ và Cơ sở</h2>
 
+                <p class="text-gray-500 text-xs">Lưu ý: Các trường có dấu * là bắt buộc.</p>
+
+                <div class="grid md:grid-cols-2 gap-6">
                     <div>
-                        <label for="Email" class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
-                        @Html.TextBoxFor(m => m.Email, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", type = "email", required = "required" })
-                        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-red-600 text-xs mt-1" })
+                        <label class="block text-sm font-medium text-gray-700 mb-1 required" for="RestaurantName">Tên Nhà hàng</label>
+                        @Html.TextBoxFor(m => m.RestaurantName, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500", required = "required", placeholder = "VD: Nhà hàng Hảo Vị" })
+                        @Html.ValidationMessageFor(m => m.RestaurantName, "", new { @class = "text-red-500 text-xs mt-1" })
                     </div>
                     <div>
-                        <label for="RestaurantName" class="block text-sm font-medium text-gray-700 mb-1">Tên nhà hàng: <span class="text-red-500">*</span></label>
-                        @Html.TextBoxFor(m => m.RestaurantName, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", required = "required" })
-                        @Html.ValidationMessageFor(m => m.RestaurantName, "", new { @class = "text-red-600 text-xs mt-1" })
+                        <label class="block text-sm font-medium text-gray-700 mb-1 required" for="Email">Email</label>
+                        @Html.TextBoxFor(m => m.Email, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500", type = "email", required = "required", placeholder = "Email liên hệ chính" })
+                        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-red-500 text-xs mt-1" })
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="City" class="block text-sm font-medium text-gray-700 mb-1">Thuộc tỉnh/thành phố nào? <span class="text-red-500">*</span></label>
-                            @Html.TextBoxFor(m => m.City, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", required = "required" })
-                            @Html.ValidationMessageFor(m => m.City, "", new { @class = "text-red-600 text-xs mt-1" })
-                        </div>
-                        <div>
-                            <label for="BranchCount" class="block text-sm font-medium text-gray-700 mb-1">Số cơ sở (Chi nhánh) cùng thương hiệu <span class="text-red-500">*</span></label>
-                            @Html.TextBoxFor(m => m.BranchCount, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", type = "number", required = "required", min = "0" })
-                            @Html.ValidationMessageFor(m => m.BranchCount, "", new { @class = "text-red-600 text-xs mt-1" })
-                        </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1 required" for="Address">Địa chỉ Nhà hàng</label>
+                        @Html.TextBoxFor(m => m.Address, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500", required = "required", placeholder = "Số nhà, tên đường..." })
+                        @Html.ValidationMessageFor(m => m.Address, "", new { @class = "text-red-500 text-xs mt-1" })
                     </div>
                     <div>
-                        <label for="Address" class="block text-sm font-medium text-gray-700 mb-1">Địa chỉ Nhà hàng <span class="text-red-500">*</span></label>
-                        @Html.TextBoxFor(m => m.Address, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", required = "required" })
-                        @Html.ValidationMessageFor(m => m.Address, "", new { @class = "text-red-600 text-xs mt-1" })
+                        <label class="block text-sm font-medium text-gray-700 mb-1 required" for="City">Tỉnh/Thành phố</label>
+                        @Html.TextBoxFor(m => m.City, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500", required = "required", placeholder = "VD: Hồ Chí Minh" })
+                    </div>
+                    <div>
+                        <label class="label required" for="BranchCount">Số chi nhánh</label>
+                        @Html.TextBoxFor(m => m.BranchCount, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500", type = "number", required = "required", min = "0" })
                     </div>
                 </div>
 
-                <div class="border-b py-6 space-y-6">
+                <hr class="my-6 border-gray-200">
+
+                <div class="grid md:grid-cols-3 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Kiểu phục vụ <span class="text-red-500">*</span></label>
-                        <div class="flex flex-wrap gap-x-6 gap-y-2">
+                        <label class="label required" for="ContactName">Tên người liên hệ</label>
+                        @Html.TextBoxFor(m => m.ContactName, new { @class = "input-field", required = "required" })
+                    </div>
+                    <div>
+                        <label class="label required" for="ContactPhone">Số điện thoại</label>
+                        @Html.TextBoxFor(m => m.ContactPhone, new { @class = "input-field", type = "tel", required = "required" })
+                    </div>
+                    <div>
+                        <label class="label required" for="ContactRole">Chức vụ tại Nhà hàng</label>
+                        @Html.TextBoxFor(m => m.ContactRole, new { @class = "input-field", required = "required", placeholder = "VD: Quản lý, Chủ sở hữu" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 space-y-6">
+                <h2 class="text-xl font-semibold text-gray-800 border-b pb-4 mb-6">2. Dịch vụ & Phong cách ẩm thực</h2>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="label required" for="ServiceDescription">Loại hình dịch vụ</label>
+                        @Html.TextBoxFor(m => m.ServiceDescription, new { @class = "input-field", placeholder = "VD: Buffet lẩu nướng hải sản, Gọi món Việt..." })
+                    </div>
+                    <div>
+                        <label class="label required" for="CuisineStyle">Phong cách ẩm thực</label>
+                        @Html.TextBoxFor(m => m.CuisineStyle, new { @class = "input-field", placeholder = "VD: Fusion, Ẩm thực Hàn Quốc..." })
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="label required">Kiểu phục vụ</label>
+                        <div class="flex flex-wrap gap-x-6 gap-y-3 text-sm pt-2">
                             <label class="flex items-center"><input type="checkbox" name="ServiceTypes" value="Gọi món" class="form-checkbox mr-2">Gọi món</label>
                             <label class="flex items-center"><input type="checkbox" name="ServiceTypes" value="Buffet" class="form-checkbox mr-2">Buffet</label>
                             <label class="flex items-center"><input type="checkbox" name="ServiceTypes" value="Băng chuyền" class="form-checkbox mr-2">Băng chuyền</label>
-                            <label class="flex items-center">@Html.TextBoxFor(m => m.ServiceTypeOther, new { @class = "w-40 px-2 py-1 border border-gray-300 rounded-md text-sm", placeholder = "Mục khác..." })</label>
+                            @Html.TextBoxFor(m => m.ServiceTypeOther, new { @class = "w-40 px-2 py-1 border border-gray-300 rounded-md text-sm", placeholder = "Khác..." })
                         </div>
                     </div>
+
                     <div>
-                        <label for="ServiceDescription" class="block text-sm font-medium text-gray-700 mb-1">Loại hình dịch vụ <span class="text-red-500">*</span></label>
-                        @Html.TextBoxFor(m => m.ServiceDescription, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", placeholder = "VD: Buffet lẩu nướng hải sản, Gọi món Việt 3 miền,...", required = "required" })
-                        @Html.ValidationMessageFor(m => m.ServiceDescription, "", new { @class = "text-red-600 text-xs mt-1" })
-                    </div>
-                    <div>
-                        <label for="CuisineStyle" class="block text-sm font-medium text-gray-700 mb-1">Phong cách ẩm thực đặc trưng <span class="text-red-500">*</span></label>
-                        @Html.TextBoxFor(m => m.CuisineStyle, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", placeholder = "VD: Đa dạng, Fusion, phong cách Hàn Quốc, ẩm thực miền Trung,...", required = "required" })
-                        @Html.ValidationMessageFor(m => m.CuisineStyle, "", new { @class = "text-red-600 text-xs mt-1" })
-                    </div>
-                    <div>
-                        <label for="SignatureDishes" class="block text-sm font-medium text-gray-700 mb-1">Món đặc sắc (liệt kê tên 3 - 5 món ăn chính) <span class="text-red-500">*</span></label>
-                        @Html.TextAreaFor(m => m.SignatureDishes, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", rows = 3, required = "required" })
-                        @Html.ValidationMessageFor(m => m.SignatureDishes, "", new { @class = "text-red-600 text-xs mt-1" })
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Hóa đơn trung bình/người <span class="text-red-500">*</span></label>
-                        <div class="space-y-2">
+                        <label class="label required">Hóa đơn trung bình/người</label>
+                        <div class="space-y-2 pt-2">
                             <label class="flex items-center">@Html.RadioButtonFor(m => m.AverageBill, "Dưới 150K", new { @class = "form-radio mr-2" }) Dưới 150K</label>
                             <label class="flex items-center">@Html.RadioButtonFor(m => m.AverageBill, "150K - 250K", new { @class = "form-radio mr-2" }) 150K - 250K</label>
                             <label class="flex items-center">@Html.RadioButtonFor(m => m.AverageBill, "250K - 500K", new { @class = "form-radio mr-2" }) 250K - 500K</label>
@@ -131,152 +136,108 @@
                             <label class="flex items-center">@Html.RadioButtonFor(m => m.AverageBill, "> 1.000K", new { @class = "form-radio mr-2" }) > 1.000K</label>
                             <label class="flex items-center">@Html.RadioButtonFor(m => m.AverageBill, "Khác", new { @class = "form-radio mr-2" }) @Html.TextBoxFor(m => m.AverageBillOther, new { @class = "w-40 px-2 py-1 border border-gray-300 rounded-md text-sm ml-1", placeholder = "Mục khác..." })</label>
                         </div>
-                        @Html.ValidationMessageFor(m => m.AverageBill, "", new { @class = "text-red-600 text-xs mt-1" })
                     </div>
                 </div>
 
-                <div class="border-b py-6 space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="TotalSeats" class="block text-sm font-medium text-gray-700 mb-1">Tổng số chỗ ngồi (sức chứa) <span class="text-red-500">*</span></label>
-                            @Html.TextBoxFor(m => m.TotalSeats, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", type = "number", required = "required", min = "0" })
-                            @Html.ValidationMessageFor(m => m.TotalSeats, "", new { @class = "text-red-600 text-xs mt-1" })
-                        </div>
-                        <div>
-                            <label for="FloorCount" class="block text-sm font-medium text-gray-700 mb-1">Số tầng (lầu) hoặc số khu vực <span class="text-red-500">*</span></label>
-                            @Html.TextBoxFor(m => m.FloorCount, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", required = "required" })
-                            @Html.ValidationMessageFor(m => m.FloorCount, "", new { @class = "text-red-600 text-xs mt-1" })
-                        </div>
+                <div>
+                    <label class="label required" for="SignatureDishes">Món đặc sắc</label>
+                    @Html.TextAreaFor(m => m.SignatureDishes, new { @class = "input-field", rows = 4, placeholder = "Liệt kê 3-5 món nổi bật..." })
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 space-y-6">
+                <h2 class="text-xl font-semibold text-gray-800 border-b pb-4 mb-6">3. Vận hành & Giờ giấc</h2>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="label required">Tổng số chỗ ngồi</label>
+                        @Html.TextBoxFor(m => m.TotalSeats, new { @class = "input-field", type = "number", min = "1" })
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label for="OpeningDate" class="block text-sm font-medium text-gray-700 mb-1">Ngày bắt đầu kinh doanh <span class="text-red-500">*</span></label>
-                            @Html.TextBoxFor(m => m.OpeningDate, "{0:yyyy-MM-dd}", new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", type = "date", required = "required" })
-                            @Html.ValidationMessageFor(m => m.OpeningDate, "", new { @class = "text-red-600 text-xs mt-1" })
-                        </div>
-                        <div>
-                            <label for="OpeningTime" class="block text-sm font-medium text-gray-700 mb-1">Giờ mở cửa <span class="text-red-500">*</span></label>
-                            @Html.TextBoxFor(m => m.OpeningTime, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", type = "time", required = "required" })
-                            @Html.ValidationMessageFor(m => m.OpeningTime, "", new { @class = "text-red-600 text-xs mt-1" })
-                        </div>
-                        <div>
-                            <label for="ClosingTime" class="block text-sm font-medium text-gray-700 mb-1">Giờ đóng cửa <span class="text-red-500">*</span></label>
-                            @Html.TextBoxFor(m => m.ClosingTime, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", type = "time", required = "required" })
-                            @Html.ValidationMessageFor(m => m.ClosingTime, "", new { @class = "text-red-600 text-xs mt-1" })
-                        </div>
+                    <div>
+                        <label class="label required">Ngày bắt đầu KD</label>
+                        @Html.TextBoxFor(m => m.OpeningDate, "{0:yyyy-MM-dd}", new { @class = "input-field", type = "date" })
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="SlowHours" class="block text-sm font-medium text-gray-700 mb-1">Khung giờ vắng khách <span class="text-red-500">*</span></label>
-                            @Html.TextBoxFor(m => m.SlowHours, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", placeholder = "VD: Trưa T2 & T3 (10h - 13h)", required = "required" })
-                            @Html.ValidationMessageFor(m => m.SlowHours, "", new { @class = "text-red-600 text-xs mt-1" })
-                        </div>
-                        <div>
-                            <label for="BusyHours" class="block text-sm font-medium text-gray-700 mb-1">Khung giờ đông khách <span class="text-red-500">*</span></label>
-                            @Html.TextBoxFor(m => m.BusyHours, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", placeholder = "VD: Tối T7, Chủ Nhật", required = "required" })
-                            @Html.ValidationMessageFor(m => m.BusyHours, "", new { @class = "text-red-600 text-xs mt-1" })
-                        </div>
+                    <div>
+                        <label class="label required">Số tầng/khu vực</label>
+                        @Html.TextBoxFor(m => m.FloorCount, new { @class = "input-field", placeholder = "VD: 2 tầng" })
                     </div>
                 </div>
 
-                <div class="border-b py-6 space-y-6">
+                <div class="grid md:grid-cols-3 gap-6">
                     <div>
-                        <label for="PartnershipGoal" class="block text-sm font-medium text-gray-700 mb-1">Mong muốn của Bạn khi hợp tác với Smart-Table <span class="text-red-500">*</span></label>
-                        @Html.TextBoxFor(m => m.PartnershipGoal, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", required = "required" })
-                        @Html.ValidationMessageFor(m => m.PartnershipGoal, "", new { @class = "text-red-600 text-xs mt-1" })
+                        <label class="label required">Giờ mở cửa / đóng cửa</label>
+                        <div class="flex space-x-3">
+                            @Html.TextBoxFor(m => m.OpeningTime, new { @class = "input-field", type = "time" })
+                            @Html.TextBoxFor(m => m.ClosingTime, new { @class = "input-field", type = "time" })
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="label required">Khung giờ đông khách</label>
+                        @Html.TextBoxFor(m => m.BusyHours, new { @class = "input-field", placeholder = "VD: Tối T7, Chủ Nhật" })
+                    </div>
+
+                    <div>
+                        <label class="label required">Khung giờ vắng khách</label>
+                        @Html.TextBoxFor(m => m.SlowHours, new { @class = "input-field", placeholder = "VD: Chiều T2–T4" })
+                    </div>
+                </div>
+            </div> <!-- ✅ Đóng khối bg-white p-8... của phần Vận hành & Giờ giấc -->
+
+            <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 space-y-6">
+                <h2 class="text-xl font-semibold text-gray-800 border-b pb-4 mb-6">4. Mục tiêu & Bổ sung (Tùy chọn)</h2>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="label required" for="PartnershipGoal">Mong muốn hợp tác</label>
+                        @Html.TextBoxFor(m => m.PartnershipGoal, new { @class = "input-field", placeholder = "VD: Tăng lượt đặt bàn vào giờ vắng khách" })
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Gói dịch vụ mà bạn muốn chọn? <span class="text-red-500">*</span></label>
-                        <div class="space-y-2">
+                        <label class="label required">Gói dịch vụ muốn chọn</label>
+                        <div class="space-y-2 pt-2">
                             <label class="flex items-center">@Html.RadioButtonFor(m => m.ServicePackage, "Gói Bắt đầu", new { @class = "form-radio mr-2" }) Gói Bắt đầu</label>
                             <label class="flex items-center">@Html.RadioButtonFor(m => m.ServicePackage, "Gói Cốt lõi", new { @class = "form-radio mr-2" }) Gói Cốt lõi</label>
                         </div>
-                        @Html.ValidationMessageFor(m => m.ServicePackage, "", new { @class = "text-red-600 text-xs mt-1" })
-                    </div>
-                    <div>
-                        <label for="ContactName" class="block text-sm font-medium text-gray-700 mb-1">Tên người liên hệ <span class="text-red-500">*</span></label>
-                        @Html.TextBoxFor(m => m.ContactName, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", required = "required" })
-                        @Html.ValidationMessageFor(m => m.ContactName, "", new { @class = "text-red-600 text-xs mt-1" })
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="ContactRole" class="block text-sm font-medium text-gray-700 mb-1">Chức vụ/Vai trò tại Nhà hàng <span class="text-red-500">*</span></label>
-                            @Html.TextBoxFor(m => m.ContactRole, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", required = "required" })
-                            @Html.ValidationMessageFor(m => m.ContactRole, "", new { @class = "text-red-600 text-xs mt-1" })
-                        </div>
-                        <div>
-                            <label for="ContactPhone" class="block text-sm font-medium text-gray-700 mb-1">Số điện thoại <span class="text-red-500">*</span></label>
-                            @Html.TextBoxFor(m => m.ContactPhone, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", type = "tel", required = "required" })
-                            @Html.ValidationMessageFor(m => m.ContactPhone, "", new { @class = "text-red-600 text-xs mt-1" })
-                        </div>
                     </div>
                 </div>
 
-                <div class="pt-6 space-y-6">
-                    <div>
-                        <label for="Website" class="block text-sm font-medium text-gray-700 mb-1">Link website hoặc Facebook Nhà hàng (nếu có)</label>
-                        @Html.TextBoxFor(m => m.Website, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" })
+                <div class="pt-4 space-y-4">
+                    <h3 class="font-semibold text-gray-800 mb-2">Thông tin bổ sung</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="label" for="Website">Link website hoặc Facebook</label>
+                            @Html.TextBoxFor(m => m.Website, new { @class = "input-field", type = "url" })
+                        </div>
+                        <div>
+                            <label class="label" for="SpaceDescription">Mô tả thêm về không gian</label>
+                            @Html.TextAreaFor(m => m.SpaceDescription, new { @class = "input-field", rows = 3, placeholder = "VD: Rộng rãi, có ca nhạc tối T6, ven sông Sài Gòn,..." })
+                        </div>
                     </div>
-                    <div>
-                        <label for="SpaceDescription" class="block text-sm font-medium text-gray-700 mb-1">Mô tả thêm về không gian hoặc điểm nổi bật khác</label>
-                        @Html.TextAreaFor(m => m.SpaceDescription, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", rows = 3, placeholder = "VD: Rộng rãi, có ca nhạc tối T6, ven sông Sài Gòn,..." })
-                    </div>
-                    <div>
-                        <label for="SeatingType" class="block text-sm font-medium text-gray-700 mb-1">Mô tả kiểu chỗ ngồi</label>
-                        @Html.TextBoxFor(m => m.SeatingType, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", placeholder = "VD: Ngồi bệt, Ngồi sofa bọc đệm,..." })
-                    </div>
-                    <div>
-                        <label for="PrivateRoomCount" class="block text-sm font-medium text-gray-700 mb-1">Số lượng phòng riêng (nếu có)</label>
-                        @Html.TextBoxFor(m => m.PrivateRoomCount, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", placeholder = "VD: 4 phòng. Nếu không có điền 0" })
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Tiện ích tại Nhà hàng</label>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2">
+
+                    <div class="pt-4 space-y-2">
+                        <h3 class="font-semibold text-gray-800">Tiện ích tại Nhà hàng</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2 text-sm">
                             <label class="flex items-center"><input type="checkbox" name="Amenities" value="Karaoke riêng" class="form-checkbox mr-2">Có phòng karaoke riêng</label>
                             <label class="flex items-center"><input type="checkbox" name="Amenities" value="Karaoke chung" class="form-checkbox mr-2">Có karaoke trong phòng ăn</label>
                             <label class="flex items-center"><input type="checkbox" name="Amenities" value="Tivi/Máy chiếu" class="form-checkbox mr-2">Có tivi, máy chiếu</label>
                             <label class="flex items-center"><input type="checkbox" name="Amenities" value="Loa mic" class="form-checkbox mr-2">Có loa mic, tổ chức sự kiện</label>
                             <label class="flex items-center"><input type="checkbox" name="Amenities" value="Khu vui chơi trẻ em" class="form-checkbox mr-2">Có khu vui chơi trẻ em</label>
-                            <label class="flex items-center"><input type="checkbox" name="Amenities" value="Ghế trẻ em" class="form-checkbox mr-2">Có ghế trẻ em</label>
-                            <label class="flex items-center"><input type="checkbox" name="Amenities" value="VAT" class="form-checkbox mr-2">Có xuất hoá đơn VAT</label>
-                            <label class="flex items-center">@Html.TextBoxFor(m => m.AmenitiesOther, new { @class = "w-40 px-2 py-1 border border-gray-300 rounded-md text-sm", placeholder = "Mục khác..." })</label>
+                            <label class="flex items-center">@Html.TextBoxFor(m => m.AmenitiesOther, new { @class = "w-40 px-2 py-1 border border-gray-300 rounded-md text-sm", placeholder = "Khác..." })</label>
                         </div>
-                    </div>
-                    <div>
-                        <label for="NearbyLandmark" class="block text-sm font-medium text-gray-700 mb-1">Gần khu vực, địa điểm nổi tiếng nào?</label>
-                        @Html.TextBoxFor(m => m.NearbyLandmark, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", placeholder = "VD: Phố đi bộ Nguyễn Huệ,..." })
-                    </div>
-                    <div>
-                        <label for="PhotoLink" class="block text-sm font-medium text-gray-700 mb-1">Link driver chia sẻ ảnh hoặc video về Nhà hàng (nếu có)</label>
-                        @Html.TextBoxFor(m => m.PhotoLink, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", type = "url" })
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Nhà hàng đã từng hợp tác với Smart-Table chưa?</label>
-                        <div class="space-y-2">
-                            <label class="flex items-center">@Html.RadioButtonFor(m => m.PreviousPartnership, "Khách hàng mới", new { @class = "form-radio mr-2" }) Tôi là khách hàng mới</label>
-                            <label class="flex items-center">@Html.RadioButtonFor(m => m.PreviousPartnership, "Đã từng hợp tác", new { @class = "form-radio mr-2" }) Tôi đã từng hợp tác với Smart-Table</label>
-                            <label class="flex items-center">@Html.RadioButtonFor(m => m.PreviousPartnership, "Cơ sở khác đang hợp tác", new { @class = "form-radio mr-2" }) Cơ sở khác đang hợp tác với Smart-Table, nhưng tôi không quản lý.</label>
-                            <label class="flex items-center">@Html.RadioButtonFor(m => m.PreviousPartnership, "Khác", new { @class = "form-radio mr-2" }) @Html.TextBoxFor(m => m.PreviousPartnershipOther, new { @class = "w-40 px-2 py-1 border border-gray-300 rounded-md text-sm ml-1", placeholder = "Mục khác..." })</label>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="PreviousPartnershipName" class="block text-sm font-medium text-gray-700 mb-1">Tên Công ty hoặc Tên nhà hàng đã từng hợp tác với Smart-Table (nếu có)</label>
-                        @Html.TextBoxFor(m => m.PreviousPartnershipName, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" })
-                    </div>
-                    <div>
-                        <label for="Questions" class="block text-sm font-medium text-gray-700 mb-1">Câu hỏi của bạn về Smart-Table (nếu có)</label>
-                        @Html.TextAreaFor(m => m.Questions, new { @class = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500", rows = 3 })
                     </div>
                 </div>
+            </div>
 
-                <div class="mt-8 pt-6 border-t">
-                    <button type="submit" class="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-lg shadow hover:from-orange-600 hover:to-red-600 transition-transform transform hover:scale-105 text-lg">
-                        Gửi thông tin đăng ký
-                    </button>
-                </div>
-            }
-        </div>
+
+            <div class="mt-8 pt-6 text-center">
+                <button type="submit" class="px-12 py-3 text-white font-semibold rounded-lg shadow-lg bg-red-600 hover:bg-red-700 transition-transform transform hover:scale-105 text-lg">
+                    ✅ Gửi thông tin đăng ký
+                </button>
+            </div>
+        }
     </div>
 </div>
 
-@* SỬA LỖI: Đã XÓA @section Scripts thừa ở đây *@
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

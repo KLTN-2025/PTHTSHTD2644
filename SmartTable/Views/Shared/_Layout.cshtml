@@ -28,17 +28,23 @@
                    class="text-2xl font-extrabold hover:text-amber-300 transition-all duration-300 flex-shrink-0 mr-8 transform hover:scale-105 tracking-tight">
                     Smart-Table
                 </a> @* <-- ĐÃ ĐÓNG THẺ <a> Ở ĐÂY *@
-
-                <nav class="menu-gap flex flex-grow justify-start items-center font-medium text-sm">
-                    <a href="@Url.Action("Index","Home")" class="menu-link-header whitespace-nowrap">Trang chủ</a>
-                    <button id="nearbyBtnDesktop" class="menu-link-header flex items-center space-x-1 whitespace-nowrap">
-                        <i class="fas fa-location-dot text-xs"></i>
-                        <span>Nhà hàng gần bạn</span>
-                    </button>
-                    <a href="#" class="menu-link-header whitespace-nowrap">Nhà hàng uy tín</a>
-                    <a href="#" class="menu-link-header whitespace-nowrap">Ưu đãi hot</a>
-                    <a href="@Url.Action("Index","Business")" class="menu-link-header whitespace-nowrap">Đăng ký đối tác</a>
-                </nav>
+                @{
+                    // Lấy role từ Session và xác định URL chính xác
+                    var userRole = Session["role"]?.ToString();
+                    var homeUrl = (userRole == "business" || userRole == "Admin") ?
+                                  Url.Action("Index", "BusinessHome") :
+                                  Url.Action("Index", "Home");
+                }
+            <nav class="flex flex-grow justify-center items-center gap-x-8 font-medium text-sm">
+                <a href="@homeUrl" class="menu-link-header whitespace-nowrap">Trang chủ</a> @* <-- ĐÃ SỬA DÒNG NÀY *@
+                <button id="nearbyBtnDesktop" class="menu-link-header flex items-center space-x-1 whitespace-nowrap">
+                    <i class="fas fa-location-dot text-xs"></i>
+                    <span>Nhà hàng gần bạn</span>
+                </button>
+                <a href="#" class="menu-link-header whitespace-nowrap">Nhà hàng uy tín</a>
+                <a href="#" class="menu-link-header whitespace-nowrap">Ưu đãi hot</a>
+                <a href="@Url.Action("Index","Business")" class="menu-link-header whitespace-nowrap">Đăng ký đối tác</a>
+            </nav>
 
                 <div class="flex items-center space-x-3 flex-shrink-0">
                     @if (Session["user"] == null)
