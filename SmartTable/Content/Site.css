@@ -51,6 +51,18 @@ body {
 
 /* ~/Content/site.css */
 
+/* Buộc Font Awesome hiển thị chính xác khi dùng với Tailwind v3 */
+.fas, .fa-solid, .far, .fa-regular, .fab, .fa-brands {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+    display: inline-block !important;
+    line-height: 1 !important;
+    font-size: 0.9rem !important;
+    color: white !important;
+}
+
+
+
 /* 🌟 Hiệu ứng underline cho menu trong Header */
 .menu-link-header {
     position: relative;

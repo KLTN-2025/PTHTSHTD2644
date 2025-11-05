@@ -1,9 +1,10 @@
 ﻿using SmartTable.Filters; // Dùng cho [AuthorizeUser]
 using SmartTable.Models;
-using System.Linq;
-using System.Web.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
+using System.Linq;
+using System.Web.Mvc;
 
 namespace SmartTable.Controllers
 {
@@ -60,5 +61,63 @@ namespace SmartTable.Controllers
             }
             base.Dispose(disposing);
         }
-    } // <-- ĐÓNG CLASS
-} // <-- ĐÓNG NAMESPACE
+    
+    // (Thêm vào bên trong class BusinessHomeController)
+
+// --- CHỈNH SỬA THÔNG TIN NHÀ HÀNG (GET) ---
+[HttpGet]
+        [AuthorizeUser]
+        public ActionResult EditRestaurant(int id)
+        {
+            var restaurant = db.Restaurants.Find(id);
+            var userId = (int)Session["user_id"];
+
+            // Security check: Đảm bảo user đang đăng nhập là chủ sở hữu nhà hàng này
+            if (restaurant == null || restaurant.user_id != userId)
+            {
+                return HttpNotFound();
+            }
+
+            return View(restaurant); // Gửi model nhà hàng đến View
+        }
+
+        // --- CHỈNH SỬA THÔNG TIN NHÀ HÀNG (POST) ---
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AuthorizeUser]
+        public ActionResult EditRestaurant(Restaurants model)
+        {
+            var userId = (int)Session["user_id"];
+
+            if (ModelState.IsValid)
+            {
+                // 1. Tìm bản ghi gốc (cần có System.Data.Entity)
+                var originalRestaurant = db.Restaurants.Find(model.restaurant_id);
+
+                // Security check
+                if (originalRestaurant == null || originalRestaurant.user_id != userId)
+                {
+                    TempData["ErrorMessage"] = "Bạn không có quyền chỉnh sửa nhà hàng này.";
+                    return RedirectToAction("Profile");
+                }
+
+                // 2. Cập nhật các trường (Chỉ cập nhật những trường cần thay đổi)
+                originalRestaurant.name = model.name;
+                originalRestaurant.address = model.address;
+                originalRestaurant.description = model.description;
+                originalRestaurant.opening_hours = model.opening_hours;
+                originalRestaurant.max_tables = model.max_tables;
+                originalRestaurant.Image = model.Image; // Cập nhật URL ảnh
+
+                db.Entry(originalRestaurant).State = EntityState.Modified; // Đánh dấu là đã thay đổi
+                db.SaveChanges();
+
+                TempData["SuccessMessage"] = "Cập nhật thông tin nhà hàng thành công!";
+                return RedirectToAction("Profile"); // Quay lại trang hồ sơ (Profile)
+            }
+
+            // Nếu Model State không hợp lệ (lỗi validation)
+            return View(model);
+        }
+    }
+}

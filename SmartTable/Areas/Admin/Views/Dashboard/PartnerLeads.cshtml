@@ -1,71 +1,162 @@
 ﻿@model IEnumerable<SmartTable.Models.PartnerLeads>
 @{
-    ViewBag.Title = "Duyệt Đối Tác Tiềm Năng";
-    // Layout đã được set trong _ViewStart.cshtml
+    ViewBag.Title = "Duyệt Nhà Hàng Mới";
+    int stt = 1;
+}
+
+@section styles {
+    <style>
+        /* CSS FIX: Buộc Font Awesome hiển thị đúng */
+        .fas, .far, .fab, .fa-solid {
+            font-family: "Font Awesome 6 Solid" !important;
+            font-weight: 900 !important;
+            display: inline-block !important;
+            font-size: 1.1rem; /* Thêm cỡ chữ cho icon */
+            color: white !important;
+        }
+
+        /* Style cơ bản cho tất cả các nút hành động */
+        .btn-action-text {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border-radius: 1.25rem; /* Tăng bo góc cho đẹp */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            line-height: 1.2;
+        }
+
+            /* Hiệu ứng hover khi di chuột qua */
+            .btn-action-text:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            }
+
+        tr:hover {
+            background-color: #f9fafb !important;
+        }
+        /* Hiệu ứng hover hàng */
+        th {
+            background-color: #f3f4f6;
+        }
+        /* Màu nền tiêu đề */
+        .table-wrapper {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        /* Bo góc và shadow cho bảng */
+    </style>
 }
 
 <h1 class="text-2xl font-bold text-gray-800 mb-4">Duyệt Đối Tác Đăng Ký</h1>
-<p class="mb-4 text-gray-600">Danh sách các nhà hàng mới đăng ký đang chờ duyệt (Trạng thái: "Mới").</p>
+<p class="mb-6 text-gray-600">Danh sách các nhà hàng mới đăng ký đang chờ duyệt.</p>
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-6" role="alert">
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6 shadow-sm" role="alert">
         @TempData["SuccessMessage"]
     </div>
 }
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 shadow-sm" role="alert">
+        @TempData["ErrorMessage"]
+    </div>
+}
 
-<div class="bg-white shadow-lg rounded-lg overflow-hidden">
+<div class="bg-white table-wrapper">
     <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
+        <thead>
             <tr>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tên Nhà Hàng
-                </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Người Liên Hệ
-                </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Điện thoại
-                </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ngày Đăng Ký
-                </th>
-                <th scope="col" class="relative px-6 py-3">
-                    <span class="sr-only">Hành động</span>
-                </th>
+                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">STT</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-1/4">Nhà Hàng / Email</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-1/4">Người Liên Hệ / Chức vụ</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-1/5">Địa Chỉ / Gói</th>
+                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Ngày Đăng Ký</th>
+                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Hành Động</th>
             </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
+
+        <tbody class="bg-white divide-y divide-gray-100">
             @foreach (var item in Model)
             {
                 <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">@Html.DisplayFor(modelItem => item.RestaurantName)</div>
-                        <div class="text-sm text-gray-500">@Html.DisplayFor(modelItem => item.Email)</div>
+                    <td class="px-6 py-4 text-center text-gray-700 font-medium">@stt</td> @* Cột STT *@
+
+                    <td class="px-6 py-4">
+                        @* Cột Nhà hàng *@
+                        <div class="font-semibold text-gray-900">@item.RestaurantName</div>
+                        <div class="text-xs text-gray-500">@item.Email</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">@Html.DisplayFor(modelItem => item.ContactName)</div>
-                        <div class="text-sm text-gray-500">@Html.DisplayFor(modelItem => item.ContactRole)</div>
+
+                    <td class="px-6 py-4">
+                        @* Cột Người liên hệ *@
+                        <div class="text-sm text-gray-900">@item.ContactName</div>
+                        <div class="text-xs text-gray-500">@item.ContactRole</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        @Html.DisplayFor(modelItem => item.ContactPhone)
+
+                    <td class="px-6 py-4">
+                        @* Cột Địa chỉ / Gói *@
+                        <div class="text-xs text-gray-700">@item.City</div>
+                        <div class="text-xs text-blue-600 font-medium">@item.ServicePackage</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+
+                    <td class="px-6 py-4">
+                        @* Cột Ngày *@
                         @item.SubmittedDate.ToString("dd/MM/yyyy")
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                        @using (Html.BeginForm("ApprovePartner", "Dashboard", new { area = "Admin", leadId = item.LeadId }, FormMethod.Post))
-                        {
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 transition"
-                                    onclick="return confirm('Bạn có chắc muốn DUYỆT đối tác @item.RestaurantName và tạo tài khoản cho họ?');">
-                                <i class="fas fa-check-circle mr-1"></i>
-                                Duyệt
-                            </button>
-                        }
+
+                    <td class="px-6 py-4 text-center">
+                        @* Cột Hành động *@
+                        <div class="flex justify-center space-x-3">
+                            @using (Html.BeginForm("ApprovePartner", "Dashboard", new { area = "Admin", leadId = item.LeadId }, FormMethod.Post, new { @class = "inline-block" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <button type="submit"
+                                        title="Duyệt và tạo tài khoản"
+                                        class="btn-action-text bg-green-600 hover:bg-green-700"
+                                        onclick="return confirm('Xác nhận duyệt đối tác @item.RestaurantName và tạo tài khoản?');">
+                                    <i class="fa-solid fa-check mr-1"></i> Duyệt
+                                </button>
+                            }
+
+                            @using (Html.BeginForm("RejectPartner", "Dashboard", new { area = "Admin", leadId = item.LeadId }, FormMethod.Post, new { @class = "inline-block" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <button type="submit"
+                                        title="Từ chối đăng ký"
+                                        class="btn-action-text bg-red-600 hover:bg-red-700"
+                                        onclick="return confirm('Xác nhận từ chối đối tác @item.RestaurantName?');">
+                                    <i class="fa-solid fa-times mr-1"></i> Từ chối
+                                </button>
+                            }
+
+                            <a href="@Url.Action("PartnerLeadDetails", "Dashboard", new { area = "Admin", id = item.LeadId })"
+                               title="Xem chi tiết hồ sơ"
+                               class="btn-action-text bg-gray-600 hover:bg-gray-700 inline-flex items-center">
+                                <i class="fa-solid fa-eye mr-1"></i> Chi tiết
+                            </a>
+                        </div>
                     </td>
                 </tr>
+                stt++;
             }
         </tbody>
     </table>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const msg = document.querySelector('.bg-green-100, .bg-red-100');
+            if (msg) window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+}

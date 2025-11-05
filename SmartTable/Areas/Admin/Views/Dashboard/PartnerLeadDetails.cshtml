@@ -1,0 +1,160 @@
+﻿@model SmartTable.Models.PartnerLeads
+@{
+    ViewBag.Title = "Chi tiết Hồ sơ đối tác";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+
+    // Tách các trường mảng (string.join) ra để hiển thị tốt hơn
+    var serviceTypes = Model.ServiceTypes?.Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries) ?? new string[0];
+    var amenities = Model.Amenities?.Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries) ?? new string[0];
+}
+
+@helper DisplayRow(string label, object value, bool isLink = false)
+{
+    string displayValue = (value == null || string.IsNullOrWhiteSpace(value.ToString())) ? "N/A" : value.ToString();
+
+    <div class="flex justify-between border-b border-dashed pb-2">
+        <dt class="text-sm font-medium text-gray-500">@label</dt>
+        <dd class="text-sm font-semibold text-gray-800 text-right max-w-[60%] break-words">
+            @if (isLink && displayValue != "N/A")
+            {
+                <a href="@displayValue" target="_blank" class="text-blue-600 hover:text-blue-800 underline truncate">Xem Link</a>
+            }
+            else if (value is DateTime)
+            {
+                @(value is DateTime ? ((DateTime)value).ToString("dd/MM/yyyy") : displayValue)
+            }
+            else
+            {
+                @displayValue
+            }
+        </dd>
+    </div>
+}
+
+<div class="max-w-6xl mx-auto py-4">
+    @* Container chính đã căn giữa *@
+
+    <div class="flex justify-between items-center border-b pb-4 mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-file-contract w-6 mr-2 text-blue-600"></i>
+            Chi Tiết Đơn Đăng Ký: @Model.RestaurantName
+        </h1>
+        <a href="@Url.Action("PartnerLeads", "Dashboard", new { area = "Admin" })"
+           class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
+            <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <p class="text-sm mb-8 p-3 bg-white rounded-lg shadow-sm border border-gray-200">
+        Trạng thái:
+        <span class="@(Model.Status == "Đã duyệt" ? "text-green-600" : (Model.Status == "Đã từ chối" ? "text-red-600" : "text-orange-600")) font-semibold">
+            @Model.Status
+        </span>
+        - Ngày gửi: @Model.SubmittedDate.ToString("dd/MM/yyyy")
+    </p>
+
+    <div class="space-y-10">
+        @* Tăng khoảng cách giữa các khối *@
+
+        <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-blue-600">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-3">1. Cơ sở và Liên hệ</h2>
+
+            <div class="grid md:grid-cols-3 gap-x-12 gap-y-4">
+
+                <div class="space-y-3 pr-6 border-r border-gray-200">
+                    @* CỘT 1 - LIÊN HỆ (Có cột dọc) *@
+                    <h3 class="text-base font-bold text-gray-700 border-b pb-1 mb-2">Thông tin liên hệ</h3>
+                    @DisplayRow("Người liên hệ", Model.ContactName)
+                    @DisplayRow("Chức vụ", Model.ContactRole)
+                    @DisplayRow("Email liên hệ", Model.Email)
+                    @DisplayRow("Số điện thoại", Model.ContactPhone)
+                    @DisplayRow("Website/FB", Model.Website, true)
+                </div>
+
+                <div class="space-y-3 px-6 border-r border-gray-200">
+                    @* CỘT 2 - CƠ SỞ (Có cột dọc) *@
+                    <h3 class="text-base font-bold text-gray-700 border-b pb-1 mb-2">Chi tiết địa điểm</h3>
+                    @DisplayRow("Tên Nhà hàng", Model.RestaurantName)
+                    @DisplayRow("Tỉnh/Thành phố", Model.City)
+                    @DisplayRow("Địa chỉ", Model.Address)
+                    @DisplayRow("Số chi nhánh", Model.BranchCount.ToString())
+                    @DisplayRow("Ảnh/Video", Model.PhotoLink, true)
+                </div>
+
+                <div class="space-y-3 pl-6">
+                    @* CỘT 3 - HỢP TÁC (Không có cột dọc) *@
+                    <h3 class="text-base font-bold text-gray-700 border-b pb-1 mb-2">Thông tin hợp tác</h3>
+                    @DisplayRow("Mong muốn hợp tác", Model.PartnershipGoal)
+                    @DisplayRow("Gói dịch vụ", Model.ServicePackage)
+                    @DisplayRow("Từng hợp tác?", Model.PreviousPartnership)
+                    @DisplayRow("Tên Cty/NH cũ", Model.PreviousPartnershipName)
+                    @DisplayRow("Câu hỏi", Model.Questions)
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-red-500">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-3">2. Vận hành & Dịch vụ</h2>
+
+            <div class="grid md:grid-cols-3 gap-x-12 gap-y-3">
+                <div class="space-y-3 pr-6 border-r border-gray-200">
+                    @* CỘT 1 - ẨM THỰC *@
+                    <h3 class="text-base font-bold text-gray-700 border-b pb-1 mb-2">Ẩm thực & Phục vụ</h3>
+                    @DisplayRow("Loại hình dịch vụ", Model.ServiceDescription)
+                    @DisplayRow("Phong cách ẩm thực", Model.CuisineStyle)
+                    @DisplayRow("Món đặc sắc", Model.SignatureDishes)
+                    @DisplayRow("Hóa đơn trung bình", Model.AverageBill)
+                    @DisplayRow("Kiểu phục vụ", Model.ServiceTypes)
+                    @DisplayRow("Phục vụ khác", Model.ServiceTypeOther)
+                </div>
+
+                <div class="space-y-3 px-6 border-r border-gray-200">
+                    @* CỘT 2 - GIỜ GIẤC & SỨC CHỨA *@
+                    <h3 class="text-base font-bold text-gray-700 border-b pb-1 mb-2">Giờ Giấc & Sức chứa</h3>
+                    @DisplayRow("Tổng số chỗ ngồi", Model.TotalSeats.ToString())
+                    @DisplayRow("Số tầng/khu vực", Model.FloorCount)
+                    @DisplayRow("Số phòng riêng", Model.PrivateRoomCount)
+                    @DisplayRow("Ngày bắt đầu KD", Model.OpeningDate)
+                    @DisplayRow("Giờ mở/đóng cửa", Model.OpeningTime + " - " + Model.ClosingTime)
+                </div>
+
+                <div class="space-y-3 pl-6">
+                    @* CỘT 3 - VẬN HÀNH *@
+                    <h3 class="text-base font-bold text-gray-700 border-b pb-1 mb-2">Vận hành & Đặc điểm</h3>
+                    @DisplayRow("Khung giờ đông khách", Model.BusyHours)
+                    @DisplayRow("Khung giờ vắng khách", Model.SlowHours)
+                    @DisplayRow("Kiểu chỗ ngồi", Model.SeatingType)
+                    @DisplayRow("Mô tả không gian", Model.SpaceDescription)
+                    @DisplayRow("Địa điểm gần đó", Model.NearbyLandmark)
+                </div>
+            </div>
+
+            <div class="md:col-span-3 pt-6 border-t mt-6">
+                <h4 class="font-medium text-gray-800 mb-2">Tiện ích tại Nhà hàng</h4>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="border p-3 rounded-lg bg-gray-50">
+                        <h5 class="text-sm font-semibold text-gray-700 mb-1">Tiện ích được chọn</h5>
+                        <p class="text-xs text-gray-700">
+                            @(string.IsNullOrEmpty(Model.Amenities) ? "Không có tiện ích nổi bật." : Model.Amenities)
+                            @if (!string.IsNullOrEmpty(Model.AmenitiesOther))
+                            {
+                                <span class="text-xs text-orange-600">(Khác: @Model.AmenitiesOther)</span>
+                            }
+                        </p>
+                    </div>
+                    <div class="border p-3 rounded-lg bg-gray-50">
+                        <h5 class="text-sm font-semibold text-gray-700 mb-1">Phục vụ khác</h5>
+                        <p class="text-xs text-gray-700">@(string.IsNullOrEmpty(Model.AmenitiesOther) ? "Không có." : Model.AmenitiesOther)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-4 border-t mt-8 flex justify-between items-center">
+            <a href="@Url.Action("PartnerLeads", "Dashboard", new { area = "Admin" })"
+               class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
+                <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách
+            </a>
+        </div>
+    </div>
+</div>

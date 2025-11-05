@@ -3,13 +3,22 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewBag.Title - Admin Panel</title>
+    <title>@ViewBag.Title - SmartTable Admin</title>
 
+    <!-- ✅ CSS: Tailwind build sẵn -->
     @Styles.Render("~/Content/css")
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          integrity="sha512-HtsKnh+6uSHiQv8z5s8mYrHTemM3uTdSABz/7iRrG02HYUz++69tn1D0I9a4ZPAGD+XJik+lWbKzhMP6Zpw0xg=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer" />
+
+
     @Scripts.Render("~/bundles/modernizr")
 
     <style>
-        /* Tạm thời ẩn thanh cuộn của sidebar trên Chrome/Safari */
+        /* Ẩn scrollbar cho sidebar */
         #admin-sidebar::-webkit-scrollbar {
             display: none;
         }
@@ -20,44 +29,47 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 font-roboto">
+<body class="bg-gray-100 font-sans">
     <div class="flex h-screen bg-gray-100">
 
-        <div id="admin-sidebar" class="w-64 bg-white shadow-lg overflow-y-auto flex-shrink-0">
+        <!-- Sidebar -->
+        <aside id="admin-sidebar" class="w-64 bg-white shadow-lg overflow-y-auto flex-shrink-0">
             <div class="p-6">
                 <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })"
                    class="text-2xl font-bold text-blue-600 tracking-tight">
                     Smart-Table <span class="font-medium text-red-500">Admin</span>
                 </a>
             </div>
+
             <nav class="mt-4 px-4 space-y-2">
                 <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })"
-                   class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                    <i class="fas fa-tachometer-alt w-6 text-center mr-2"></i>
+                   class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-200 transition">
+                    <i class="fa-solid fa-gauge-high w-6 text-center mr-2"></i>
                     Dashboard
                 </a>
 
                 <a href="@Url.Action("PartnerLeads", "Dashboard", new { area = "Admin" })"
-                   class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                    <i class="fas fa-handshake w-6 text-center mr-2"></i>
+                   class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-200 transition">
+                    <i class="fa-solid fa-handshake w-6 text-center mr-2"></i>
                     Duyệt Đối Tác
                 </a>
 
-                <a href="#" class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                    <i class="fas fa-users w-6 text-center mr-2"></i>
+                <a href="#" class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-200 transition">
+                    <i class="fa-solid fa-users w-6 text-center mr-2"></i>
                     Quản lý Users
                 </a>
 
                 <hr class="my-4" />
 
                 <a href="@Url.Action("Logout", "Account", new { area = "" })"
-                   class="flex items-center px-3 py-2 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
-                    <i class="fas fa-sign-out-alt w-6 text-center mr-2"></i>
+                   class="flex items-center px-3 py-2 text-red-600 rounded-lg hover:bg-red-50 transition">
+                    <i class="fa-solid fa-right-from-bracket w-6 text-center mr-2"></i>
                     Đăng xuất
                 </a>
             </nav>
-        </div>
+        </aside>
 
+        <!-- Main content -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <header class="bg-white shadow-sm h-14 flex items-center justify-end px-6">
                 @if (Session["user"] != null)
@@ -74,6 +86,7 @@
         </div>
     </div>
 
+    @RenderSection("styles", required: false)
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/main")
     @RenderSection("Scripts", required: false)
