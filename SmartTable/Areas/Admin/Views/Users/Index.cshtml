@@ -1,0 +1,61 @@
+﻿@model IEnumerable<SmartTable.Models.Users>
+@{
+    ViewBag.Title = "Quản lý Người dùng";
+}
+
+<h1 class="text-2xl font-bold text-gray-800 mb-4">Quản lý Tất cả Người dùng</h1>
+<p class="mb-4 text-gray-600">Kiểm tra thông tin chi tiết và quản lý tài khoản người dùng.</p>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<div class="bg-white shadow-xl rounded-lg overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">ID</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Họ và Tên</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Email/SĐT</th>
+                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Vai trò</th>
+                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Ngày tạo</th>
+                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Hành động</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-100">
+            @foreach (var item in Model)
+            {
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 text-center text-gray-700">@item.user_id</td>
+                    <td class="px-6 py-4 font-medium text-gray-900">@item.full_name</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">
+                        <div>@item.email</div>
+                        <div class="text-xs text-gray-500">@item.phone</div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                            @(item.role == "Admin" ? "bg-red-100 text-red-800" : (item.role == "business" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-800"))">
+                            @item.role
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center text-gray-700">
+                        @item.created_at.Value.ToString("dd/MM/yyyy")
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        @using (Html.BeginForm("Delete", "Users", new { area = "Admin", id = item.user_id }, FormMethod.Post, new { @class = "inline-block" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <button type="submit"
+                                    title="Xóa tài khoản vĩnh viễn"
+                                    class="px-3 py-1.5 bg-red-600 hover:bg-rose-700 text-white rounded-lg text-sm shadow-md transition"
+                                    onclick="return confirm('CẢNH BÁO: Xóa tài khoản @item.email sẽ xóa tất cả Booking và Review liên quan. Xác nhận xóa?');">
+                                <i class="fas fa-trash-alt mr-1"></i> Xóa
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

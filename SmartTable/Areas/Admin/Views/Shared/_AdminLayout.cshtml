@@ -42,10 +42,16 @@
             </div>
 
             <nav class="mt-4 px-4 space-y-2">
-                <a href="@Url.Action("Index", "Dashboard", new { area = "Admin" })"
-                   class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-200 transition">
-                    <i class="fa-solid fa-gauge-high w-6 text-center mr-2"></i>
-                    Dashboard
+                <a href="@Url.Action("Index", "Role", new { area = "Admin" })"
+                   class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-users w-6 text-center mr-2"></i>
+                    Quản lý Vai trò
+                </a>
+
+                <a href="@Url.Action("Index", "Users", new { area = "Admin" })"
+                   class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-users w-6 text-center mr-2"></i>
+                    Quản lý Users
                 </a>
 
                 <a href="@Url.Action("PartnerLeads", "Dashboard", new { area = "Admin" })"
@@ -54,10 +60,7 @@
                     Duyệt Đối Tác
                 </a>
 
-                <a href="#" class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-200 transition">
-                    <i class="fa-solid fa-users w-6 text-center mr-2"></i>
-                    Quản lý Users
-                </a>
+
 
                 <hr class="my-4" />
 
