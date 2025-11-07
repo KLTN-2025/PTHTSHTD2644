@@ -1,0 +1,203 @@
+﻿@model IEnumerable<SmartTable.Models.Restaurants>
+@{
+    ViewBag.Title = "Quản lý Nhà hàng";
+}
+
+
+
+<h2 class="text-xl font-bold text-gray-800 mb-3 mt-8">Bản đồ Nhà hàng Gần Bạn (OSM)</h2>
+<div id="map-container">Đang tải bản đồ...</div>
+
+<h1 class="text-2xl font-bold text-gray-800 mb-4">Quản lý Tất cả Nhà hàng</h1>
+<p class="mb-6 text-gray-600">Thêm, sửa, xóa và kiểm tra trạng thái duyệt các nhà hàng.</p>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6 shadow-sm" role="alert">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 shadow-sm" role="alert">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="flex justify-start mb-4">
+    <a href="@Url.Action("Create")" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition">
+        <i class="fas fa-plus mr-1"></i> Thêm Nhà hàng mới
+    </a>
+</div>
+
+
+<div class="bg-white shadow-xl rounded-lg overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider w-12">ID</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-1/4">Tên Nhà Hàng / Địa chỉ</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Chủ sở hữu</th>
+                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Trạng thái</th>
+                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Hành động</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-100">
+            @foreach (var item in Model)
+            {
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 text-center text-gray-700">@item.restaurant_id</td>
+
+                    <td class="px-6 py-4">
+                        <div class="font-semibold text-gray-900">@item.name</div>
+                        <div class="text-xs text-gray-500">@item.address</div>
+                    </td>
+
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-blue-600 font-medium">@item.Users.full_name</div> @* <-- PHẢI DÙNG Users.full_name *@
+                        <div class="text-xs text-gray-500">ID: @item.user_id</div>
+                    </td>
+
+                    <td class="px-6 py-4 text-center">
+                        @{
+                            var statusClass = item.is_approved == true ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800";
+                            var statusText = item.is_approved == true ? "Đã duyệt" : "Chờ duyệt";
+                        }
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @statusClass">
+                            @statusText
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="inline-flex items-center justify-center space-x-3">
+                            <!-- Nút Chi tiết -->
+                            <a href="@Url.Action("Details", new { id = item.restaurant_id })"
+                               title="Xem chi tiết"
+                               class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-md shadow-md transition-transform transform hover:scale-105 text-sm">
+                                <i class="fas fa-eye text-base mr-2"></i> <!-- icon to hơn -->
+                                Chi tiết
+                            </a>
+
+                            <!-- Nút Sửa -->
+                            <a href="@Url.Action("Edit", new { id = item.restaurant_id })"
+                               title="Chỉnh sửa"
+                               class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md shadow-md transition-transform transform hover:scale-105 text-sm">
+                                <i class="fas fa-edit text-base mr-2"></i>
+                                Sửa
+                            </a>
+
+                            <!-- Nút Xóa -->
+                            @using (Html.BeginForm("Delete", "Restaurant", new { id = item.restaurant_id, area = "Admin" }, FormMethod.Post, new { @class = "inline-block", onsubmit = "return confirm('CẢNH BÁO: Xóa nhà hàng sẽ xóa Booking và Review liên quan. Xác nhận xóa?');" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <button type="submit"
+                                        title="Xóa"
+                                        class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-md shadow-md transition-transform transform hover:scale-105 text-sm">
+                                    <i class="fas fa-trash text-base mr-2"></i>
+                                    Xóa
+                                </button>
+                            }
+                        </div>
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+    @section scripts {
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script>
+        var map;
+        const DEFAULT_POS = [10.8231, 106.6297]; // TP.HCM
+
+        // ĐỊNH NGHĨA CUSTOM ICON CHO NHÀ HÀNG BẰNG HÌNH ẢNH LOGO (Global Scope)
+        const RestaurantIcon = L.icon({
+            iconUrl: '@Url.Content("~/Content/images/RestaurantIcon.png")', // <-- ĐẢM BẢO ĐƯỜNG DẪN NÀY ĐÚNG
+            iconSize: [80, 80], // Kích thước icon (Width, Height)
+            iconAnchor: [16, 32], // Neo (anchor) icon tại chân
+            popupAnchor: [0, -32]
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(initMap, handleLocationError);
+            } else {
+                handleLocationError(false);
+            }
+        });
+
+        function initMap(position) {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            const userPos = [userLat, userLng];
+
+            map = L.map('map-container').setView(userPos, 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            L.marker(userPos).addTo(map).bindPopup('Vị trí của bạn').openPopup();
+
+            loadNearbyRestaurants(userLat, userLng);
+        }
+
+        function handleLocationError(error) {
+            const defaultPos = [10.8231, 106.6297];
+            map = L.map('map-container').setView(defaultPos, 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            let message = 'Vui lòng cho phép truy cập vị trí để xem bản đồ.';
+            document.getElementById('map-container').innerHTML = message;
+        }
+
+        function loadNearbyRestaurants(lat, lng) {
+            const url = '@Url.Action("GetNearbyMapData", "Restaurant", new { area = "Admin" })';
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: { lat: lat, lng: lng, radiusKm: 5 },
+                dataType: 'json',
+                success: function (data) {
+                    data.forEach(function (restaurant) {
+                        if (restaurant.latitude && restaurant.longitude) {
+                            L.marker([restaurant.latitude, restaurant.longitude], {
+                                icon: RestaurantIcon
+                            }).addTo(map)
+                            .bindPopup(`
+                                <div>
+                                    <h5 style="font-weight: bold; margin-bottom: 5px; color: #1e40af;">${restaurant.name}</h5>
+                                    <p>Địa chỉ: ${restaurant.address}</p>
+                                    <p>Khoảng cách: ${restaurant.distanceKm.toFixed(2)} km</p>
+                                    <p><a href="@Url.Action("Details", "Restaurant", new { area = "Admin" })}/${restaurant.restaurant_id}" style="color: blue;">Xem chi tiết</a></p>
+                                </div>
+                            `);
+                        }
+                    });
+                },
+                error: function (error) {
+                    document.getElementById('map-container').innerHTML = 'Lỗi khi tải dữ liệu nhà hàng.';
+                    console.error("Lỗi khi tải dữ liệu nhà hàng gần đó:", error.responseText);
+                }
+            });
+        }
+        </script>
+    }
+    @section styles {
+        <style>
+
+            /* CSS của Leaflet */
+            @@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+
+            /* Đảm bảo bản đồ có kích thước */
+            #map-container {
+                height: 500px;
+                width: 100%;
+                margin-bottom: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+            /* Không cần CSS .custom-div-icon và .custom-div-icon i nữa */
+        </style>
+    }
+
+</div>

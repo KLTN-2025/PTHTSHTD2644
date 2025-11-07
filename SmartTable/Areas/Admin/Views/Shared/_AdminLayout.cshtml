@@ -14,7 +14,6 @@
           crossorigin="anonymous"
           referrerpolicy="no-referrer" />
 
-
     @Scripts.Render("~/bundles/modernizr")
 
     <style>
@@ -29,6 +28,9 @@
         }
     </style>
 </head>
+
+
+
 <body class="bg-gray-100 font-sans">
     <div class="flex h-screen bg-gray-100">
 
@@ -59,7 +61,11 @@
                     <i class="fa-solid fa-handshake w-6 text-center mr-2"></i>
                     Duyệt Đối Tác
                 </a>
-
+                <a href="@Url.Action("Index", "Restaurant", new { area = "Admin" })"
+                   class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-store w-6 text-center mr-2"></i>
+                    Quản lý Nhà hàng
+                </a>
 
 
                 <hr class="my-4" />

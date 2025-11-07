@@ -18,6 +18,9 @@ namespace SmartTable.Models
         public Entities()
             : base("name=Entities")
         {
+            // FIX LỖI PROXY TOÀN CỤC
+            this.Configuration.ProxyCreationEnabled = false;
+            this.Configuration.LazyLoadingEnabled = false;
         }
     
         protected override void OnModelCreating(DbModelBuilder modelBuilder)

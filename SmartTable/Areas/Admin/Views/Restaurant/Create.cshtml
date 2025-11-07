@@ -1,0 +1,61 @@
+﻿@model SmartTable.Models.Restaurants
+@{
+    ViewBag.Title = "Thêm Nhà hàng mới";
+}
+
+<h1 class="text-2xl font-bold text-gray-800 mb-4">Thêm Nhà hàng mới</h1>
+
+<div class="bg-white p-6 rounded-lg shadow-xl max-w-3xl">
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+        @Html.ValidationSummary(true, "", new { @class = "text-red-600 mb-4" })
+
+        <div class="grid md:grid-cols-2 gap-6">
+
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700">Tên Nhà hàng</label>
+                @Html.EditorFor(model => model.name, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", required = "required" } })
+                @Html.ValidationMessageFor(model => model.name, "", new { @class = "text-red-500 text-xs mt-1" })
+            </div>
+
+            <div>
+                <label for="user_id" class="block text-sm font-medium text-gray-700">Chủ sở hữu (Business)</label>
+                @Html.DropDownList("user_id", null, "--- Chọn Chủ sở hữu ---", new { @class = "w-full p-2 border rounded-lg", required = "required" })
+                @Html.ValidationMessageFor(model => model.user_id, "", new { @class = "text-red-500 text-xs mt-1" })
+            </div>
+
+            <div class="md:col-span-2">
+                <label for="address" class="block text-sm font-medium text-gray-700">Địa chỉ</label>
+                @Html.EditorFor(model => model.address, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", required = "required" } })
+            </div>
+
+            <div>
+                <label for="opening_hours" class="block text-sm font-medium text-gray-700">Giờ mở cửa (VD: 10:00 - 22:00)</label>
+                @Html.EditorFor(model => model.opening_hours, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", required = "required" } })
+            </div>
+
+            <div>
+                <label for="max_tables" class="block text-sm font-medium text-gray-700">Số bàn tối đa</label>
+                @Html.EditorFor(model => model.max_tables, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", type = "number", min = "1" } })
+            </div>
+
+            <div class="md:col-span-2">
+                <label for="Image" class="block text-sm font-medium text-gray-700">URL Ảnh đại diện</label>
+                @Html.EditorFor(model => model.Image, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", placeholder = "http://..." } })
+            </div>
+
+            <div class="md:col-span-2">
+                <label for="description" class="block text-sm font-medium text-gray-700">Mô tả</label>
+                @Html.TextAreaFor(model => model.description, new { @class = "w-full p-2 border rounded-lg", rows = 3 })
+            </div>
+
+            <div class="md:col-span-2 pt-4 border-t flex justify-between items-center">
+                <a href="@Url.Action("Index")" class="text-gray-600 hover:text-gray-900">Quay lại danh sách</a>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition">
+                    <i class="fas fa-save mr-1"></i> Lưu Nhà hàng
+                </button>
+            </div>
+        </div>
+    }
+</div>
