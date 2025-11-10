@@ -60,6 +60,8 @@
 
                     <td class="px-6 py-4 text-center">
                         @{
+                            // Dùng .GetValueOrDefault(false) để đảm bảo giá trị luôn là True/False
+                            var isApproved = item.is_approved.GetValueOrDefault(false);
                             var statusClass = item.is_approved == true ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800";
                             var statusText = item.is_approved == true ? "Đã duyệt" : "Chờ duyệt";
                         }
@@ -105,21 +107,31 @@
     </table>
     @section scripts {
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
         <script>
         var map;
         const DEFAULT_POS = [10.8231, 106.6297]; // TP.HCM
 
-        // ĐỊNH NGHĨA CUSTOM ICON CHO NHÀ HÀNG BẰNG HÌNH ẢNH LOGO (Global Scope)
+        // ĐỊNH NGHĨA CUSTOM ICON CHO NHÀ HÀNG (Global Scope)
         const RestaurantIcon = L.icon({
-            iconUrl: '@Url.Content("~/Content/images/RestaurantIcon.png")', // <-- ĐẢM BẢO ĐƯỜNG DẪN NÀY ĐÚNG
-            iconSize: [80, 80], // Kích thước icon (Width, Height)
-            iconAnchor: [16, 32], // Neo (anchor) icon tại chân
+            iconUrl: '@Url.Content("~/Content/images/logo.png")',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
             popupAnchor: [0, -32]
         });
 
+        // THÊM TÙY CHỌN ĐỘ CHÍNH XÁC CAO
+        const geolocationOptions = {
+            enableHighAccuracy: true, // <-- YÊU CẦU GPS/MẠNG CHÍNH XÁC HƠN
+            timeout: 15000,           // <-- TĂNG THỜI GIAN CHỜ LÊN 15 GIÂY (Fix lỗi timeout)
+            maximumAge: 0             // <-- KHÔNG DÙNG VỊ TRÍ CŨ
+        };
+
+
         document.addEventListener('DOMContentLoaded', function () {
+            // Kiểm tra và khởi tạo Map (sử dụng options mới)
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(initMap, handleLocationError);
+                navigator.geolocation.getCurrentPosition(initMap, handleLocationError, geolocationOptions);
             } else {
                 handleLocationError(false);
             }
@@ -130,7 +142,7 @@
             const userLng = position.coords.longitude;
             const userPos = [userLat, userLng];
 
-            map = L.map('map-container').setView(userPos, 13);
+            map = L.map('map-container').setView(userPos, 16); // Tăng Zoom lên 16 để xem chi tiết
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -142,6 +154,7 @@
         }
 
         function handleLocationError(error) {
+            // ... (Logic xử lý lỗi định vị giữ nguyên) ...
             const defaultPos = [10.8231, 106.6297];
             map = L.map('map-container').setView(defaultPos, 12);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);

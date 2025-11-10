@@ -91,15 +91,33 @@ namespace SmartTable.Areas.Admin.Controllers
                 // 3. TẠO VÀ LIÊN KẾT NHÀ HÀNG MỚI (CHỈ CẦN CODE NÀY)
                 var newRestaurant = new Restaurants
                 {
-                    user_id = partnerUser.user_id, // Gán ID USER VỪA TẠO/CẬP NHẬT
+                    user_id = partnerUser.user_id,
                     name = lead.RestaurantName,
                     address = lead.Address,
-                    opening_hours = lead.OpeningTime + "-" + lead.ClosingTime,
-                    is_approved = true, // Đánh dấu nhà hàng đã duyệt
                     max_tables = lead.TotalSeats,
-                    // Lấy PhotoLink từ Lead làm ảnh đại diện hoặc đặt mặc định
+                    opening_hours = lead.OpeningTime + "-" + lead.ClosingTime,
+                    is_approved = true,
                     Image = lead.PhotoLink ?? "https://via.placeholder.com/400x300.png?text=SmartTable",
-                    created_at = DateTime.Now
+                    created_at = DateTime.Now,
+
+                    // === CHUYỂN DỮ LIỆU CHI TIẾT TỪ PARTNERLEADS ===
+                    CuisineStyle = lead.CuisineStyle,
+                    ServiceDescription = lead.ServiceDescription,
+                    ServiceTypes = lead.ServiceTypes, // Kiểu phục vụ (Gọi món, Buffet)
+                    AverageBill = lead.AverageBill,
+                    FloorCount = lead.FloorCount,
+                    BusyHours = lead.BusyHours,
+                    SlowHours = lead.SlowHours,
+                    SignatureDishes = lead.SignatureDishes,
+                    PartnershipGoal = lead.PartnershipGoal,
+                    ServicePackage = lead.ServicePackage,
+                    ContactName = lead.ContactName,
+                    ContactPhone = lead.ContactPhone,
+                    ContactRole = lead.ContactRole,
+                    Website = lead.Website,
+                    SpaceDescription = lead.SpaceDescription,
+                    Amenities = lead.Amenities
+                    // ... (Không cần các trường Other và Previous Partnership)
                 };
                 db.Restaurants.Add(newRestaurant);
 

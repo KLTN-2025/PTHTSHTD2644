@@ -29,8 +29,8 @@ namespace SmartTable.Models
         public Nullable<bool> is_available { get; set; }
         public string Image { get; set; }
     
-        public virtual Restaurants Restaurants { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Orders> Orders { get; set; }
+        public virtual Restaurants Restaurants { get; set; }
     }
 }

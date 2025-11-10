@@ -18,9 +18,6 @@ namespace SmartTable.Models
         public Entities()
             : base("name=Entities")
         {
-            // FIX LỖI PROXY TOÀN CỤC
-            this.Configuration.ProxyCreationEnabled = false;
-            this.Configuration.LazyLoadingEnabled = false;
         }
     
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
@@ -33,10 +30,10 @@ namespace SmartTable.Models
         public virtual DbSet<MenuItems> MenuItems { get; set; }
         public virtual DbSet<Orders> Orders { get; set; }
         public virtual DbSet<Payments> Payments { get; set; }
-        public virtual DbSet<Restaurants> Restaurants { get; set; }
         public virtual DbSet<Reviews> Reviews { get; set; }
         public virtual DbSet<Tables> Tables { get; set; }
         public virtual DbSet<Users> Users { get; set; }
         public virtual DbSet<PartnerLeads> PartnerLeads { get; set; }
+        public virtual DbSet<Restaurants> Restaurants { get; set; }
     }
 }

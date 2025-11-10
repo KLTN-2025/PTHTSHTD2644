@@ -1,11 +1,14 @@
 ﻿using SmartTable.Filters;
 using SmartTable.Models;
-using System.Data.Entity; 
+using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Web.Mvc;
 using System;
-
+using System.Diagnostics;
+using System.Globalization;
+using System.Configuration;
+using System.Collections.Generic;
 
 namespace SmartTable.Areas.Admin.Controllers
 {
@@ -13,6 +16,10 @@ namespace SmartTable.Areas.Admin.Controllers
     public class RestaurantController : Controller
     {
         private Entities db = new Entities();
+
+        // Danh sách thuộc tính được phép Bind/Chỉnh sửa. 
+        private const string BIND_PROPERTIES = "restaurant_id,user_id,name,address,description,max_tables,opening_hours,is_approved,Image,CuisineStyle,ServiceDescription,ServiceTypes,AverageBill,FloorCount,BusyHours,SlowHours,SignatureDishes,PartnershipGoal,ServicePackage,ContactName,ContactPhone,ContactRole,Website,SpaceDescription,Amenities,SeatingType,PrivateRoomCount,NearbyLandmark";
+
 
         // GET: Admin/Restaurant/Index
         public ActionResult Index()
@@ -26,21 +33,17 @@ namespace SmartTable.Areas.Admin.Controllers
         {
             if (id == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
 
-            // Đã tắt Proxy, nên chỉ cần Include là đủ
             Restaurants restaurant = db.Restaurants
                                        .Include(r => r.Users)
                                        .FirstOrDefault(r => r.restaurant_id == id);
 
             if (restaurant == null) return HttpNotFound();
-
-            return View(restaurant); // Trả về đối tượng gốc (non-proxy)
+            return View(restaurant);
         }
-
 
         // GET: Admin/Restaurant/Create
         public ActionResult Create()
         {
-            // Trả về danh sách Users để Admin chọn Chủ sở hữu
             ViewBag.user_id = new SelectList(db.Users.Where(u => u.role == "business"), "user_id", "email");
             return View();
         }
@@ -48,8 +51,18 @@ namespace SmartTable.Areas.Admin.Controllers
         // POST: Admin/Restaurant/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "restaurant_id,user_id,name,address,latitude,longitude,description,max_tables,opening_hours,is_approved,Image")] Restaurants restaurant)
+        public ActionResult Create([Bind(Include = BIND_PROPERTIES)] Restaurants restaurant, string latitudeStr, string longitudeStr)
         {
+            // 1. Xử lý tọa độ từ chuỗi sang double (Sử dụng CultureInfo.InvariantCulture để dùng dấu chấm)
+            if (!string.IsNullOrEmpty(latitudeStr))
+            {
+                restaurant.latitude = Convert.ToDouble(latitudeStr, CultureInfo.InvariantCulture);
+            }
+            if (!string.IsNullOrEmpty(longitudeStr))
+            {
+                restaurant.longitude = Convert.ToDouble(longitudeStr, CultureInfo.InvariantCulture);
+            }
+
             if (ModelState.IsValid)
             {
                 restaurant.created_at = System.DateTime.Now;
@@ -66,17 +79,12 @@ namespace SmartTable.Areas.Admin.Controllers
         // GET: Admin/Restaurant/Edit/5
         public ActionResult Edit(int? id)
         {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            // FIX PROXY: Dùng AsNoTracking() cho Edit cũng giúp ngăn lỗi
-            Restaurants restaurant = db.Restaurants.AsNoTracking().FirstOrDefault(r => r.restaurant_id == id);
+            if (id == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
 
-            if (restaurant == null)
-            {
-                return HttpNotFound();
-            }
+            Restaurants restaurant = db.Restaurants.Find(id); // Dùng Find() đơn giản
+
+            if (restaurant == null) return HttpNotFound();
+
             ViewBag.user_id = new SelectList(db.Users.Where(u => u.role == "business"), "user_id", "email", restaurant.user_id);
             return View(restaurant);
         }
@@ -85,31 +93,57 @@ namespace SmartTable.Areas.Admin.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(
-    [Bind(Include = "restaurant_id,user_id,name,address,description,max_tables,opening_hours,is_approved,Image")] Restaurants restaurant,
-    string latitudeStr, // <-- Nhận giá trị Vĩ độ dưới dạng chuỗi
-    string longitudeStr // <-- Nhận giá trị Kinh độ dưới dạng chuỗi
+    [Bind(Include = BIND_PROPERTIES)] Restaurants restaurant, // KHÔNG CÓ LAT/LNG TRONG BIND
+    string latitudeStr,
+    string longitudeStr
 )
         {
-            // 1. CHUYỂN ĐỔI CHUỖI VỀ DECIMAL (Dùng Culture Invariant - Dấu chấm)
-            if (!string.IsNullOrEmpty(latitudeStr))
+            double latValue;
+            double lngValue;
+
+            // 1. SỬ DỤNG TRYPARSE (AN TOÀN HƠN)
+            bool latValid = double.TryParse(
+                latitudeStr,
+                NumberStyles.Float, // Cho phép số thực
+                CultureInfo.InvariantCulture, // Bắt buộc dùng dấu chấm
+                out latValue
+            );
+            bool lngValid = double.TryParse(
+                longitudeStr,
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out lngValue
+            );
+
+            // 2. GÁN GIÁ TRỊ VÀO MODEL VÀ KIỂM TRA LỖI VALIDATION
+            // Chỉ gán nếu conversion thành công, nếu không gán null
+            restaurant.latitude = latValid ? (double?)latValue : null;
+            restaurant.longitude = lngValid ? (double?)lngValue : null;
+
+            if (!latValid && !string.IsNullOrEmpty(latitudeStr))
             {
-                restaurant.latitude = Convert.ToDecimal(latitudeStr, System.Globalization.CultureInfo.InvariantCulture);
+                // Thêm lỗi cụ thể nếu chuỗi không phải là số
+                ModelState.AddModelError("latitudeStr", "Vĩ độ phải là giá trị số (dùng dấu chấm).");
             }
-            if (!string.IsNullOrEmpty(longitudeStr))
+            if (!lngValid && !string.IsNullOrEmpty(longitudeStr))
             {
-                restaurant.longitude = Convert.ToDecimal(longitudeStr, System.Globalization.CultureInfo.InvariantCulture);
+                ModelState.AddModelError("longitudeStr", "Kinh độ phải là giá trị số (dùng dấu chấm).");
             }
 
-            // 2. Tiếp tục validation và lưu
+
+            // 3. Tiến hành lưu
             if (ModelState.IsValid)
             {
                 db.Entry(restaurant).State = EntityState.Modified;
+                db.Entry(restaurant).Property(r => r.created_at).IsModified = false;
+
                 db.SaveChanges();
+
                 TempData["SuccessMessage"] = $"Đã cập nhật nhà hàng {restaurant.name} thành công.";
                 return RedirectToAction("Index");
             }
 
-            // Nếu Model State không hợp lệ, tạo lại SelectList
+            // Nếu Model State không hợp lệ (lỗi tọa độ), tạo lại SelectList
             ViewBag.user_id = new SelectList(db.Users.Where(u => u.role == "business"), "user_id", "email", restaurant.user_id);
             return View(restaurant);
         }
@@ -122,7 +156,6 @@ namespace SmartTable.Areas.Admin.Controllers
             Restaurants restaurant = db.Restaurants.Find(id);
             if (restaurant != null)
             {
-                // Xử lý liên kết
                 db.Restaurants.Remove(restaurant);
                 db.SaveChanges();
                 TempData["SuccessMessage"] = $"Đã xóa nhà hàng {restaurant.name} thành công.";
@@ -139,16 +172,14 @@ namespace SmartTable.Areas.Admin.Controllers
             base.Dispose(disposing);
         }
 
-        // Hàm hỗ trợ chuyển đổi từ độ sang radian (cần cho Haversine)
+        // --- HÀM HỖ TRỢ MAP ---
         private double ToRadians(double degree)
         {
             return degree * Math.PI / 180;
         }
 
-        // Hàm tính khoảng cách Haversine giữa 2 tọa độ (trả về km)
         private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
         {
-            // ... (Code Haversine giữ nguyên) ...
             var R = 6371;
             var dLat = ToRadians(lat2 - lat1);
             var dLon = ToRadians(lon2 - lon1);
@@ -156,17 +187,21 @@ namespace SmartTable.Areas.Admin.Controllers
                     Math.Cos(ToRadians(lat1)) * Math.Cos(ToRadians(lat2)) *
                     Math.Pow(Math.Sin(dLon / 2), 2);
             var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-            return R * c; // Khoảng cách theo km
+            return R * c;
         }
 
-        // GET: Admin/Restaurant/GetNearbyMapData?lat=...&lng=...
         [HttpGet]
         public JsonResult GetNearbyMapData(double lat, double lng, double radiusKm = 5)
         {
-            // Lấy tất cả nhà hàng đã được duyệt có tọa độ
-            var allRestaurants = db.Restaurants.AsNoTracking()
-                .Where(r => r.latitude.HasValue && r.longitude.HasValue && r.is_approved == true)
-                .ToList();
+            // SỬA LỖI: Thay thế .HasValue bằng != null
+            var allRestaurants = db.Restaurants
+            .Where(r => r.is_approved == true)
+            .ToList() // <-- ép tải về bộ nhớ
+            .Where(r => r.latitude != null && r.longitude != null)
+            .ToList();
+
+            // Logic còn lại giữ nguyên
+            var userCoord = new System.Device.Location.GeoCoordinate(lat, lng);
 
             var nearbyRestaurants = allRestaurants
                 .Select(r => new
@@ -174,11 +209,10 @@ namespace SmartTable.Areas.Admin.Controllers
                     r.restaurant_id,
                     r.name,
                     r.address,
-            // SỬA LỖI: Ép kiểu sang double để JSON nhận đúng định dạng số
-            latitude = (double)r.latitude.Value,
+                    // Sử dụng .Value an toàn sau khi đã lọc ở trên
+                    latitude = (double)r.latitude.Value,
                     longitude = (double)r.longitude.Value,
-            // Tính khoảng cách
-            distanceKm = CalculateDistance(lat, lng, (double)r.latitude.Value, (double)r.longitude.Value)
+                    distanceKm = CalculateDistance(lat, lng, (double)r.latitude.Value, (double)r.longitude.Value)
                 })
                 .Where(r => r.distanceKm <= radiusKm)
                 .OrderBy(r => r.distanceKm)
@@ -186,6 +220,5 @@ namespace SmartTable.Areas.Admin.Controllers
 
             return Json(nearbyRestaurants, JsonRequestBehavior.AllowGet);
         }
-
     }
 }

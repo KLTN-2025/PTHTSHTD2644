@@ -1,89 +1,93 @@
 ﻿@model SmartTable.Models.Restaurants
-
 @{
     ViewBag.Title = "Chi tiết Nhà hàng";
 }
+
+@helper DisplayData(string label, object value, bool isLink = false)
+{
+    string displayValue = (value == null || string.IsNullOrWhiteSpace(value.ToString())) ? "N/A" : value.ToString();
+
+    <div class="flex justify-between border-b border-dashed pb-2">
+        <dt class="text-sm font-medium text-gray-500">@label</dt>
+        <dd class="text-sm font-semibold text-gray-800 text-right max-w-[60%] break-words">
+            @if (isLink && displayValue != "N/A")
+            {
+                <a href="@displayValue" target="_blank" class="text-blue-600 hover:text-blue-800 underline truncate">Xem Link</a>
+            }
+            else if (value is DateTime)
+            {
+                @(value is DateTime ? ((DateTime)value).ToString("dd/MM/yyyy HH:mm") : displayValue)
+            }
+            else
+            {
+                @displayValue
+            }
+        </dd>
+    </div>
+}
+
 
 <h1 class="text-2xl font-bold text-gray-800 mb-4">Chi tiết Nhà hàng: @Model.name</h1>
 
 <div class="bg-white p-6 rounded-lg shadow-xl max-w-4xl">
 
-    <div class="grid md:grid-cols-3 gap-8">
+    <div class="space-y-8">
 
-        <div class="md:col-span-2">
-            <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">Thông tin cơ bản</h3>
-            <dl class="space-y-3">
-                <div class="flex justify-between border-b border-dashed pb-2">
-                    <dt class="text-sm font-medium text-gray-500">ID</dt>
-                    <dd class="font-semibold text-gray-900">@Model.restaurant_id</dd>
-                </div>
-                <div class="flex justify-between border-b border-dashed pb-2">
-                    <dt class="text-sm font-medium text-gray-500">Chủ sở hữu</dt>
-                    <dd class="font-semibold text-blue-600">
-                        @(Model.Users != null
-                                            ? $"{Model.Users.full_name} ({Model.Users.email})"
-                                            : "Chưa có chủ sở hữu")
-                    </dd>
-                </div>
-                <div class="flex justify-between border-b border-dashed pb-2">
-                    <dt class="text-sm font-medium text-gray-500">Địa chỉ</dt>
-                    <dd class="font-medium text-gray-900">@Model.address</dd>
-                </div>
-                <div class="flex justify-between border-b border-dashed pb-2">
-                    <dt class="text-sm font-medium text-gray-500">Giờ mở cửa</dt>
-                    <dd class="font-medium text-gray-900">@Model.opening_hours</dd>
-                </div>
-                <div class="flex justify-between border-b border-dashed pb-2">
-                    <dt class="text-sm font-medium text-gray-500">Số bàn tối đa</dt>
-                    <dd class="font-medium text-gray-900">@Model.max_tables</dd>
-                </div>
-                <div class="flex justify-between border-b pb-2">
-                    <dt class="text-sm font-medium text-gray-500">Trạng thái duyệt</dt>
-                    <dd class="font-medium @(Model.is_approved == true ? "text-green-600" : "text-yellow-600")">@(Model.is_approved == true ? "Đã duyệt" : "Chờ duyệt")</dd>
-                </div>
-                <div class="flex justify-between border-b pb-2">
-                    <dt class="text-sm font-medium text-gray-500">Ngày tạo</dt>
-                    <dd class="font-medium text-gray-900">
-                        @(Model.created_at.HasValue
-                                    ? Model.created_at.Value.ToString("dd/MM/yyyy HH:mm")
-                                    : "Chưa xác định")
-                    </dd>
-                </div>
+        <div class="grid md:grid-cols-3 gap-8 border-b pb-6">
+            <h3 class="md:col-span-3 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">1. Thông tin cơ bản</h3>
 
+            <div class="space-y-3">
+                @DisplayData("ID Nhà hàng", @Model.restaurant_id)
+                @DisplayData("Chủ sở hữu", $"{Model.Users?.full_name} ({Model.Users?.email})")
+                @DisplayData("Địa chỉ", @Model.address)
+                @DisplayData("Ngày tạo", @Model.created_at)
+                @DisplayData("Trạng thái duyệt", (Model.is_approved.GetValueOrDefault(false) ? "Đã duyệt" : "Chờ duyệt"))
+            </div>
 
-                <div class="flex justify-between border-b pb-2">
-                    <dt class="text-sm font-medium text-gray-500">Latitude (Vĩ độ)</dt>
-                    <dd class="font-medium text-gray-900">@Model.latitude</dd>
-                </div>
-                <div class="flex justify-between border-b pb-2">
-                    <dt class="text-sm font-medium text-gray-500">Longitude (Kinh độ)</dt>
-                    <dd class="font-medium text-gray-900">@Model.longitude</dd>
-                </div>
-            </dl>
-        </div>
+            <div class="space-y-3">
+                @DisplayData("Latitude (Vĩ độ)", @Model.latitude)
+                @DisplayData("Longitude (Kinh độ)", @Model.longitude)
+                @DisplayData("Số bàn tối đa", @Model.max_tables)
+                @DisplayData("Giờ mở cửa", @Model.opening_hours)
+                @DisplayData("Ảnh Đại diện", @Model.Image, true)
+            </div>
 
-        <div>
-            <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">Ảnh Đại Diện</h3>
-            <div class="mb-4">
+            <div>
+                <h4 class="text-sm font-medium text-gray-500 mb-2">Ảnh Đại Diện</h4>
                 <img src="@(Model.Image ?? "https://via.placeholder.com/300x200.png?text=No+Image")"
                      alt="Ảnh nhà hàng"
                      class="w-full h-auto object-cover rounded-lg shadow-md border" />
             </div>
-
-            @if (!string.IsNullOrEmpty(Model.Image))
-            {
-                <a href="@Model.Image" target="_blank" class="text-sm text-blue-500 hover:underline">
-                    <i class="fas fa-external-link-alt mr-1"></i> Xem ảnh gốc
-                </a>
-            }
         </div>
-    </div>
 
-    <div class="pt-6 mt-6 border-t">
-        <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">Mô tả Chi tiết</h3>
-        <p class="text-sm text-gray-600 whitespace-pre-wrap">@(string.IsNullOrEmpty(Model.description) ? "Không có mô tả chi tiết." : Model.description)</p>
-    </div>
 
+        <div class="grid md:grid-cols-3 gap-8 border-b pb-6">
+            <h3 class="md:col-span-3 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">2. Dịch vụ & Vận hành chi tiết</h3>
+
+            <div class="space-y-3">
+                @DisplayData("Phong cách Ẩm thực", @Model.CuisineStyle)
+                @DisplayData("Loại hình Dịch vụ", @Model.ServiceDescription)
+                @DisplayData("Kiểu phục vụ", @Model.ServiceTypes)
+                @DisplayData("Hóa đơn TB/người", @Model.AverageBill)
+                @DisplayData("Món đặc sắc", @Model.SignatureDishes)
+            </div>
+
+            <div class="space-y-3">
+                @DisplayData("Số tầng/khu vực", @Model.FloorCount)
+                @DisplayData("Khung giờ đông khách", @Model.BusyHours)
+                @DisplayData("Khung giờ vắng khách", @Model.SlowHours)
+                @DisplayData("Mô tả kiểu chỗ ngồi", @Model.SeatingType)
+            </div>
+
+            <div class="space-y-3">
+                @DisplayData("Mô tả Chi tiết", @Model.description)
+                @DisplayData("Tiện ích", @Model.Amenities)
+                @DisplayData("Phòng riêng", @Model.PrivateRoomCount)
+                @DisplayData("Địa điểm gần đó", @Model.NearbyLandmark)
+            </div>
+        </div>
+
+    </div>
 
     <div class="pt-6 border-t mt-6 flex justify-between items-center">
         <a href="@Url.Action("Index")" class="text-gray-600 hover:text-gray-900">

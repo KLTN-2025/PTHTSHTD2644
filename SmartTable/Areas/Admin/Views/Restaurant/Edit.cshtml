@@ -1,115 +1,166 @@
 ﻿@model SmartTable.Models.Restaurants
 @{
     ViewBag.Title = "Chỉnh sửa Nhà hàng";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h1 class="text-2xl font-bold text-gray-800 mb-6">Chỉnh sửa Nhà hàng</h1>
+<h1 class="text-2xl font-bold text-gray-800 mb-4">Chỉnh sửa Nhà hàng: @Model.name</h1>
 
-@using (Html.BeginForm())
-{
+<div class="bg-white p-6 rounded-lg shadow-xl max-w-4xl">
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+        @Html.ValidationSummary(true, "", new { @class = "text-red-600 mb-4" })
+        @Html.HiddenFor(model => model.restaurant_id)
+        @Html.HiddenFor(model => model.user_id) 
 
-    @Html.AntiForgeryToken()
-    @Html.HiddenFor(model => model.restaurant_id)
+        <div class="space-y-8">
 
-    <div class="bg-white p-6 rounded-lg shadow-lg max-w-3xl mx-auto">
-        @Html.ValidationSummary(true, "", new { @class = "text-red-500 mb-4 text-sm" })
+            <div class="grid md:grid-cols-2 gap-6 border-b pb-6">
+                <h3 class="md:col-span-2 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">1. Thông tin cơ bản và Chủ sở hữu</h3>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Tên nhà hàng -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Tên Nhà hàng</label>
-                @Html.TextBoxFor(model => model.name, new { @class = "w-full border-gray-300 rounded-lg p-2 focus:ring focus:ring-blue-200" })
-                @Html.ValidationMessageFor(model => model.name, "", new { @class = "text-red-500 text-xs mt-1" })
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700">Tên Nhà hàng</label>
+                    @Html.EditorFor(model => model.name, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", required = "required" } })
+                    @Html.ValidationMessageFor(model => model.name, "", new { @class = "text-red-500 text-xs mt-1" })
+                </div>
+
+                <div>
+                    <label for="owner_email" class="block text-sm font-medium text-gray-700">Chủ sở hữu (Hiện tại)</label>
+                    @Html.TextBox("OwnerEmailDisplay", Model.Users?.email ?? "Chưa gán", new { @class = "w-full p-2 border rounded-lg bg-gray-100", @readonly = "readonly" })
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="address" class="block text-sm font-medium text-gray-700">Địa chỉ</label>
+                    @Html.EditorFor(model => model.address, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", required = "required" } })
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="Image" class="block text-sm font-medium text-gray-700">URL Ảnh đại diện</label>
+                    @Html.EditorFor(model => model.Image, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", placeholder = "Dán URL ảnh vào đây" } })
+                    <small class="text-gray-500 block mt-2">Ảnh hiện tại:</small>
+                    @if (!string.IsNullOrEmpty(Model.Image))
+                    {
+                        <img src="@Model.Image" alt="Ảnh hiện tại" class="w-32 h-20 object-cover mt-1 rounded-md border" />
+                    }
+                </div>
             </div>
 
-            <!-- Chủ sở hữu -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Chủ sở hữu</label>
-                @Html.DropDownListFor(model => model.user_id, (SelectList)ViewBag.user_id, "--- Chọn Chủ sở hữu ---", new { @class = "w-full border-gray-300 rounded-lg p-2 focus:ring focus:ring-blue-200" })
-                @Html.ValidationMessageFor(model => model.user_id, "", new { @class = "text-red-500 text-xs mt-1" })
+            <div class="grid md:grid-cols-2 gap-6 border-b pb-6">
+                <h3 class="md:col-span-2 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">2. Dịch vụ & Ẩm thực</h3>
+
+                <div>
+                    <label for="CuisineStyle" class="block text-sm font-medium text-gray-700">Phong cách Ẩm thực</label>
+                    @Html.EditorFor(model => model.CuisineStyle, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", placeholder = "Hàn Quốc, Fusion..." } })
+                </div>
+
+                <div>
+                    <label for="ServiceDescription" class="block text-sm font-medium text-gray-700">Loại hình Dịch vụ</label>
+                    @Html.EditorFor(model => model.ServiceDescription, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", placeholder = "Buffet lẩu, Gọi món Việt..." } })
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="SignatureDishes" class="block text-sm font-medium text-gray-700">Món đặc sắc</label>
+                    @Html.TextAreaFor(model => model.SignatureDishes, new { @class = "w-full p-2 border rounded-lg", rows = 3, placeholder = "Liệt kê 3-5 món nổi bật..." })
+                </div>
+
+                <div>
+                    <label for="ServiceTypes" class="block text-sm font-medium text-gray-700">Kiểu phục vụ (Chuỗi text)</label>
+                    @Html.EditorFor(model => model.ServiceTypes, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", placeholder = "Gọi món, Buffet..." } })
+                </div>
+
+                <div>
+                    <label for="AverageBill" class="block text-sm font-medium text-gray-700">Hóa đơn trung bình/người</label>
+                    @Html.EditorFor(model => model.AverageBill, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", placeholder = "Dưới 150K" } })
+                </div>
             </div>
 
-            <!-- Địa chỉ -->
-            <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Địa chỉ</label>
-                @Html.TextBoxFor(model => model.address, new { @class = "w-full border-gray-300 rounded-lg p-2 focus:ring focus:ring-blue-200" })
-                @Html.ValidationMessageFor(model => model.address, "", new { @class = "text-red-500 text-xs mt-1" })
+            <div class="grid md:grid-cols-3 gap-6">
+                <h3 class="md:col-span-3 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">3. Vận hành & Giờ giấc</h3>
+
+                <div>
+                    <label for="opening_hours" class="block text-sm font-medium text-gray-700">Giờ mở cửa (Chuỗi)</label>
+                    @Html.EditorFor(model => model.opening_hours, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", required = "required", placeholder = "10:00 - 22:00" } })
+                </div>
+
+                <div>
+                    <label for="max_tables" class="block text-sm font-medium text-gray-700">Số bàn tối đa</label>
+                    @Html.EditorFor(model => model.max_tables, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", type = "number", min = "1", required = "required" } })
+                </div>
+
+                <div>
+                    <label for="FloorCount" class="block text-sm font-medium text-gray-700">Số tầng/khu vực</label>
+                    @Html.EditorFor(model => model.FloorCount, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", placeholder = "2 tầng" } })
+                </div>
+
+                <div>
+                    <label for="BusyHours" class="block text-sm font-medium text-gray-700">Khung giờ đông khách</label>
+                    @Html.EditorFor(model => model.BusyHours, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg" } })
+                </div>
+
+                <div>
+                    <label for="SlowHours" class="block text-sm font-medium text-gray-700">Khung giờ vắng khách</label>
+                    @Html.EditorFor(model => model.SlowHours, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg" } })
+                </div>
+
+                <div>
+                    <label for="latitudeStr" class="block text-sm font-medium text-gray-700">Latitude (Vĩ độ)</label>
+                    @* SỬ DỤNG INPUT THỦ CÔNG: Giá trị hiển thị phải có đầy đủ độ chính xác (double) và dùng dấu chấm (InvariantCulture) *@
+                    <input type="text" name="latitudeStr" id="latitudeStr"
+                           value="@(Model.latitude?.ToString("G17", System.Globalization.CultureInfo.InvariantCulture))" @* <-- Dùng "G17" để đảm bảo hiển thị 17 chữ số có nghĩa *@
+                           class="w-full p-2 border rounded-lg" placeholder="VD: 12.674781143866461 (Số nhỏ)" />
+                    @Html.ValidationMessageFor(model => model.latitude, "", new { @class = "text-red-500 text-xs mt-1" })
+                </div>
+                <div>
+                    <label for="longitudeStr" class="block text-sm font-medium text-gray-700">Longitude (Kinh độ)</label>
+                    <input type="text" name="longitudeStr" id="longitudeStr"
+                           value="@(Model.longitude?.ToString("G17", System.Globalization.CultureInfo.InvariantCulture))" @* <-- Dùng "G17" để đảm bảo hiển thị 17 chữ số có nghĩa *@
+                           class="w-full p-2 border rounded-lg" placeholder="VD: 108.01669447898604 (Số lớn)" />
+                    @Html.ValidationMessageFor(model => model.longitude, "", new { @class = "text-red-500 text-xs mt-1" })
+                </div>
+
+                <div>
+                    <label for="SeatingType" class="block text-sm font-medium text-gray-700">Kiểu chỗ ngồi</label>
+                    @Html.EditorFor(model => model.SeatingType, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", placeholder = "Ngồi bệt, sofa đệm..." } })
+                </div>
+                <div>
+                    <label for="PrivateRoomCount" class="block text-sm font-medium text-gray-700">Số lượng phòng riêng</label>
+                    @Html.EditorFor(model => model.PrivateRoomCount, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", placeholder = "4 phòng" } })
+                </div>
+                <div>
+                    <label for="NearbyLandmark" class="block text-sm font-medium text-gray-700">Địa điểm gần đó</label>
+                    @Html.EditorFor(model => model.NearbyLandmark, new { htmlAttributes = new { @class = "w-full p-2 border rounded-lg", placeholder = "Phố đi bộ Nguyễn Huệ" } })
+                </div>
+
+                <div class="md:col-span-3 pt-4">
+                    <label for="description" class="block text-sm font-medium text-gray-700">Mô tả Chi tiết</label>
+                    @Html.TextAreaFor(model => model.description, new { @class = "w-full p-2 border rounded-lg", rows = 4, placeholder = "Mô tả về không gian, đặc điểm nổi bật..." })
+                </div>
             </div>
 
-            <!-- Latitude -->
-            <div>
-                <label for="latitudeStr" class="block text-sm font-medium text-gray-700">Latitude (Vĩ độ)</label>
-                @* Dùng TextBox thủ công để đặt tên tham số là latitudeStr *@
-                <input type="text" name="latitudeStr" id="latitudeStr"
-                       value="@(Model.latitude?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
-                       class="w-full p-2 border rounded-lg" placeholder="VD: 12.675916" />
-                @Html.ValidationMessageFor(model => model.latitude, "", new { @class = "text-red-500 text-xs mt-1" })
+            <div class="grid md:grid-cols-2 gap-6 pt-6 border-t mt-6">
+
+                <div>
+                    <label for="user_id" class="block text-sm font-medium text-gray-700">Gán Chủ sở hữu mới</label>
+                    @Html.DropDownList("user_id", null, "--- Chọn Chủ sở hữu ---", new { @class = "w-full p-2 border rounded-lg", required = "required" })
+                    <small class="text-xs text-gray-500 mt-1 block">Người sở hữu hiện tại: @(Model.Users?.full_name ?? "Chưa gán")</small>
+                </div>
+
+                <div class="flex flex-col justify-end pb-1">
+                    <div class="mt-2">
+                        @* FIX LỖI BOOLEAN: Dùng Html.CheckBox và GetValueOrDefault(false) *@
+                        @Html.CheckBox("is_approved", Model.is_approved.GetValueOrDefault(false), new { @class = "h-4 w-4 text-blue-600 border-gray-300 rounded" })
+                        <label for="is_approved" class="ml-2 text-sm text-gray-700">Nhà hàng đã được phê duyệt</label>
+                    </div>
+                </div>
             </div>
 
-            <!-- Longitude -->
-            <div>
-                <label for="longitudeStr" class="block text-sm font-medium text-gray-700">Longitude (Kinh độ)</label>
-                @* Dùng TextBox thủ công để đặt tên tham số là longitudeStr *@
-                <input type="text" name="longitudeStr" id="longitudeStr"
-                       value="@(Model.longitude?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
-                       class="w-full p-2 border rounded-lg" placeholder="VD: 108.012986" />
-                @Html.ValidationMessageFor(model => model.longitude, "", new { @class = "text-red-500 text-xs mt-1" })
-            </div>
 
-            <!-- Giờ mở cửa -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Giờ mở cửa</label>
-                @Html.TextBoxFor(model => model.opening_hours, new { @class = "w-full border-gray-300 rounded-lg p-2 focus:ring focus:ring-blue-200" })
-                @Html.ValidationMessageFor(model => model.opening_hours, "", new { @class = "text-red-500 text-xs mt-1" })
-            </div>
-
-            <!-- Số bàn tối đa -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Số bàn tối đa</label>
-                @Html.TextBoxFor(model => model.max_tables, new { @class = "w-full border-gray-300 rounded-lg p-2 focus:ring focus:ring-blue-200" })
-                @Html.ValidationMessageFor(model => model.max_tables, "", new { @class = "text-red-500 text-xs mt-1" })
-            </div>
-
-            <!-- Trạng thái duyệt -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Trạng thái duyệt</label>
-                @Html.DropDownListFor(model => model.is_approved, new SelectList(new[] {
-                    new { Value = true, Text = "Đã duyệt" },
-                    new { Value = false, Text = "Chờ duyệt" }
-                }, "Value", "Text", Model.is_approved),
-                new { @class = "w-full border-gray-300 rounded-lg p-2 focus:ring focus:ring-blue-200" })
-                @Html.ValidationMessageFor(model => model.is_approved, "", new { @class = "text-red-500 text-xs mt-1" })
-            </div>
-
-            <!-- Ảnh -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Ảnh đại diện (URL)</label>
-                @Html.TextBoxFor(model => model.Image, new { @class = "w-full border-gray-300 rounded-lg p-2 focus:ring focus:ring-blue-200" })
-                @Html.ValidationMessageFor(model => model.Image, "", new { @class = "text-red-500 text-xs mt-1" })
-
-                @if (!string.IsNullOrEmpty(Model.Image))
-                {
-                    <img src="@Model.Image" alt="Ảnh nhà hàng" class="mt-3 w-full rounded-md border shadow-sm" />
-                }
-            </div>
-
-            <!-- Mô tả -->
-            <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Mô tả chi tiết</label>
-                @Html.TextAreaFor(model => model.description, 5, 40, new { @class = "w-full border-gray-300 rounded-lg p-2 focus:ring focus:ring-blue-200" })
-                @Html.ValidationMessageFor(model => model.description, "", new { @class = "text-red-500 text-xs mt-1" })
+            <div class="pt-6 border-t mt-6 flex justify-between items-center">
+                <a href="@Url.Action("Index")" class="text-gray-600 hover:text-gray-900">Quay lại danh sách</a>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition">
+                    <i class="fas fa-save mr-1"></i> Lưu thay đổi
+                </button>
             </div>
         </div>
-
-        <!-- Nút hành động -->
-        <div class="flex justify-between items-center mt-8 border-t pt-6">
-            <a href="@Url.Action("Index")" class="text-gray-600 hover:text-gray-900 text-sm font-medium">
-                <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách
-            </a>
-            <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition">
-                <i class="fas fa-save mr-1"></i> Lưu thay đổi
-            </button>
-        </div>
-    </div>
-}
+    }
+</div>

@@ -21,7 +21,7 @@ namespace SmartTable.Models
         public string comment { get; set; }
         public Nullable<System.DateTime> created_at { get; set; }
     
-        public virtual Restaurants Restaurants { get; set; }
         public virtual Users Users { get; set; }
+        public virtual Restaurants Restaurants { get; set; }
     }
 }

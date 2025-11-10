@@ -27,14 +27,33 @@ namespace SmartTable.Models
         public Nullable<int> user_id { get; set; }
         public string name { get; set; }
         public string address { get; set; }
-        public Nullable<decimal> latitude { get; set; }
-        public Nullable<decimal> longitude { get; set; }
+        public Nullable<double> latitude { get; set; }
+        public Nullable<double> longitude { get; set; }
         public string description { get; set; }
         public Nullable<int> max_tables { get; set; }
         public string opening_hours { get; set; }
         public Nullable<bool> is_approved { get; set; }
         public Nullable<System.DateTime> created_at { get; set; }
         public string Image { get; set; }
+        public string CuisineStyle { get; set; }
+        public string ServiceDescription { get; set; }
+        public string ServiceTypes { get; set; }
+        public string AverageBill { get; set; }
+        public string FloorCount { get; set; }
+        public string BusyHours { get; set; }
+        public string SlowHours { get; set; }
+        public string SignatureDishes { get; set; }
+        public string PartnershipGoal { get; set; }
+        public string ServicePackage { get; set; }
+        public string ContactName { get; set; }
+        public string ContactPhone { get; set; }
+        public string ContactRole { get; set; }
+        public string Website { get; set; }
+        public string SpaceDescription { get; set; }
+        public string Amenities { get; set; }
+        public string SeatingType { get; set; }
+        public string PrivateRoomCount { get; set; }
+        public string NearbyLandmark { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Bookings> Bookings { get; set; }

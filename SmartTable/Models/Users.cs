@@ -18,8 +18,8 @@ namespace SmartTable.Models
         public Users()
         {
             this.Bookings = new HashSet<Bookings>();
-            this.Restaurants = new HashSet<Restaurants>();
             this.Reviews = new HashSet<Reviews>();
+            this.Restaurants = new HashSet<Restaurants>();
         }
     
         public int user_id { get; set; }
@@ -34,8 +34,8 @@ namespace SmartTable.Models
         public virtual ICollection<Bookings> Bookings { get; set; }
         public virtual LoyaltyPoints LoyaltyPoints { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Restaurants> Restaurants { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Reviews> Reviews { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Restaurants> Restaurants { get; set; }
     }
 }

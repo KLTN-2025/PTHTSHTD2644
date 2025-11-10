@@ -29,11 +29,11 @@ namespace SmartTable.Models
         public string status { get; set; }
         public string special_request { get; set; }
     
-        public virtual Restaurants Restaurants { get; set; }
         public virtual Users Users { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Orders> Orders { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Payments> Payments { get; set; }
+        public virtual Restaurants Restaurants { get; set; }
     }
 }
