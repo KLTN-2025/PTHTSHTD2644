@@ -114,9 +114,9 @@
 
         // ĐỊNH NGHĨA CUSTOM ICON CHO NHÀ HÀNG (Global Scope)
         const RestaurantIcon = L.icon({
-            iconUrl: '@Url.Content("~/Content/images/logo.png")',
-            iconSize: [32, 32],
-            iconAnchor: [16, 32],
+            iconUrl: '@Url.Content("~/Content/images/RestaurantIcon.png")',
+            iconSize: [60, 60],
+            iconAnchor: [29, 45],
             popupAnchor: [0, -32]
         });
 
@@ -163,36 +163,41 @@
         }
 
         function loadNearbyRestaurants(lat, lng) {
-            const url = '@Url.Action("GetNearbyMapData", "Restaurant", new { area = "Admin" })';
+    const url = '@Url.Action("GetNearbyMapData", "Restaurant", new { area = "Admin" })';
 
-            $.ajax({
-                url: url,
-                type: 'GET',
-                data: { lat: lat, lng: lng, radiusKm: 5 },
-                dataType: 'json',
-                success: function (data) {
-                    data.forEach(function (restaurant) {
-                        if (restaurant.latitude && restaurant.longitude) {
-                            L.marker([restaurant.latitude, restaurant.longitude], {
-                                icon: RestaurantIcon
-                            }).addTo(map)
-                            .bindPopup(`
-                                <div>
-                                    <h5 style="font-weight: bold; margin-bottom: 5px; color: #1e40af;">${restaurant.name}</h5>
-                                    <p>Địa chỉ: ${restaurant.address}</p>
-                                    <p>Khoảng cách: ${restaurant.distanceKm.toFixed(2)} km</p>
-                                    <p><a href="@Url.Action("Details", "Restaurant", new { area = "Admin" })}/${restaurant.restaurant_id}" style="color: blue;">Xem chi tiết</a></p>
-                                </div>
-                            `);
-                        }
-                    });
-                },
-                error: function (error) {
-                    document.getElementById('map-container').innerHTML = 'Lỗi khi tải dữ liệu nhà hàng.';
-                    console.error("Lỗi khi tải dữ liệu nhà hàng gần đó:", error.responseText);
+    $.ajax({
+        url: url,
+        type: 'GET',
+        data: { lat: lat, lng: lng, radiusKm: 5 },
+        dataType: 'json',
+        success: function (data) {
+            data.forEach(function (restaurant) {
+                if (restaurant.latitude && restaurant.longitude) {
+
+                    // Tạo URL chi tiết một lần bên ngoài chuỗi template
+                    const detailsUrl = '@Url.Action("Details", "Restaurant", new { area = "Admin" })' + '/' + restaurant.restaurant_id;
+
+                    L.marker([restaurant.latitude, restaurant.longitude], {
+                        icon: RestaurantIcon
+                    }).addTo(map)
+                    .bindPopup(`
+                        <div>
+                            <h5 style="font-weight: bold; margin-bottom: 5px; color: #1e40af;">${restaurant.name}</h5>
+                            <p>Địa chỉ: ${restaurant.address}</p>
+                            <p>Khoảng cách: ${restaurant.distanceKm.toFixed(2)} km</p>
+
+                            <p><a href="${detailsUrl}" style="color: blue;">Xem chi tiết</a></p>
+                        </div>
+                    `);
                 }
             });
+        },
+        error: function (error) {
+            document.getElementById('map-container').innerHTML = 'Lỗi khi tải dữ liệu nhà hàng.';
+            console.error("Lỗi khi tải dữ liệu nhà hàng gần đó:", error.responseText);
         }
+    });
+}
         </script>
     }
     @section styles {
@@ -209,7 +214,6 @@
                 border-radius: 8px;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             }
-            /* Không cần CSS .custom-div-icon và .custom-div-icon i nữa */
         </style>
     }
 

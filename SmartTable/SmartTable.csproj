@@ -138,6 +138,7 @@
     <Compile Include="Controllers\Filters\AuthorizeAdminAttribute.cs" />
     <Compile Include="Controllers\Filters\AuthorizeUserAttribute.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\PublicRestaurantController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -319,6 +320,8 @@
     <Content Include="Views\BusinessHome\Index.cshtml" />
     <Content Include="Views\BusinessHome\Profile.cshtml" />
     <Content Include="Views\BusinessHome\EditRestaurant.cshtml" />
+    <Content Include="Views\PublicRestaurant\Nearby.cshtml" />
+    <Content Include="Views\PublicRestaurant\Details.cshtml" />
     <None Include="Views\Shared\_BusinessLayout.cshtml" />
   </ItemGroup>
   <ItemGroup>

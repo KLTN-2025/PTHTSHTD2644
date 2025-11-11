@@ -1,0 +1,162 @@
+﻿@model IEnumerable<SmartTable.Models.Restaurants>
+@{
+    ViewBag.Title = "Nhà hàng gần bạn";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<div class="container mx-auto p-6 lg:py-10">
+    <h1 class="text-3xl font-bold mb-8 text-gray-800">
+        <i class="fas fa-location-dot text-red-600 mr-2"></i> Khám phá Nhà hàng Gần Bạn
+    </h1>
+
+    <div class="flex flex-col lg:flex-row gap-6">
+        <div class="lg:w-3/5 bg-white p-4 rounded-xl shadow-2xl border-l-4 border-blue-600">
+            <h2 class="text-xl font-semibold mb-3 border-b pb-2 text-blue-600">Bản đồ Định vị (Bán kính 5km)</h2>
+            <div id="map-container" style="height: 500px; border-radius: 8px;">
+                <p class="text-center text-gray-500 pt-20">Đang tải bản đồ...</p>
+            </div>
+        </div>
+
+        <div class="lg:w-2/5 bg-white p-4 rounded-xl shadow-2xl border-l-4 border-red-600">
+            <h2 class="text-xl font-semibold mb-3 border-b pb-2 text-red-600">Danh sách Gần nhất</h2>
+            <div id="restaurant-list-container" class="space-y-4 overflow-y-auto pr-2" style="max-height: 500px;">
+                <p class="text-center text-gray-500">Danh sách sẽ hiển thị khi xác định được vị trí.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        let map;
+        const DEFAULT_POS = [10.8231, 106.6297]; // TP.HCM
+        const MAP_ZOOM = 13;
+
+        const RestaurantIcon = L.icon({
+            iconUrl: '/Content/images/RestaurantIcon.png', // hoặc URL icon của bạn
+            iconSize: [52, 52],
+            iconAnchor: [46, 42],
+            popupAnchor: [0, -28]
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(initMap, showDefaultMap, { enableHighAccuracy: true, timeout: 15000 });
+            } else {
+                showDefaultMap();
+            }
+        });
+
+        // === Khởi tạo bản đồ với vị trí người dùng ===
+        function initMap(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            renderMap(lat, lng);
+        }
+
+        // === Nếu bị từ chối hoặc lỗi vị trí ===
+        function showDefaultMap() {
+            renderMap(DEFAULT_POS[0], DEFAULT_POS[1]);
+        }
+
+        // === Tạo bản đồ Leaflet ===
+        function renderMap(lat, lng) {
+            document.getElementById('map-container').innerHTML = ""; // xóa "Đang tải..."
+
+            map = L.map('map-container').setView([lat, lng], MAP_ZOOM);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Tắt cuộn zoom (không cuộn cả trang)
+            map.scrollWheelZoom.disable();
+            map.on('mouseover', () => map.scrollWheelZoom.enable());
+            map.on('mouseout', () => map.scrollWheelZoom.disable());
+
+            L.marker([lat, lng]).addTo(map).bindPopup('📍 Vị trí của bạn').openPopup();
+
+            loadNearbyRestaurants(lat, lng);
+        }
+
+        // === Gọi API lấy danh sách nhà hàng gần ===
+        function loadNearbyRestaurants(lat, lng) {
+            const apiUrl = '@Url.Action("GetNearbyMapData", "PublicRestaurant")';
+            const listDiv = $('#restaurant-list-container');
+            listDiv.html('<p class="text-center text-blue-500 mt-4">🔍 Đang tải dữ liệu nhà hàng...</p>');
+
+            $.ajax({
+                url: apiUrl,
+                type: 'GET',
+                data: { lat: lat, lng: lng, radiusKm: 5 },
+                dataType: 'json',
+                success: function (data) {
+                    if (!data || data.length === 0) {
+                        listDiv.html('<p class="text-center text-gray-500 mt-4">Không tìm thấy nhà hàng nào trong bán kính 5km.</p>');
+                        return;
+                    }
+
+                    let htmlList = '';
+
+                    data.forEach(r => {
+                        if (r.latitude && r.longitude) {
+                            const detailsUrl = '@Url.Action("Details", "PublicRestaurant")/' + r.restaurant_id;
+
+                            // Vẽ marker
+                            L.marker([r.latitude, r.longitude], { icon: RestaurantIcon })
+                                .addTo(map)
+                                .bindPopup(`
+                                    <div>
+                                        <h5 style="font-weight:bold;color:#1e40af;">${r.name}</h5>
+                                        <p>${r.address}</p>
+                                        <p><b>${r.distanceKm.toFixed(2)} km</b> từ vị trí của bạn</p>
+                                        <a href="${detailsUrl}" style="color:blue;">Xem chi tiết</a>
+                                    </div>
+                                `);
+
+                            // Danh sách bên phải
+                            htmlList += `
+                                <a href="${detailsUrl}" class="flex items-start space-x-4 border border-gray-200 p-3 rounded-lg bg-white hover:bg-gray-50 transition duration-150 shadow-sm">
+                                    <img src="${r.Image || '/Content/placeholder.png'}" alt="${r.name}" class="w-16 h-16 object-cover rounded-md" />
+                                    <div class="flex-grow">
+                                        <h4 class="text-md font-bold text-gray-900">${r.name}</h4>
+                                        <p class="text-sm text-gray-600 truncate">${r.address}</p>
+                                        <div class="flex justify-between items-center mt-1">
+                                            <p class="text-xs text-green-600 font-semibold">${r.distanceKm.toFixed(2)} km</p>
+                                            <span class="text-blue-500 text-xs font-medium">Xem ></span>
+                                        </div>
+                                    </div>
+                                </a>
+                            `;
+                        }
+                    });
+
+                    listDiv.html(htmlList);
+                },
+                error: function (xhr) {
+                    console.error('❌ Lỗi tải danh sách nhà hàng:', xhr.responseText);
+                    listDiv.html('<p class="text-center text-red-600 mt-4">Không thể tải danh sách nhà hàng.</p>');
+                }
+            });
+        }
+    </script>
+}
+
+@section styles {
+    <style>
+        @@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+
+        #map-container {
+            height: 500px;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background: #f3f4f6;
+            z-index: 0;
+        }
+    </style>
+}

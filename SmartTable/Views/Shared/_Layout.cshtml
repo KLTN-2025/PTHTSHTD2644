@@ -37,10 +37,9 @@
                 }
             <nav class="flex flex-grow justify-center items-center gap-x-8 font-medium text-sm">
                 <a href="@homeUrl" class="menu-link-header whitespace-nowrap">Trang chủ</a> @* <-- ĐÃ SỬA DÒNG NÀY *@
-                <button id="nearbyBtnDesktop" class="menu-link-header flex items-center space-x-1 whitespace-nowrap">
-                    <i class="fas fa-location-dot text-xs"></i>
-                    <span>Nhà hàng gần bạn</span>
-                </button>
+                <a href="@Url.Action("Nearby", "PublicRestaurant")" class="menu-link-header whitespace-nowrap">
+                    <i class="fas fa-map-marker-alt"></i> Nhà hàng gần bạn
+                </a>
                 <a href="#" class="menu-link-header whitespace-nowrap">Nhà hàng uy tín</a>
                 <a href="#" class="menu-link-header whitespace-nowrap">Ưu đãi hot</a>
                 <a href="@Url.Action("Index","Business")" class="menu-link-header whitespace-nowrap">Đăng ký đối tác</a>

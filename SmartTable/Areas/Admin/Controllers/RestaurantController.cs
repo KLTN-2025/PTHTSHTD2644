@@ -17,9 +17,8 @@ namespace SmartTable.Areas.Admin.Controllers
     {
         private Entities db = new Entities();
 
-        // Danh sách thuộc tính được phép Bind/Chỉnh sửa. 
-        private const string BIND_PROPERTIES = "restaurant_id,user_id,name,address,description,max_tables,opening_hours,is_approved,Image,CuisineStyle,ServiceDescription,ServiceTypes,AverageBill,FloorCount,BusyHours,SlowHours,SignatureDishes,PartnershipGoal,ServicePackage,ContactName,ContactPhone,ContactRole,Website,SpaceDescription,Amenities,SeatingType,PrivateRoomCount,NearbyLandmark";
-
+        // Danh sách thuộc tính được phép Bind/Chỉnh sửa. 
+        private const string BIND_PROPERTIES = "restaurant_id,user_id,name,address,description,max_tables,opening_hours,is_approved,Image,CuisineStyle,ServiceDescription,ServiceTypes,AverageBill,FloorCount,BusyHours,SlowHours,SignatureDishes,PartnershipGoal,ServicePackage,ContactName,ContactPhone,ContactRole,Website,SpaceDescription,Amenities,AmenitiesOther,SeatingType,PrivateRoomCount,NearbyLandmark"; // <-- ĐÃ THÊM AMENITIESOTHER
 
         // GET: Admin/Restaurant/Index
         public ActionResult Index()
@@ -53,7 +52,7 @@ namespace SmartTable.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = BIND_PROPERTIES)] Restaurants restaurant, string latitudeStr, string longitudeStr)
         {
-            // 1. Xử lý tọa độ từ chuỗi sang double (Sử dụng CultureInfo.InvariantCulture để dùng dấu chấm)
+            // 1. Xử lý tọa độ từ chuỗi sang double
             if (!string.IsNullOrEmpty(latitudeStr))
             {
                 restaurant.latitude = Convert.ToDouble(latitudeStr, CultureInfo.InvariantCulture);
@@ -81,9 +80,15 @@ namespace SmartTable.Areas.Admin.Controllers
         {
             if (id == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
 
-            Restaurants restaurant = db.Restaurants.Find(id); // Dùng Find() đơn giản
+            Restaurants restaurant = db.Restaurants.Find(id);
 
             if (restaurant == null) return HttpNotFound();
+
+            ViewBag.AvailableAmenities = new List<string>
+            {
+                "Karaoke riêng", "Karaoke chung", "Tivi/Máy chiếu",
+                "Loa mic", "Khu vui chơi trẻ em", "Ghế trẻ em", "VAT"
+            };
 
             ViewBag.user_id = new SelectList(db.Users.Where(u => u.role == "business"), "user_id", "email", restaurant.user_id);
             return View(restaurant);
@@ -93,36 +98,25 @@ namespace SmartTable.Areas.Admin.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(
-    [Bind(Include = BIND_PROPERTIES)] Restaurants restaurant, // KHÔNG CÓ LAT/LNG TRONG BIND
-    string latitudeStr,
-    string longitudeStr
-)
+            [Bind(Include = BIND_PROPERTIES)] Restaurants restaurant,
+            string latitudeStr,
+            string longitudeStr,
+            string[] AmenitiesCheckbox
+        )
         {
             double latValue;
             double lngValue;
 
-            // 1. SỬ DỤNG TRYPARSE (AN TOÀN HƠN)
-            bool latValid = double.TryParse(
-                latitudeStr,
-                NumberStyles.Float, // Cho phép số thực
-                CultureInfo.InvariantCulture, // Bắt buộc dùng dấu chấm
-                out latValue
-            );
-            bool lngValid = double.TryParse(
-                longitudeStr,
-                NumberStyles.Float,
-                CultureInfo.InvariantCulture,
-                out lngValue
-            );
+            // 1. SỬ DỤNG TRYPARSE (Fix lỗi tọa độ)
+            bool latValid = double.TryParse(latitudeStr, NumberStyles.Float, CultureInfo.InvariantCulture, out latValue);
+            bool lngValid = double.TryParse(longitudeStr, NumberStyles.Float, CultureInfo.InvariantCulture, out lngValue);
 
-            // 2. GÁN GIÁ TRỊ VÀO MODEL VÀ KIỂM TRA LỖI VALIDATION
-            // Chỉ gán nếu conversion thành công, nếu không gán null
+            // 2. GÁN GIÁ TRỊ TỌA ĐỘ VÀ KIỂM TRA VALIDATION
             restaurant.latitude = latValid ? (double?)latValue : null;
             restaurant.longitude = lngValid ? (double?)lngValue : null;
 
             if (!latValid && !string.IsNullOrEmpty(latitudeStr))
             {
-                // Thêm lỗi cụ thể nếu chuỗi không phải là số
                 ModelState.AddModelError("latitudeStr", "Vĩ độ phải là giá trị số (dùng dấu chấm).");
             }
             if (!lngValid && !string.IsNullOrEmpty(longitudeStr))
@@ -131,7 +125,25 @@ namespace SmartTable.Areas.Admin.Controllers
             }
 
 
-            // 3. Tiến hành lưu
+            // 3. FIX LỖI TIỆN ÍCH: Xử lý và Ghép nối Checkbox và Text khác
+            List<string> amenityList = new List<string>();
+
+            if (AmenitiesCheckbox != null && AmenitiesCheckbox.Length > 0)
+            {
+                var selectedAmenities = AmenitiesCheckbox.Where(a => a != "false" && !string.IsNullOrWhiteSpace(a));
+                amenityList.AddRange(selectedAmenities);
+            }
+
+            if (!string.IsNullOrEmpty(restaurant.AmenitiesOther)) // Đã thêm BIND_PROPERTY cho AmenitiesOther
+            {
+                amenityList.Add($"Khác: {restaurant.AmenitiesOther}");
+            }
+
+            // Gán chuỗi kết quả vào cột Amenities
+            restaurant.Amenities = amenityList.Count > 0 ? string.Join(", ", amenityList) : null;
+
+
+            // 4. Tiến hành lưu
             if (ModelState.IsValid)
             {
                 db.Entry(restaurant).State = EntityState.Modified;
@@ -143,7 +155,7 @@ namespace SmartTable.Areas.Admin.Controllers
                 return RedirectToAction("Index");
             }
 
-            // Nếu Model State không hợp lệ (lỗi tọa độ), tạo lại SelectList
+            // Nếu Model State không hợp lệ, tạo lại SelectList
             ViewBag.user_id = new SelectList(db.Users.Where(u => u.role == "business"), "user_id", "email", restaurant.user_id);
             return View(restaurant);
         }
@@ -193,15 +205,11 @@ namespace SmartTable.Areas.Admin.Controllers
         [HttpGet]
         public JsonResult GetNearbyMapData(double lat, double lng, double radiusKm = 5)
         {
-            // SỬA LỖI: Thay thế .HasValue bằng != null
             var allRestaurants = db.Restaurants
-            .Where(r => r.is_approved == true)
-            .ToList() // <-- ép tải về bộ nhớ
-            .Where(r => r.latitude != null && r.longitude != null)
-            .ToList();
-
-            // Logic còn lại giữ nguyên
-            var userCoord = new System.Device.Location.GeoCoordinate(lat, lng);
+                .Where(r => r.is_approved == true)
+                .ToList()
+                .Where(r => r.latitude != null && r.longitude != null) // Lọc an toàn sau ToList()
+                .ToList();
 
             var nearbyRestaurants = allRestaurants
                 .Select(r => new
@@ -209,7 +217,6 @@ namespace SmartTable.Areas.Admin.Controllers
                     r.restaurant_id,
                     r.name,
                     r.address,
-                    // Sử dụng .Value an toàn sau khi đã lọc ở trên
                     latitude = (double)r.latitude.Value,
                     longitude = (double)r.longitude.Value,
                     distanceKm = CalculateDistance(lat, lng, (double)r.latitude.Value, (double)r.longitude.Value)
