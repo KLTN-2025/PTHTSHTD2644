@@ -4,7 +4,7 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="53ed1e20e7b2495d8c524b16d37d9793" Name="Diagram1" ZoomLevel="83">
+      <Diagram DiagramId="53ed1e20e7b2495d8c524b16d37d9793" Name="Diagram1" ZoomLevel="53">
         <EntityTypeShape EntityType="SmartTableSystemModel.Bookings" Width="1.5" PointX="22.875" PointY="23.125" IsExpanded="true" />
         <EntityTypeShape EntityType="SmartTableSystemModel.LoyaltyPoints" Width="1.5" PointX="17.625" PointY="21.5" IsExpanded="true" />
         <EntityTypeShape EntityType="SmartTableSystemModel.MenuItems" Width="1.5" PointX="19.875" PointY="23.875" IsExpanded="true" />
@@ -26,6 +26,8 @@
         <AssociationConnector Association="SmartTableSystemModel.FK_Restaurants_User" />
         <AssociationConnector Association="SmartTableSystemModel.FK_Reviews_Restaurants" />
         <AssociationConnector Association="SmartTableSystemModel.FK_Tables_Restaurants" />
+        <EntityTypeShape EntityType="SmartTableSystemModel.RestaurantImages" Width="1.5" PointX="19.875" PointY="32" />
+        <AssociationConnector Association="SmartTableSystemModel.FK_RestaurantImages_Restaurants" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

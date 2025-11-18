@@ -102,6 +102,15 @@
           <Property Name="status" Type="nvarchar" MaxLength="50" />
           <Property Name="transaction_id" Type="nvarchar" MaxLength="100" />
         </EntityType>
+        <EntityType Name="RestaurantImages">
+          <Key>
+            <PropertyRef Name="image_id" />
+          </Key>
+          <Property Name="image_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="restaurant_id" Type="int" Nullable="false" />
+          <Property Name="image_url" Type="nvarchar" MaxLength="500" Nullable="false" />
+          <Property Name="description" Type="nvarchar" MaxLength="500" />
+        </EntityType>
         <EntityType Name="Restaurants">
           <Key>
             <PropertyRef Name="restaurant_id" />
@@ -256,6 +265,20 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_RestaurantImages_Restaurants">
+          <End Role="Restaurants" Type="Self.Restaurants" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="RestaurantImages" Type="Self.RestaurantImages" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Restaurants">
+              <PropertyRef Name="restaurant_id" />
+            </Principal>
+            <Dependent Role="RestaurantImages">
+              <PropertyRef Name="restaurant_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_Restaurants_User">
           <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
           <End Role="Restaurants" Type="Self.Restaurants" Multiplicity="*" />
@@ -311,6 +334,7 @@
           <EntitySet Name="Orders" EntityType="Self.Orders" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="PartnerLeads" EntityType="Self.PartnerLeads" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Payments" EntityType="Self.Payments" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="RestaurantImages" EntityType="Self.RestaurantImages" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Restaurants" EntityType="Self.Restaurants" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Reviews" EntityType="Self.Reviews" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Tables" EntityType="Self.Tables" Schema="dbo" store:Type="Tables" />
@@ -342,6 +366,10 @@
           <AssociationSet Name="FK_Payments_Bookings" Association="Self.FK_Payments_Bookings">
             <End Role="Bookings" EntitySet="Bookings" />
             <End Role="Payments" EntitySet="Payments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RestaurantImages_Restaurants" Association="Self.FK_RestaurantImages_Restaurants">
+            <End Role="Restaurants" EntitySet="Restaurants" />
+            <End Role="RestaurantImages" EntitySet="RestaurantImages" />
           </AssociationSet>
           <AssociationSet Name="FK_Restaurants_User" Association="Self.FK_Restaurants_User">
             <End Role="Users" EntitySet="Users" />
@@ -595,6 +623,11 @@
             <End Role="Restaurants" EntitySet="Restaurants" />
             <End Role="Tables" EntitySet="Tables" />
           </AssociationSet>
+          <EntitySet Name="RestaurantImages" EntityType="SmartTableSystemModel.RestaurantImages" />
+          <AssociationSet Name="FK_RestaurantImages_Restaurants" Association="SmartTableSystemModel.FK_RestaurantImages_Restaurants">
+            <End Role="Restaurants" EntitySet="Restaurants" />
+            <End Role="RestaurantImages" EntitySet="RestaurantImages" />
+          </AssociationSet>
         </EntityContainer>
         <EntityType Name="PartnerLeads">
           <Key>
@@ -680,6 +713,7 @@
           <NavigationProperty Name="Users" Relationship="SmartTableSystemModel.FK_Restaurants_User" FromRole="Restaurants" ToRole="Users" />
           <NavigationProperty Name="Reviews" Relationship="SmartTableSystemModel.FK_Reviews_Restaurants" FromRole="Restaurants" ToRole="Reviews" />
           <NavigationProperty Name="Tables" Relationship="SmartTableSystemModel.FK_Tables_Restaurants" FromRole="Restaurants" ToRole="Tables" />
+          <NavigationProperty Name="RestaurantImages" Relationship="SmartTableSystemModel.FK_RestaurantImages_Restaurants" FromRole="Restaurants" ToRole="RestaurantImages" />
         </EntityType>
         <Association Name="FK_Bookings_Restaurants">
           <End Type="SmartTableSystemModel.Restaurants" Role="Restaurants" Multiplicity="0..1" />
@@ -737,6 +771,30 @@
               <PropertyRef Name="restaurant_id" />
             </Principal>
             <Dependent Role="Tables">
+              <PropertyRef Name="restaurant_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="RestaurantImages">
+          <Key>
+            <PropertyRef Name="image_id" />
+          </Key>
+          <Property Name="image_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="restaurant_id" Type="Int32" Nullable="false" />
+          <Property Name="image_url" Type="String" Nullable="false" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="description" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Restaurants" Relationship="SmartTableSystemModel.FK_RestaurantImages_Restaurants" FromRole="RestaurantImages" ToRole="Restaurants" />
+        </EntityType>
+        <Association Name="FK_RestaurantImages_Restaurants">
+          <End Type="SmartTableSystemModel.Restaurants" Role="Restaurants" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="SmartTableSystemModel.RestaurantImages" Role="RestaurantImages" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Restaurants">
+              <PropertyRef Name="restaurant_id" />
+            </Principal>
+            <Dependent Role="RestaurantImages">
               <PropertyRef Name="restaurant_id" />
             </Dependent>
           </ReferentialConstraint>
@@ -921,6 +979,16 @@
                 <ScalarProperty Name="name" ColumnName="name" />
                 <ScalarProperty Name="user_id" ColumnName="user_id" />
                 <ScalarProperty Name="restaurant_id" ColumnName="restaurant_id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RestaurantImages">
+            <EntityTypeMapping TypeName="SmartTableSystemModel.RestaurantImages">
+              <MappingFragment StoreEntitySet="RestaurantImages">
+                <ScalarProperty Name="description" ColumnName="description" />
+                <ScalarProperty Name="image_url" ColumnName="image_url" />
+                <ScalarProperty Name="restaurant_id" ColumnName="restaurant_id" />
+                <ScalarProperty Name="image_id" ColumnName="image_id" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

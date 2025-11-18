@@ -161,6 +161,9 @@
     <Compile Include="Models\Payments.cs">
       <DependentUpon>SmartTableSystem2.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\RestaurantImages.cs">
+      <DependentUpon>SmartTableSystem2.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\Restaurants.cs">
       <DependentUpon>SmartTableSystem2.tt</DependentUpon>
     </Compile>

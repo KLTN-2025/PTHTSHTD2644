@@ -1,5 +1,4 @@
-﻿@model IEnumerable<SmartTable.Models.Restaurants>
-@{
+﻿@{
     ViewBag.Title = "Nhà hàng gần bạn";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -7,22 +6,31 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <div class="container mx-auto p-6 lg:py-10">
-    <h1 class="text-3xl font-bold mb-8 text-gray-800">
+    <h1 class="text-3xl font-bold mb-2 text-gray-800">
         <i class="fas fa-location-dot text-red-600 mr-2"></i> Khám phá Nhà hàng Gần Bạn
     </h1>
+    <p class="text-gray-600 mb-6 italic text-sm">
+        <i class="fas fa-info-circle mr-1"></i> Nếu vị trí chưa chính xác, bạn có thể <b>kéo thả biểu tượng màu xanh</b> đến vị trí đúng của mình.
+    </p>
 
     <div class="flex flex-col lg:flex-row gap-6">
+
         <div class="lg:w-3/5 bg-white p-4 rounded-xl shadow-2xl border-l-4 border-blue-600">
-            <h2 class="text-xl font-semibold mb-3 border-b pb-2 text-blue-600">Bản đồ Định vị (Bán kính 5km)</h2>
-            <div id="map-container" style="height: 500px; border-radius: 8px;">
-                <p class="text-center text-gray-500 pt-20">Đang tải bản đồ...</p>
+            <div class="flex justify-between items-center mb-3 border-b pb-2">
+                <h2 class="text-xl font-semibold text-blue-600">Bản đồ (Bán kính 5km)</h2>
+                <button onclick="locateUser()" class="text-sm bg-blue-100 text-blue-600 px-3 py-1 rounded hover:bg-blue-200 transition">
+                    <i class="fas fa-crosshairs"></i> Tìm lại tôi
+                </button>
+            </div>
+            <div id="map-container" style="height: 500px; border-radius: 8px; z-index: 0;">
+                <p class="text-center text-gray-500 pt-20">Đang lấy vị trí...</p>
             </div>
         </div>
 
         <div class="lg:w-2/5 bg-white p-4 rounded-xl shadow-2xl border-l-4 border-red-600">
             <h2 class="text-xl font-semibold mb-3 border-b pb-2 text-red-600">Danh sách Gần nhất</h2>
             <div id="restaurant-list-container" class="space-y-4 overflow-y-auto pr-2" style="max-height: 500px;">
-                <p class="text-center text-gray-500">Danh sách sẽ hiển thị khi xác định được vị trí.</p>
+                <p class="text-center text-gray-500">Đang chờ vị trí...</p>
             </div>
         </div>
     </div>
@@ -33,130 +41,152 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        let map;
+        var map;
+        var userMarker; 
+        var searchCircle;
+        var restaurantMarkers = []; 
         const DEFAULT_POS = [10.8231, 106.6297]; // TP.HCM
-        const MAP_ZOOM = 13;
 
+        // Icon Nhà hàng
         const RestaurantIcon = L.icon({
-            iconUrl: '/Content/images/RestaurantIcon.png', // hoặc URL icon của bạn
-            iconSize: [52, 52],
-            iconAnchor: [46, 42],
-            popupAnchor: [0, -28]
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448373.png',
+            iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
+        });
+
+        // Icon Người dùng (Màu xanh)
+        const UserIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
         });
 
         document.addEventListener('DOMContentLoaded', function () {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(initMap, showDefaultMap, { enableHighAccuracy: true, timeout: 15000 });
-            } else {
-                showDefaultMap();
-            }
+            locateUser(); // Tự động tìm khi vào trang
         });
 
-        // === Khởi tạo bản đồ với vị trí người dùng ===
-        function initMap(position) {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            renderMap(lat, lng);
+        function locateUser() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => initMap(pos.coords.latitude, pos.coords.longitude),
+                    () => initMap(DEFAULT_POS[0], DEFAULT_POS[1]), // Fallback nếu lỗi
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            } else {
+                initMap(DEFAULT_POS[0], DEFAULT_POS[1]);
+            }
         }
 
-        // === Nếu bị từ chối hoặc lỗi vị trí ===
-        function showDefaultMap() {
-            renderMap(DEFAULT_POS[0], DEFAULT_POS[1]);
-        }
+        function initMap(lat, lng) {
+            const userLocation = [lat, lng];
 
-        // === Tạo bản đồ Leaflet ===
-        function renderMap(lat, lng) {
-            document.getElementById('map-container').innerHTML = ""; // xóa "Đang tải..."
+            // 1. Khởi tạo bản đồ (nếu chưa có)
+            if (!map) {
+                map = L.map('map-container').setView(userLocation, 14);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap'
+                }).addTo(map);
+            } else {
+                map.setView(userLocation, 14);
+            }
 
-            map = L.map('map-container').setView([lat, lng], MAP_ZOOM);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
+            // 2. Xử lý Marker Người dùng (Cho phép Kéo thả)
+            if (userMarker) map.removeLayer(userMarker);
+            if (searchCircle) map.removeLayer(searchCircle);
+
+            // Vẽ vòng tròn 5km
+            searchCircle = L.circle(userLocation, {
+                color: 'blue', fillColor: '#3b82f6', fillOpacity: 0.1, radius: 5000
             }).addTo(map);
 
-            // Tắt cuộn zoom (không cuộn cả trang)
-            map.scrollWheelZoom.disable();
-            map.on('mouseover', () => map.scrollWheelZoom.enable());
-            map.on('mouseout', () => map.scrollWheelZoom.disable());
+            // Vẽ Marker
+            userMarker = L.marker(userLocation, {
+                icon: UserIcon,
+                draggable: true // <--- QUAN TRỌNG: Cho phép kéo
+            }).addTo(map)
+            .bindPopup("<b>Bạn đang ở đây</b><br>Kéo tôi để chỉnh vị trí!").openPopup();
 
-            L.marker([lat, lng]).addTo(map).bindPopup('📍 Vị trí của bạn').openPopup();
+            // 3. Sự kiện khi Kéo thả xong -> Tìm lại nhà hàng
+            userMarker.on('dragend', function(event) {
+                var marker = event.target;
+                var position = marker.getLatLng();
 
+                searchCircle.setLatLng(position);
+                map.panTo(position); 
+
+                loadNearbyRestaurants(position.lat, position.lng);
+            });
+
+            // 4. Tải dữ liệu lần đầu
             loadNearbyRestaurants(lat, lng);
         }
 
-        // === Gọi API lấy danh sách nhà hàng gần ===
         function loadNearbyRestaurants(lat, lng) {
-            const apiUrl = '@Url.Action("GetNearbyMapData", "PublicRestaurant")';
-            const listDiv = $('#restaurant-list-container');
-            listDiv.html('<p class="text-center text-blue-500 mt-4">🔍 Đang tải dữ liệu nhà hàng...</p>');
+            const url = '@Url.Action("GetNearbyMapData", "PublicRestaurant")';
+            const $listContainer = $('#restaurant-list-container');
+
+            $listContainer.html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-blue-600 text-2xl"></i><p class="text-gray-500 mt-2">Đang quét nhà hàng...</p></div>');
+
+            // Xóa các marker nhà hàng cũ
+            restaurantMarkers.forEach(m => map.removeLayer(m));
+            restaurantMarkers = [];
 
             $.ajax({
-                url: apiUrl,
+                url: url,
                 type: 'GET',
                 data: { lat: lat, lng: lng, radiusKm: 5 },
                 dataType: 'json',
                 success: function (data) {
-                    if (!data || data.length === 0) {
-                        listDiv.html('<p class="text-center text-gray-500 mt-4">Không tìm thấy nhà hàng nào trong bán kính 5km.</p>');
-                        return;
+                    let listHtml = '';
+
+                    if (data.length === 0) {
+                        listHtml = '<div class="text-center p-6 bg-gray-50 rounded-lg"><p class="text-gray-500">Không tìm thấy nhà hàng nào trong bán kính 5km.</p></div>';
                     }
 
-                    let htmlList = '';
+                    data.forEach(function (restaurant) {
+                        if (restaurant.latitude && restaurant.longitude) {
 
-                    data.forEach(r => {
-                        if (r.latitude && r.longitude) {
-                            const detailsUrl = '@Url.Action("Details", "PublicRestaurant")/' + r.restaurant_id;
+                            const detailsUrl = '@Url.Action("Details", "PublicRestaurant")' + '/' + restaurant.restaurant_id;
 
-                            // Vẽ marker
-                            L.marker([r.latitude, r.longitude], { icon: RestaurantIcon })
-                                .addTo(map)
-                                .bindPopup(`
-                                    <div>
-                                        <h5 style="font-weight:bold;color:#1e40af;">${r.name}</h5>
-                                        <p>${r.address}</p>
-                                        <p><b>${r.distanceKm.toFixed(2)} km</b> từ vị trí của bạn</p>
-                                        <a href="${detailsUrl}" style="color:blue;">Xem chi tiết</a>
-                                    </div>
-                                `);
+                            // 1. Marker trên Map
+                            var marker = L.marker([restaurant.latitude, restaurant.longitude], {
+                                icon: RestaurantIcon
+                            }).addTo(map)
+                            .bindPopup(`
+                                <div class="text-center">
+                                    <h5 style="font-weight:bold; margin-bottom:2px; color:#1e40af;">${restaurant.name}</h5>
+                                    <p style="font-size:11px; color:#666;">${restaurant.distanceKm.toFixed(1)} km</p>
+                                    <a href="/Home/RestaurantDetails/${restaurant.restaurant_id}" class="text-blue-600 underline text-xs">Xem chi tiết</a>
+                                </div>
+                            `);
+                            restaurantMarkers.push(marker);
 
-                            // Danh sách bên phải
-                            htmlList += `
-                                <a href="${detailsUrl}" class="flex items-start space-x-4 border border-gray-200 p-3 rounded-lg bg-white hover:bg-gray-50 transition duration-150 shadow-sm">
-                                    <img src="${r.Image || '/Content/placeholder.png'}" alt="${r.name}" class="w-16 h-16 object-cover rounded-md" />
-                                    <div class="flex-grow">
-                                        <h4 class="text-md font-bold text-gray-900">${r.name}</h4>
-                                        <p class="text-sm text-gray-600 truncate">${r.address}</p>
-                                        <div class="flex justify-between items-center mt-1">
-                                            <p class="text-xs text-green-600 font-semibold">${r.distanceKm.toFixed(2)} km</p>
-                                            <span class="text-blue-500 text-xs font-medium">Xem ></span>
+                            // 2. Item trong Danh sách
+                            listHtml += `
+                            <a href="/Home/RestaurantDetails/${restaurant.restaurant_id}" class="block group">
+                                <div class="flex items-start space-x-3 border border-gray-200 p-3 rounded-lg bg-white hover:shadow-lg hover:border-blue-300 transition duration-200">
+                                    <img src="${restaurant.Image || '/Content/placeholder.png'}" class="w-20 h-20 object-cover rounded-md flex-shrink-0 group-hover:opacity-90" />
+                                    <div class="flex-grow min-w-0">
+                                        <div class="flex justify-between items-start">
+                                            <h4 class="text-md font-bold text-gray-900 truncate group-hover:text-blue-600 transition">${restaurant.name}</h4>
+                                            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded whitespace-nowrap ml-2">${restaurant.distanceKm.toFixed(1)} km</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 truncate mt-1"><i class="fas fa-map-marker-alt mr-1"></i>${restaurant.address}</p>
+                                        <div class="mt-2 text-right">
+                                            <span class="text-blue-500 text-xs font-medium group-hover:underline">Đặt bàn ngay &rarr;</span>
                                         </div>
                                     </div>
-                                </a>
-                            `;
+                                </div>
+                            </a>
+                        `;
                         }
                     });
 
-                    listDiv.html(htmlList);
+                    $listContainer.html(listHtml);
                 },
-                error: function (xhr) {
-                    console.error('❌ Lỗi tải danh sách nhà hàng:', xhr.responseText);
-                    listDiv.html('<p class="text-center text-red-600 mt-4">Không thể tải danh sách nhà hàng.</p>');
+                error: function (error) {
+                    $listContainer.html('<p class="text-center text-red-600">Lỗi kết nối server.</p>');
                 }
             });
         }
     </script>
-}
-
-@section styles {
-    <style>
-        @@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-
-        #map-container {
-            height: 500px;
-            width: 100%;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            background: #f3f4f6;
-            z-index: 0;
-        }
-    </style>
 }

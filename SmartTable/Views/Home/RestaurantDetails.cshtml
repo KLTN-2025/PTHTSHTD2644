@@ -2,35 +2,50 @@
 @{
     ViewBag.Title = Model.Restaurant.name;
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Helper hiển thị chi tiết
+    @helper DetailRow(string iconClass, string label, object value)
+    {
+        string val = (value == null || string.IsNullOrWhiteSpace(value.ToString())) ? "N/A" : value.ToString();
+        <div class="flex items-start py-2 border-b border-gray-200">
+            <div class="w-8 flex-shrink-0 text-center text-gray-400 mt-1"><i class="@iconClass"></i></div>
+            <div class="flex-grow">
+                <span class="text-xs font-bold text-gray-500 uppercase block mb-0.5">@label</span>
+                <span class="text-sm text-gray-800 font-medium">@val</span>
+            </div>
+        </div>
+    }
+
+    var restaurantLat = Model.Restaurant.latitude.GetValueOrDefault(0);
+    var restaurantLng = Model.Restaurant.longitude.GetValueOrDefault(0);
 }
 
 @section styles {
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         .font-display {
             font-family: 'Playfair Display', serif;
         }
 
-        /* Style cho Tab */
+        /* Tabs */
         .tab-link {
-            padding: 1rem 1.5rem; /* py-4 px-6 */
-            font-size: 1.125rem; /* text-lg */
-            font-weight: 500; /* font-medium */
-            color: rgb(107 114 128); /* text-gray-500 */
-            border-bottom-width: 2px;
-            border-color: transparent;
-            transition-property: color, border-color;
-            transition-duration: 200ms;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            color: #6B7280; /* gray-500 */
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
         }
 
             .tab-link:hover {
-                border-color: rgb(59 130 246); /* hover:border-blue-500 */
-                color: rgb(59 130 246); /* hover:text-blue-600 */
+                color: #DC2626;
             }
 
             .tab-link.active {
-                border-color: rgb(37 99 235); /* border-blue-600 */
-                color: rgb(37 99 235); /* text-blue-600 */
+                color: #DC2626;
+                border-bottom-color: #DC2626;
+                font-weight: 700;
             }
 
         .tab-content {
@@ -40,178 +55,276 @@
             .tab-content.active {
                 display: block;
             }
+
+        /* Sticky Sidebar */
+        .reservation-box {
+            position: sticky;
+            top: 80px;
+        }
+
+        /* Gallery scroll */
+        .gallery-scroll {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 10px;
+            padding-bottom: 10px;
+        }
+
+            .gallery-scroll img {
+                scroll-snap-align: start;
+                flex-shrink: 0;
+                width: 200px;
+                height: 140px;
+                border-radius: 8px;
+                object-fit: cover;
+                cursor: pointer;
+            }
+        /* Lightbox overlay */
+        #lightbox-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+
+            #lightbox-overlay img {
+                max-width: 90%;
+                max-height: 90%;
+                border-radius: 8px;
+            }
     </style>
 }
 
-<div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
-    <div class="md:flex">
-        <div class="md:flex-shrink-0 md:w-1/3">
-            <img class="h-64 w-full object-cover"
-                 src="@(Model.Restaurant.Image ?? "https://via.placeholder.com/400x300.png?text=SmartTable")"
-                 alt="Ảnh bìa @Model.Restaurant.name">
-        </div>
-        <div class="p-8 flex flex-col justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 font-display mb-2">@Model.Restaurant.name</h1>
-                <p class="text-gray-600 text-sm mb-4 flex items-start">
-                    <i class="fas fa-map-marker-alt w-5 mt-1 text-blue-500"></i>
-                    <span class="ml-2">@Model.Restaurant.address</span>
-                </p>
-
-                <div class="flex items-center mb-2">
-                    <span class="text-yellow-500">
-                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
-                    </span>
-                    <span class="ml-2 text-sm text-gray-500">(@Model.Reviews.Count đánh giá)</span>
-                </div>
-
-                <p class="text-gray-600 text-sm mb-4">
-                    <i class="fas fa-clock w-5 text-blue-500"></i>
-                    <span class="ml-2">Mở cửa: @Model.Restaurant.opening_hours</span>
-                </p>
+<div class="bg-gray-50 min-h-screen pb-12">
+    <!-- Header -->
+    <div class="bg-white border-b">
+        <div class="container mx-auto px-4 py-6 lg:py-8">
+            <h1 class="font-display text-3xl md:text-4xl font-bold text-gray-900 mb-2">@Model.Restaurant.name</h1>
+            <p class="text-gray-600 flex items-center text-sm md:text-base">
+                <i class="fas fa-map-marker-alt text-red-600 mr-2"></i> @Model.Restaurant.address
+            </p>
+            <div class="flex items-center gap-4 mt-4 text-sm text-gray-500">
+                <span class="flex items-center"><i class="fas fa-clock mr-1 text-green-600"></i> @Model.Restaurant.opening_hours</span>
+                <span class="flex items-center"><i class="fas fa-utensils mr-1 text-orange-500"></i> @Model.Restaurant.CuisineStyle</span>
+                <span class="flex items-center"><i class="fas fa-star text-yellow-400 mr-1"></i> 4.5 (120 đánh giá)</span>
             </div>
-
-            <a href="@Url.Action("DatBan", "DatBan", new { id = Model.Restaurant.restaurant_id })"
-               class="lg:hidden w-full text-center px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-lg shadow hover:from-orange-600 hover:to-red-600 transition-transform transform hover:scale-105 text-lg">
-                Đặt bàn ngay
-            </a>
         </div>
     </div>
-</div>
 
-<div class="container mx-auto max-w-7xl px-6">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="container mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
+        <!-- Main Content -->
+        <div class="lg:w-2/3 space-y-6">
 
-        <div class="lg:col-span-2">
-            <div class="bg-white rounded-t-lg shadow-md">
-                <nav class="flex border-b border-gray-200">
-                    <button class="tab-link active" data-tab="gioi-thieu">Giới thiệu</button>
-                    <button class="tab-link" data-tab="menu">Menu</button>
-                    <button class="tab-link" data-tab="danh-gia">Đánh giá (@Model.Reviews.Count)</button>
-                </nav>
-            </div>
+            <!-- Banner + Gallery -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <img src="@(Model.Restaurant.Image ?? "https://via.placeholder.com/800x450.png?text=SmartTable")"
+                     alt="Ảnh nhà hàng" class="w-full h-80 md:h-96 object-cover" />
 
-            <div class="bg-white rounded-b-lg shadow-md p-6">
-                <div id="gioi-thieu" class="tab-content active space-y-4">
-                    <h3 class="text-xl font-semibold text-gray-800 font-display">Về nhà hàng @Model.Restaurant.name</h3>
-                    <p class="text-gray-700 leading-relaxed">
-                        @Model.Restaurant.description
-                    </p>
-                    <hr />
-                    <h4 class="text-lg font-semibold text-gray-800">Thông tin chi tiết</h4>
-                    <ul class="list-disc list-inside text-gray-700 space-y-1">
-                        <li><span class="font-medium">Địa chỉ:</span> @Model.Restaurant.address</li>
-                        <li><span class="font-medium">Giờ hoạt động:</span> @Model.Restaurant.opening_hours</li>
-                    </ul>
-                </div>
-
-                <div id="menu" class="tab-content space-y-4">
-                    <h3 class="text-xl font-semibold text-gray-800 font-display">Thực đơn đặc sắc</h3>
-                    @if (Model.MenuItems == null || !Model.MenuItems.Any())
-                    {
-                        <p class="text-gray-500">Menu đang được cập nhật...</p>
-                    }
-                    else
-                    {
-                        foreach (var item in Model.MenuItems)
-                        {
-                            <div class="border rounded-lg p-4 flex justify-between items-center">
-                                <div>
-                                    <h4 class="font-semibold text-gray-800">@item.name</h4>
-                                    <p class="text-sm text-gray-500">@item.description</p>
-                                </div>
-                                <span class="font-semibold text-blue-600 text-lg">@item.price.ToString("N0")đ</span>
-                            </div>
-                        }
-                    }
-                </div>
-
-                <div id="danh-gia" class="tab-content space-y-6">
-                    <h3 class="text-xl font-semibold text-gray-800 font-display">Đánh giá từ khách hàng</h3>
-                    @if (Model.Reviews == null || !Model.Reviews.Any())
-                    {
-                        <p class="text-gray-500">Chưa có đánh giá nào cho nhà hàng này.</p>
-                    }
-                    else
-                    {
-                        foreach (var review in Model.Reviews)
-                        {
-                            <div class="border-b pb-4">
-                                <div class="flex items-center mb-2">
-                                    <i class="fas fa-user-circle text-2xl text-gray-400 mr-2"></i>
-                                    <div>
-                                        <h4 class="font-semibold text-gray-800">@review.Users.full_name</h4>
-                                        <p class="text-xs text-gray-500">@review.created_at.Value.ToString("dd/MM/yyyy")</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center mb-2">
-                                    <span class="text-yellow-500">
-                                        @for (int i = 0; i < review.rating; i++)
-                                        {<i class="fas fa-star"></i>}
-                                        @for (int i = 0; i < (5 - review.rating); i++)
-                                        {<i class="far fa-star"></i>}
-                                    </span>
-                                </div>
-                                <p class="text-gray-700">@review.comment</p>
-                            </div>
-                        }
-                    }
-                </div>
-            </div>
-        </div>
-
-        <div class="lg:col-span-1 hidden lg:block">
-            <div class="bg-white rounded-lg shadow-lg p-6 sticky top-28">
-                <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center font-display">
-                    Tiến hành đặt bàn
-                </h3>
-
-                @using (Html.BeginForm("DatBan", "DatBan", FormMethod.Get, new { @class = "space-y-4" }))
+                @if (Model.Restaurant.RestaurantImages != null && Model.Restaurant.RestaurantImages.Any())
                 {
-                    @Html.Hidden("id", Model.Restaurant.restaurant_id)
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Số lượng khách</label>
-                        <input type="number" name="NumberOfPeople" min="1" value="2" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <div class="p-4 border-t">
+                        <div class="gallery-scroll">
+                            @foreach (var img in Model.Restaurant.RestaurantImages)
+                            {
+                                <img src="@img.image_url" alt="Ảnh View" />
+                            }
+                        </div>
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Ngày đến</label>
-                        <input type="date" name="ReservationDate" required value="@DateTime.Now.ToString("yyyy-MM-dd")"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-
-                    <button type="submit"
-                            class="w-full mt-4 px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-lg hover:bg-red-700 hover:scale-105 transition-transform text-lg">
-                        TIẾP TỤC ĐẶT BÀN
-                    </button>
                 }
             </div>
+
+            <!-- Tabs -->
+            <div class="bg-white rounded-xl shadow-sm">
+                <div class="flex border-b border-gray-200 overflow-x-auto">
+                    <button class="tab-link active" data-tab="gioi-thieu">Thông tin chi tiết</button>
+                    <button class="tab-link" data-tab="menu">Thực đơn</button>
+                    <button class="tab-link" data-tab="ban-do">Bản đồ</button>
+                    <button class="tab-link" data-tab="danh-gia">Đánh giá</button>
+                </div>
+
+                <div class="p-6">
+                    <!-- Thông tin chi tiết -->
+                    <div id="gioi-thieu" class="tab-content active space-y-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-3">Giới thiệu</h3>
+                        <p class="text-gray-700 whitespace-pre-wrap">@Model.Restaurant.description ?? "Chưa có mô tả."</p>
+
+                        <div class="grid md:grid-cols-2 gap-8 mt-4">
+                            <div class="space-y-2">
+                                <h4 class="font-bold text-gray-800 mb-2 border-b pb-1">Đặc điểm & Phục vụ</h4>
+                                @DetailRow("fas fa-dollar-sign", "Khoảng giá", Model.Restaurant.AverageBill)
+                                @DetailRow("fas fa-concierge-bell", "Loại hình", Model.Restaurant.ServiceDescription)
+                                @DetailRow("fas fa-hands-helping", "Phục vụ", Model.Restaurant.ServiceTypes)
+                                @DetailRow("fas fa-utensils", "Món đặc sắc", Model.Restaurant.SignatureDishes)
+                            </div>
+                            <div class="space-y-2">
+                                <h4 class="font-bold text-gray-800 mb-2 border-b pb-1">Không gian & Tiện ích</h4>
+                                @DetailRow("fas fa-chair", "Sức chứa", Model.Restaurant.max_tables + " bàn")
+                                @DetailRow("fas fa-door-closed", "Phòng riêng", Model.Restaurant.PrivateRoomCount)
+                                @DetailRow("fas fa-couch", "Chỗ ngồi", Model.Restaurant.SeatingType)
+                                @DetailRow("fas fa-star", "Tiện ích", Model.Restaurant.Amenities)
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(Model.Restaurant.SpaceDescription))
+                        {
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mt-4">
+                                <h4 class="font-bold text-blue-800 mb-1">Mô tả không gian</h4>
+                                <p class="text-sm text-blue-900">@Model.Restaurant.SpaceDescription</p>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Menu -->
+                    <div id="menu" class="tab-content space-y-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Thực đơn nổi bật</h3>
+                        @if (!Model.MenuItems.Any())
+                        {
+                            <p class="text-gray-500 italic">Đang cập nhật...</p>
+                        }
+                        else
+                        {
+                            <div class="grid md:grid-cols-2 gap-4">
+                                @foreach (var item in Model.MenuItems)
+                                {
+                                    <div class="flex justify-between items-start p-3 border rounded-lg bg-gray-50">
+                                        <div>
+                                            <h5 class="font-semibold text-gray-900">@item.name</h5>
+                                            <p class="text-xs text-gray-500">@item.description</p>
+                                        </div>
+                                        <span class="font-bold text-red-600 whitespace-nowrap ml-2">@item.price.ToString("N0") đ</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Map -->
+                    <div id="ban-do" class="tab-content">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Vị trí Nhà hàng</h3>
+                        <div id="map-tab-container" class="h-80 w-full rounded-lg border bg-gray-200"></div>
+                        <p class="text-sm text-gray-500 mt-2 italic">Địa chỉ: @Model.Restaurant.address</p>
+                    </div>
+
+                    <!-- Reviews -->
+                    <div id="danh-gia" class="tab-content">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Đánh giá từ khách hàng</h3>
+                        @if (!Model.Reviews.Any())
+                        {
+                            <p class="text-gray-500 italic">Chưa có đánh giá nào.</p>
+                        }
+                        else
+                        {
+                            foreach (var review in Model.Reviews)
+                            {
+                                <div class="border-b py-3">
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <img src="/images/default-avatar.png" class="w-10 h-10 rounded-full object-cover" />
+                                        <div>
+                                            <p class="font-semibold text-gray-800">@review.Users?.full_name ?? "Khách ẩn danh"</p>
+                                            <p class="text-xs text-gray-500">@review.created_at?.ToString("dd/MM/yyyy")</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex text-yellow-400 mb-1">
+                                        @for (int i = 0; i < review.rating; i++)
+                                        {<i class="fas fa-star"></i>}
+                                        @for (int i = review.rating; i < 5; i++)
+                                        {<i class="far fa-star"></i>}
+                                    </div>
+                                    <p class="text-gray-700">@review.comment</p>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
         </div>
 
+        <!-- Sidebar -->
+        <div class="lg:w-1/3">
+            <div class="reservation-box bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
+                <div class="bg-red-600 p-4 text-center">
+                    <h3 class="text-white font-bold text-xl uppercase">Đặt Bàn Giữ Chỗ</h3>
+                    <p class="text-red-100 text-sm">Miễn phí • Xác nhận ngay</p>
+                </div>
+                <div class="p-6 space-y-5">
+                    @using (Html.BeginForm("DatBan", "DatBan", FormMethod.Get, new { @class = "space-y-4" }))
+                    {
+                        @Html.Hidden("id", Model.Restaurant.restaurant_id)
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Số khách</label>
+                            <select name="NumberOfPeople" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
+                                <option value="2">2 người</option>
+                                <option value="4">4 người</option>
+                                <option value="6">6 người</option>
+                                <option value="8">8 người</option>
+                                <option value="10">10+ người</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Ngày đến</label>
+                            <input type="date" name="ReservationDate" required value="@DateTime.Now.ToString("yyyy-MM-dd")"
+                                   class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" />
+                        </div>
+                        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-lg shadow-md transition transform hover:scale-[1.02]">
+                            TIẾP TỤC ĐẶT BÀN
+                        </button>
+                        <p class="text-xs text-center text-gray-500 mt-2"><i class="fas fa-shield-alt mr-1"></i> Thông tin của bạn được bảo mật</p>
+                    }
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
+<!-- Lightbox Overlay -->
+<div id="lightbox-overlay"><img /></div>
 
-@section Scripts {
+@section scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // TAB logic
             const tabs = document.querySelectorAll('.tab-link');
             const contents = document.querySelectorAll('.tab-content');
-
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
-                    const targetId = tab.dataset.tab;
+                    const target = tab.dataset.tab;
+                    tabs.forEach(t=>t.classList.remove('active'));
+                    contents.forEach(c=>c.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.getElementById(target).classList.add('active');
 
-                    // Cập nhật trạng thái
-                    tabs.forEach(t => t.classList.remove('active', 'text-blue-600', 'border-blue-600'));
-                    contents.forEach(c => c.classList.add('hidden'));
-
-                    tab.classList.add('active', 'text-blue-600', 'border-blue-600');
-                    document.getElementById(targetId).classList.remove('hidden');
+                    if(target==='ban-do' && @restaurantLat != 0 && @restaurantLng != 0) setTimeout(initMap,200);
                 });
             });
+
+            // Map
+            let map;
+            function initMap(){
+                if(map){ map.invalidateSize(); return; }
+                const pos=[@restaurantLat, @restaurantLng];
+                map=L.map('map-tab-container',{scrollWheelZoom:false}).setView(pos,16);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+                const icon=L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/3448/3448373.png',iconSize:[32,32],iconAnchor:[16,32]});
+                L.marker(pos,{icon}).addTo(map).bindPopup("<b>@Model.Restaurant.name</b><br>@Model.Restaurant.address").openPopup();
+                map.on('mouseover',()=>map.scrollWheelZoom.enable());
+                map.on('mouseout',()=>map.scrollWheelZoom.disable());
+            }
+
+            // Lightbox Gallery
+            const overlay=document.getElementById('lightbox-overlay');
+            const lightboxImg=overlay.querySelector('img');
+            document.querySelectorAll('.gallery-scroll img').forEach(img=>{
+                img.addEventListener('click',()=>{ lightboxImg.src=img.src; overlay.style.display='flex'; });
+            });
+            overlay.addEventListener('click',()=>{ overlay.style.display='none'; });
         });
     </script>
 }
