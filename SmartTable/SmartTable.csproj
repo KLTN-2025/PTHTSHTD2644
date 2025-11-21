@@ -146,6 +146,8 @@
     <Compile Include="Models\Bookings.cs">
       <DependentUpon>SmartTableSystem2.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\DeepSeekHelper.cs" />
+    <Compile Include="Models\DeepSeekModel.cs" />
     <Compile Include="Models\LoyaltyPoints.cs">
       <DependentUpon>SmartTableSystem2.tt</DependentUpon>
     </Compile>

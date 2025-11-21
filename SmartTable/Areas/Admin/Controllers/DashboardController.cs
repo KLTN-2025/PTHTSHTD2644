@@ -8,6 +8,8 @@ using System.Web.Mvc;
 using System;
 using System.Configuration; // <-- Thêm: Cần cho ConfigurationManager
 using System.Net.Mail; // <-- Thêm: Cần cho MailAddress
+using System.Security.Cryptography;
+using System.Data.Entity;
 
 namespace SmartTable.Areas.Admin.Controllers
 {
@@ -29,12 +31,21 @@ namespace SmartTable.Areas.Admin.Controllers
             return View(leads);
         }
 
-        private string GenerateRandomPassword(int length = 8)
+        // Thay thế GenerateRandomPassword bằng hàm an toàn
+        private string GenerateSecureRandomPassword(int length = 10)
         {
-            const string validChars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            Random random = new Random();
-            return new string(Enumerable.Repeat(validChars, length)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
+            const string chars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var data = new byte[length];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(data);
+            }
+            var result = new char[length];
+            for (int i = 0; i < length; i++)
+            {
+                result[i] = chars[data[i] % chars.Length];
+            }
+            return new string(result);
         }
         [HttpGet] // <-- Action này chỉ để router tìm thấy đường dẫn
         public ActionResult RejectPartner(int? leadId)
@@ -59,93 +70,98 @@ namespace SmartTable.Areas.Admin.Controllers
             var lead = db.PartnerLeads.Find(leadId);
             if (lead == null) return HttpNotFound();
 
-            try
+            using (var tran = db.Database.BeginTransaction())
             {
-                var existingUser = db.Users.FirstOrDefault(u => u.email == lead.Email);
-                Users partnerUser;
-                string randomPassword = GenerateRandomPassword();
+                try
+                {
+                    var existingUser = db.Users.FirstOrDefault(u => u.email == lead.Email);
+                    Users partnerUser;
+                    string randomPassword = GenerateSecureRandomPassword();
 
-                // 1. Xử lý User (Tạo mới hoặc Nâng cấp vai trò)
-                if (existingUser != null)
-                {
-                    existingUser.role = "business";
-                    partnerUser = existingUser;
-                }
-                else
-                {
-                    partnerUser = new Users
+                    // 1. Xử lý User (Tạo mới hoặc Nâng cấp vai trò)
+                    if (existingUser != null)
                     {
-                        email = lead.Email,
-                        full_name = lead.ContactName,
-                        phone = lead.ContactPhone,
-                        role = "business",
-                        password_hash = BCrypt.Net.BCrypt.HashPassword(randomPassword),
-                        created_at = DateTime.Now
+                        existingUser.role = "business";
+                        partnerUser = existingUser;
+                    }
+                    else
+                    {
+                        partnerUser = new Users
+                        {
+                            email = lead.Email,
+                            full_name = lead.ContactName,
+                            phone = lead.ContactPhone,
+                            role = "business",
+                            password_hash = BCrypt.Net.BCrypt.HashPassword(randomPassword),
+                            created_at = DateTime.Now
+                        };
+                        db.Users.Add(partnerUser);
+                    }
+
+                    // 2. LƯU THAY ĐỔI LẦN 1 (BẮT BUỘC để có partnerUser.user_id)
+                    db.SaveChanges();
+
+                    // 3. TẠO VÀ LIÊN KẾT NHÀ HÀNG MỚI (CHỈ CẦN CODE NÀY)
+                    var newRestaurant = new Restaurants
+                    {
+                        user_id = partnerUser.user_id,
+                        name = lead.RestaurantName,
+                        address = lead.Address,
+                        max_tables = lead.TotalSeats,
+                        opening_hours = lead.OpeningTime + "-" + lead.ClosingTime,
+                        is_approved = true,
+                        Image = lead.PhotoLink ?? "https://via.placeholder.com/400x300.png?text=SmartTable",
+                        created_at = DateTime.Now,
+
+                        // === CHUYỂN DỮ LIỆU CHI TIẾT TỪ PARTNERLEADS ===
+                        CuisineStyle = lead.CuisineStyle,
+                        ServiceDescription = lead.ServiceDescription,
+                        ServiceTypes = lead.ServiceTypes, // Kiểu phục vụ (Gọi món, Buffet)
+                        AverageBill = lead.AverageBill,
+                        FloorCount = lead.FloorCount,
+                        BusyHours = lead.BusyHours,
+                        SlowHours = lead.SlowHours,
+                        SignatureDishes = lead.SignatureDishes,
+                        PartnershipGoal = lead.PartnershipGoal,
+                        ServicePackage = lead.ServicePackage,
+                        ContactName = lead.ContactName,
+                        ContactPhone = lead.ContactPhone,
+                        ContactRole = lead.ContactRole,
+                        Website = lead.Website,
+                        SpaceDescription = lead.SpaceDescription,
+                        Amenities = lead.Amenities
+                        // ... (Không cần các trường Other và Previous Partnership)
                     };
-                    db.Users.Add(partnerUser);
+                    db.Restaurants.Add(newRestaurant);
+
+                    // 4. GỬI EMAIL CHÀO MỪNG (Chỉ gửi nếu là user mới)
+                    if (existingUser == null)
+                    {
+                        string subject = "Chào mừng Đối tác! Tài khoản Smart-Table của bạn đã được duyệt.";
+                        string body = $"Chào {partnerUser.full_name},\n\n" +
+                                      $"Tài khoản đối tác của bạn đã được duyệt. Bạn có thể đăng nhập bằng thông tin sau:\n" +
+                                      $"Email: {partnerUser.email}\n" +
+                                      $"Mật khẩu: {randomPassword}\n\n" +
+                                      $"Vui lòng đổi mật khẩu sau khi đăng nhập lần đầu.\nTrân trọng,\nĐội ngũ Smart-Table.";
+
+                        EmailHelper.SendEmail(partnerUser.email, subject, body);
+                    }
+
+                    // cuối cùng cập nhật lead.Status và lưu
+                    lead.Status = "Đã duyệt";
+                    db.SaveChanges(); // Lưu nốt Nhà hàng và trạng thái Lead
+
+                    tran.Commit();
+                    TempData["SuccessMessage"] = "Đã duyệt đối tác.";
+                    return RedirectToAction("Index");
                 }
-
-                // 2. LƯU THAY ĐỔI LẦN 1 (BẮT BUỘC để có partnerUser.user_id)
-                db.SaveChanges();
-
-                // 3. TẠO VÀ LIÊN KẾT NHÀ HÀNG MỚI (CHỈ CẦN CODE NÀY)
-                var newRestaurant = new Restaurants
+                catch (Exception ex)
                 {
-                    user_id = partnerUser.user_id,
-                    name = lead.RestaurantName,
-                    address = lead.Address,
-                    max_tables = lead.TotalSeats,
-                    opening_hours = lead.OpeningTime + "-" + lead.ClosingTime,
-                    is_approved = true,
-                    Image = lead.PhotoLink ?? "https://via.placeholder.com/400x300.png?text=SmartTable",
-                    created_at = DateTime.Now,
-
-                    // === CHUYỂN DỮ LIỆU CHI TIẾT TỪ PARTNERLEADS ===
-                    CuisineStyle = lead.CuisineStyle,
-                    ServiceDescription = lead.ServiceDescription,
-                    ServiceTypes = lead.ServiceTypes, // Kiểu phục vụ (Gọi món, Buffet)
-                    AverageBill = lead.AverageBill,
-                    FloorCount = lead.FloorCount,
-                    BusyHours = lead.BusyHours,
-                    SlowHours = lead.SlowHours,
-                    SignatureDishes = lead.SignatureDishes,
-                    PartnershipGoal = lead.PartnershipGoal,
-                    ServicePackage = lead.ServicePackage,
-                    ContactName = lead.ContactName,
-                    ContactPhone = lead.ContactPhone,
-                    ContactRole = lead.ContactRole,
-                    Website = lead.Website,
-                    SpaceDescription = lead.SpaceDescription,
-                    Amenities = lead.Amenities
-                    // ... (Không cần các trường Other và Previous Partnership)
-                };
-                db.Restaurants.Add(newRestaurant);
-
-                // 4. GỬI EMAIL CHÀO MỪNG (Chỉ gửi nếu là user mới)
-                if (existingUser == null)
-                {
-                    string subject = "Chào mừng Đối tác! Tài khoản Smart-Table của bạn đã được duyệt.";
-                    string body = $"Chào {partnerUser.full_name},\n\n" +
-                                  $"Tài khoản đối tác của bạn đã được duyệt. Bạn có thể đăng nhập bằng thông tin sau:\n" +
-                                  $"Email: {partnerUser.email}\n" +
-                                  $"Mật khẩu: {randomPassword}\n\n" +
-                                  $"Vui lòng đổi mật khẩu sau khi đăng nhập lần đầu.\nTrân trọng,\nĐội ngũ Smart-Table.";
-
-                    EmailHelper.SendEmail(partnerUser.email, subject, body);
+                    tran.Rollback();
+                    // log ex
+                    TempData["ErrorMessage"] = "Duyệt thất bại.";
+                    return RedirectToAction("PartnerLeads");
                 }
-
-                // 5. Cập nhật trạng thái và lưu lần cuối
-                lead.Status = "Đã duyệt";
-                db.SaveChanges(); // Lưu nốt Nhà hàng và trạng thái Lead
-
-                TempData["SuccessMessage"] = "Đăng ký thành công! Yêu cầu của bạn đang được kiểm duyệt. Vui lòng kiểm tra email sau 03 ngày làm việc để nhận thông tin đăng nhập chính thức.";
-                return RedirectToAction("Index"); 
-            }
-            catch (Exception ex)
-            {
-                // Nếu có lỗi, TempData sẽ báo cho Admin biết
-                TempData["ErrorMessage"] = "Duyệt thất bại. Lỗi: " + ex.Message;
-                return RedirectToAction("PartnerLeads");
             }
         }
         // (Trong file Areas/Admin/Controllers/DashboardController.cs)

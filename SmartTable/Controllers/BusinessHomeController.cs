@@ -1,4 +1,4 @@
-﻿using SmartTable.Filters; // Dùng cho [AuthorizeUser]
+﻿using SmartTable.Filters; 
 using SmartTable.Models;
 using System;
 using System.Collections.Generic;
@@ -33,7 +33,7 @@ namespace SmartTable.Controllers
             return View(restaurant);
         }
 
-        // --- HÀM PROFILE (ĐÃ DI CHUYỂN VÀO ĐÚNG VỊ TRÍ) ---
+        // --- HÀM PROFILE ---
         [AuthorizeUser]
         public ActionResult Profile()
         {
@@ -50,7 +50,7 @@ namespace SmartTable.Controllers
             {
                 ViewBag.ErrorMessage = "Chưa có nhà hàng nào liên kết với tài khoản này.";
             }
-            return View(restaurant); // Trả về View Profile, kèm theo model Nhà hàng
+            return View(restaurant); 
         }
 
         protected override void Dispose(bool disposing)
@@ -109,7 +109,7 @@ namespace SmartTable.Controllers
                 originalRestaurant.max_tables = model.max_tables;
                 originalRestaurant.Image = model.Image; // Cập nhật URL ảnh
 
-                db.Entry(originalRestaurant).State = EntityState.Modified; // Đánh dấu là đã thay đổi
+                db.Entry(originalRestaurant).State = EntityState.Modified; 
                 db.SaveChanges();
 
                 TempData["SuccessMessage"] = "Cập nhật thông tin nhà hàng thành công!";

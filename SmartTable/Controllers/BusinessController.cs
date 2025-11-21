@@ -119,9 +119,9 @@ namespace SmartTable.Controllers
                 // 4. Xử lý nếu có lỗi
                 System.Diagnostics.Debug.WriteLine("LỖI RegisterPartner: " + ex.Message);
                 TempData["ErrorMessage"] = "Đã xảy ra lỗi khi gửi thông tin. Vui lòng thử lại.";
-                return View("RegisterPartner", model); // Quay lại form và báo lỗi
+                return View("RegisterPartner", model); 
             }
-        } // <-- Đóng hàm RegisterPartner [POST]
+        } 
 
         // [GET] /Business/Login
         [HttpGet]

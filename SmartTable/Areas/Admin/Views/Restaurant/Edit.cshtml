@@ -2,13 +2,31 @@
 @{
     ViewBag.Title = "Chỉnh sửa Nhà hàng";
 
+    // Danh sách tiện ích
     List<string> availableAmenities = ViewBag.AvailableAmenities as List<string> ?? new List<string>
 {
-        "Karaoke riêng", "Karaoke chung", "Tivi/Máy chiếu",
-        "Loa mic", "Khu vui chơi trẻ em", "Ghế trẻ em", "VAT"
+        "Karaoke riêng", "Karaoke chung", "Tivi/Máy chiếu", "Loa mic", "Khu vui chơi trẻ em", "Ghế trẻ em", "VAT"
     };
-
     string[] currentAmenities = Model.Amenities?.Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries) ?? new string[0];
+
+    // Lấy tọa độ để init map (Nếu null thì dùng mặc định TP.HCM)
+    // Dùng InvariantCulture để đảm bảo định dạng số chấm động JS hiểu được
+    var latInit = Model.latitude.HasValue ? Model.latitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "10.8231";
+    var lngInit = Model.longitude.HasValue ? Model.longitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "106.6297";
+}
+
+@section styles {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #edit-map {
+            height: 400px;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+            z-index: 0;
+            margin-top: 10px;
+        }
+    </style>
 }
 
 <h1 class="text-2xl font-bold text-gray-800 mb-4">Chỉnh sửa Nhà hàng: @Model.name</h1>
@@ -23,188 +41,115 @@
 
     <div class="space-y-8">
 
-        <!-- 1. Thông tin cơ bản & Chủ sở hữu -->
         <div class="grid md:grid-cols-2 gap-6 border-b pb-6">
-            <h3 class="md:col-span-2 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">1. Thông tin cơ bản & Chủ sở hữu</h3>
+            <h3 class="md:col-span-2 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">1. Thông tin cơ bản</h3>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Tên Nhà hàng</label>
                 @Html.TextBoxFor(m => m.name, new { @class = "w-full p-2 border rounded-lg", required = "required" })
             </div>
-
             <div>
-                <label class="block text-sm font-medium text-gray-700">Chủ sở hữu hiện tại</label>
-                <input type="text" class="w-full p-2 border rounded-lg bg-gray-100" value="@(Model.Users?.full_name ?? "Chưa gán")" readonly />
-                <small class="text-gray-500 text-xs">Email: @(Model.Users?.email ?? "-")</small>
+                <label class="block text-sm font-medium text-gray-700">Chủ sở hữu</label>
+                @Html.TextBox("OwnerEmailDisplay", Model.Users?.email ?? "Chưa gán", new { @class = "w-full p-2 border rounded-lg bg-gray-100", @readonly = "readonly" })
             </div>
-
             <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700">Địa chỉ</label>
                 @Html.TextBoxFor(m => m.address, new { @class = "w-full p-2 border rounded-lg", required = "required" })
             </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Tên người liên hệ</label>
-                @Html.TextBoxFor(m => m.ContactName, new { @class = "w-full p-2 border rounded-lg", placeholder = "Nguyễn Văn A" })
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Số điện thoại liên hệ</label>
-                @Html.TextBoxFor(m => m.ContactPhone, new { @class = "w-full p-2 border rounded-lg", placeholder = "0987654321" })
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Vai trò liên hệ</label>
-                @Html.TextBoxFor(m => m.ContactRole, new { @class = "w-full p-2 border rounded-lg", placeholder = "Quản lý / Chủ cửa hàng" })
-            </div>
-
             <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700">Website</label>
-                @Html.TextBoxFor(m => m.Website, new { @class = "w-full p-2 border rounded-lg", placeholder = "https://example.com" })
+                <label class="block text-sm font-medium text-gray-700">Ảnh đại diện</label>
+                <input type="file" name="uploadedImage" class="w-full p-2 border rounded-lg" />
+                @Html.HiddenFor(m => m.Image)
+                @if (!string.IsNullOrEmpty(Model.Image))
+                {
+                    <img src="@Model.Image" class="w-32 h-20 object-cover mt-2 rounded border" />
+                }
             </div>
         </div>
 
-        <!-- 2. Dịch vụ & Ẩm thực -->
-        <div class="grid md:grid-cols-3 gap-6 border-b pb-6">
-            <h3 class="md:col-span-3 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">2. Dịch vụ & Ẩm thực</h3>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Phong cách Ẩm thực</label>
-                @Html.TextBoxFor(m => m.CuisineStyle, new { @class = "w-full p-2 border rounded-lg", placeholder = "Hàn Quốc, Fusion..." })
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Loại hình Dịch vụ</label>
-                @Html.TextBoxFor(m => m.ServiceDescription, new { @class = "w-full p-2 border rounded-lg", placeholder = "Buffet lẩu, Gọi món Việt..." })
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Kiểu phục vụ</label>
-                @Html.TextBoxFor(m => m.ServiceTypes, new { @class = "w-full p-2 border rounded-lg", placeholder = "Gọi món, Buffet..." })
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Hóa đơn trung bình</label>
-                @Html.TextBoxFor(m => m.AverageBill, new { @class = "w-full p-2 border rounded-lg", placeholder = "Dưới 150K" })
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Gói dịch vụ</label>
-                @Html.TextBoxFor(m => m.ServicePackage, new { @class = "w-full p-2 border rounded-lg", placeholder = "Gói cơ bản, Premium..." })
-            </div>
-
-            <div class="md:col-span-3">
-                <label class="block text-sm font-medium text-gray-700">Món đặc sắc</label>
-                @Html.TextAreaFor(m => m.SignatureDishes, new { @class = "w-full p-2 border rounded-lg", rows = 3, placeholder = "Liệt kê món nổi bật..." })
-            </div>
-
-            <div class="md:col-span-3">
-                <label class="block text-sm font-medium text-gray-700">Mục tiêu hợp tác</label>
-                @Html.TextBoxFor(m => m.PartnershipGoal, new { @class = "w-full p-2 border rounded-lg", placeholder = "Hợp tác với sự kiện, tour..." })
-            </div>
+        <div class="grid md:grid-cols-2 gap-6 border-b pb-6">
+            <h3 class="md:col-span-2 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">2. Dịch vụ & Ẩm thực</h3>
+            <div><label class="block text-sm">Phong cách</label>@Html.TextBoxFor(m => m.CuisineStyle, new { @class = "w-full p-2 border rounded-lg" })</div>
+            <div><label class="block text-sm">Loại hình</label>@Html.TextBoxFor(m => m.ServiceDescription, new { @class = "w-full p-2 border rounded-lg" })</div>
+            <div><label class="block text-sm">Kiểu phục vụ</label>@Html.TextBoxFor(m => m.ServiceTypes, new { @class = "w-full p-2 border rounded-lg" })</div>
+            <div><label class="block text-sm">Hóa đơn TB</label>@Html.TextBoxFor(m => m.AverageBill, new { @class = "w-full p-2 border rounded-lg" })</div>
+            <div class="md:col-span-2"><label class="block text-sm">Món đặc sắc</label>@Html.TextAreaFor(m => m.SignatureDishes, new { @class = "w-full p-2 border rounded-lg", rows = 3 })</div>
         </div>
 
-        <!-- 3. Vận hành & Giờ giấc -->
         <div class="grid md:grid-cols-3 gap-6 border-b pb-6">
             <h3 class="md:col-span-3 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">3. Vận hành & Giờ giấc</h3>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Giờ mở cửa</label>
-                @Html.TextBoxFor(m => m.opening_hours, new { @class = "w-full p-2 border rounded-lg", required = "required", placeholder = "10:00 - 22:00" })
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Số bàn tối đa</label>
-                @Html.TextBoxFor(m => m.max_tables, new { @class = "w-full p-2 border rounded-lg", type = "number", min = "1", required = "required" })
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Số tầng</label>
-                @Html.TextBoxFor(m => m.FloorCount, new { @class = "w-full p-2 border rounded-lg" })
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Giờ cao điểm</label>
-                @Html.TextBoxFor(m => m.BusyHours, new { @class = "w-full p-2 border rounded-lg" })
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Giờ vắng khách</label>
-                @Html.TextBoxFor(m => m.SlowHours, new { @class = "w-full p-2 border rounded-lg" })
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Latitude</label>
-                <input type="text" name="latitudeStr" value="@(Model.latitude?.ToString("G17", System.Globalization.CultureInfo.InvariantCulture))" class="w-full p-2 border rounded-lg" />
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Longitude</label>
-                <input type="text" name="longitudeStr" value="@(Model.longitude?.ToString("G17", System.Globalization.CultureInfo.InvariantCulture))" class="w-full p-2 border rounded-lg" />
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Kiểu chỗ ngồi</label>
-                @Html.TextBoxFor(m => m.SeatingType, new { @class = "w-full p-2 border rounded-lg" })
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Số phòng riêng</label>
-                @Html.TextBoxFor(m => m.PrivateRoomCount, new { @class = "w-full p-2 border rounded-lg" })
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Địa điểm gần</label>
-                @Html.TextBoxFor(m => m.NearbyLandmark, new { @class = "w-full p-2 border rounded-lg" })
-            </div>
+            <div><label class="block text-sm">Giờ mở cửa</label>@Html.TextBoxFor(m => m.opening_hours, new { @class = "w-full p-2 border rounded-lg" })</div>
+            <div><label class="block text-sm">Số bàn tối đa</label>@Html.TextBoxFor(m => m.max_tables, new { @class = "w-full p-2 border rounded-lg", type = "number" })</div>
+            <div><label class="block text-sm">Số tầng</label>@Html.TextBoxFor(m => m.FloorCount, new { @class = "w-full p-2 border rounded-lg" })</div>
+            <div><label class="block text-sm">Giờ đông</label>@Html.TextBoxFor(m => m.BusyHours, new { @class = "w-full p-2 border rounded-lg" })</div>
+            <div><label class="block text-sm">Giờ vắng</label>@Html.TextBoxFor(m => m.SlowHours, new { @class = "w-full p-2 border rounded-lg" })</div>
+            <div><label class="block text-sm">Phòng riêng</label>@Html.TextBoxFor(m => m.PrivateRoomCount, new { @class = "w-full p-2 border rounded-lg" })</div>
+            <div><label class="block text-sm">Chỗ ngồi</label>@Html.TextBoxFor(m => m.SeatingType, new { @class = "w-full p-2 border rounded-lg" })</div>
+            <div class="md:col-span-2"><label class="block text-sm">Địa điểm gần</label>@Html.TextBoxFor(m => m.NearbyLandmark, new { @class = "w-full p-2 border rounded-lg" })</div>
         </div>
 
-        <!-- 4. Tiện ích & mô tả -->
-        <div class="pt-6 border-t mt-6">
-            <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">4. Tiện ích & Mô tả</h3>
+        <div class="border-b pb-6">
+            <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">4. Cập nhật Vị trí (Kéo thả Marker)</h3>
 
-            <label class="block text-sm font-medium text-gray-700 mb-2">Tiện ích cơ bản</label>
-            <div class="grid grid-cols-2 gap-2 mb-4">
+            <div class="grid md:grid-cols-2 gap-6 mb-4">
+                <div>
+                    <label class="block text-sm font-bold text-blue-600">Latitude (Vĩ độ)</label>
+                    <input type="text" name="latitudeStr" id="latitudeStr"
+                           value="@latInit" class="w-full p-2 border border-blue-300 rounded-lg bg-blue-50 font-mono" readonly />
+                    <small class="text-gray-500">Tự động cập nhật khi kéo marker</small>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-blue-600">Longitude (Kinh độ)</label>
+                    <input type="text" name="longitudeStr" id="longitudeStr"
+                           value="@lngInit" class="w-full p-2 border border-blue-300 rounded-lg bg-blue-50 font-mono" readonly />
+                    <small class="text-gray-500">Tự động cập nhật khi kéo marker</small>
+                </div>
+            </div>
+
+            <div id="edit-map"></div>
+
+            <p class="text-center text-sm text-gray-500 mt-2 italic">
+                <i class="fas fa-hand-pointer"></i> Kéo thả biểu tượng màu xanh để chọn vị trí chính xác của nhà hàng.
+            </p>
+        </div>
+
+        <div class="pt-6 border-t mt-6">
+            <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">5. Tiện ích & Mô tả</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                 @foreach (var amenity in availableAmenities)
                 {
                     bool isChecked = currentAmenities.Contains(amenity);
                     <label class="flex items-center text-sm">
-                        <input type="checkbox" name="AmenitiesCheckbox" value="@amenity" @(isChecked ? "checked" : "") class="h-4 w-4 text-blue-600 rounded mr-2" />
-                        @amenity
+                        @Html.CheckBox("AmenitiesCheckbox", isChecked, new { @value = amenity, @class = "mr-2 h-4 w-4" }) @amenity
                     </label>
                 }
             </div>
-
-            <div class="mt-4">
-                <label class="block text-sm font-medium text-gray-700">Tiện ích khác</label>
+            <div class="mb-4">
+                <label class="block text-sm">Tiện ích khác</label>
                 @Html.TextBoxFor(m => m.AmenitiesOther, new { @class = "w-full p-2 border rounded-lg" })
             </div>
-
-            <div class="mt-4">
-                <label class="block text-sm font-medium text-gray-700">Mô tả chi tiết</label>
+            <div>
+                <label class="block text-sm">Mô tả chi tiết</label>
                 @Html.TextAreaFor(m => m.description, new { @class = "w-full p-2 border rounded-lg", rows = 4 })
-            </div>
-
-            <div class="mt-4">
-                <label class="block text-sm font-medium text-gray-700">Mô tả không gian</label>
-                @Html.TextAreaFor(m => m.SpaceDescription, new { @class = "w-full p-2 border rounded-lg", rows = 3 })
             </div>
         </div>
 
         <!-- 5. Ảnh View -->
         <div class="border-b pb-4 mt-4">
             <label class="block font-medium mb-2">Ảnh view hiện tại</label>
+
             @if (Model.RestaurantImages != null && Model.RestaurantImages.Any())
             {
                 <div class="grid md:grid-cols-3 gap-4">
                     @foreach (var img in Model.RestaurantImages)
                     {
-                        <div class="border rounded overflow-hidden flex flex-col items-center">
-                            <img src="@img.image_url" class="w-full h-32 object-cover" />
-                            <!-- Checkbox Xóa bên dưới ảnh -->
-                            <label class="mt-2 bg-red-600 text-white text-xs px-2 py-1 rounded cursor-pointer hover:bg-red-700 flex items-center space-x-1">
+                        <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition p-2 bg-white">
+                            <img src="@img.image_url" class="w-full h-32 object-cover rounded" />
+
+                            <!-- Checkbox Xóa -->
+                            <label class="mt-3 bg-red-600 text-white text-xs px-3 py-1 rounded cursor-pointer hover:bg-red-700 flex items-center justify-center space-x-2">
                                 <input type="checkbox" name="DeleteImages" value="@img.image_id" class="h-4 w-4" />
-                                <span>Xóa</span>
+                                <span>Xóa ảnh</span>
                             </label>
                         </div>
                     }
@@ -216,34 +161,80 @@
             }
         </div>
 
-
-        <!-- 6. Chủ sở hữu mới & phê duyệt -->
         <div class="grid md:grid-cols-2 gap-6 pt-6 border-t mt-6">
             <div>
-                <label class="block text-sm font-medium text-gray-700">Gán Chủ sở hữu mới</label>
-                @Html.DropDownList("user_id", null, "--- Chọn Chủ sở hữu ---", new { @class = "w-full p-2 border rounded-lg" })
-                <small class="text-gray-500 text-xs block mt-1">Hiện tại: @(Model.Users?.full_name ?? "Chưa gán")</small>
+                <label class="block text-sm">Gán Chủ sở hữu mới</label>
+                @Html.DropDownList("user_id", null, "--- Chọn ---", new { @class = "w-full p-2 border rounded-lg" })
             </div>
-
-            <div class="flex flex-col justify-end pb-1">
+            <div class="flex flex-col justify-end">
                 <div class="mt-2">
-                    @Html.CheckBox("is_approved", Model.is_approved.GetValueOrDefault(false), new { @class = "h-4 w-4 text-blue-600 rounded" })
-                    <label class="ml-2 text-sm text-gray-700">Nhà hàng đã được phê duyệt</label>
+                    @Html.CheckBox("is_approved", Model.is_approved.GetValueOrDefault(false), new { @class = "h-4 w-4" })
+                    <label class="ml-2 text-sm">Đã phê duyệt</label>
                 </div>
             </div>
         </div>
 
-        <!-- Submit -->
-        <div class="pt-6 border-t mt-6 flex justify-between items-center">
-            <a href="@Url.Action("Index")" class="text-gray-600 hover:text-gray-900">Quay lại danh sách</a>
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition">
-                <i class="fas fa-save mr-1"></i> Lưu thay đổi
+        <div class="pt-6 border-t mt-6 flex justify-between">
+            <a href="@Url.Action("Index")" class="text-gray-600 hover:text-gray-900">Quay lại</a>
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-lg font-bold">
+                <i class="fas fa-save mr-1"></i> LƯU THAY ĐỔI
             </button>
         </div>
     </div>
     }
 </div>
 
-@section Scripts {
+@section scripts {
     @Scripts.Render("~/bundles/jqueryval")
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 1. Lấy tọa độ ban đầu từ Razor
+            var lat = @latInit;
+            var lng = @lngInit;
+
+            // 2. Khởi tạo Map
+            var map = L.map('edit-map').setView([lat, lng], 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+
+            // 3. Tạo Marker KÉO THẢ ĐƯỢC (Draggable)
+            var RestaurantIcon = L.icon({
+                iconUrl: '@Url.Content("~/Content/Images/restaurantIcon.png")',
+                iconSize: [50, 50],       
+                iconAnchor: [25, 45],     
+                popupAnchor: [0, -40]     
+            });
+
+            // 3. Tạo Marker KÉO THẢ
+            var marker = L.marker([lat, lng], {
+                draggable: true,
+                icon: RestaurantIcon  
+            }).addTo(map);
+            // 4. Sự kiện khi kéo thả xong -> Cập nhật Input
+            marker.on('dragend', function (e) {
+                var position = marker.getLatLng();
+
+                // Cập nhật giá trị vào ô input (Dùng toFixed để giữ định dạng số)
+                document.getElementById('latitudeStr').value = position.lat.toFixed(7);
+                document.getElementById('longitudeStr').value = position.lng.toFixed(7);
+
+                // Pan map tới vị trí mới
+                map.panTo(new L.LatLng(position.lat, position.lng));
+            });
+
+            // 5. Sự kiện click vào bản đồ để di chuyển marker tức thì (UX tốt hơn)
+            map.on('click', function(e) {
+                var position = e.latlng;
+                marker.setLatLng(position); // Di chuyển marker đến điểm click
+
+                // Cập nhật input
+                document.getElementById('latitudeStr').value = position.lat.toFixed(7);
+                document.getElementById('longitudeStr').value = position.lng.toFixed(7);
+            });
+        });
+    </script>
 }
