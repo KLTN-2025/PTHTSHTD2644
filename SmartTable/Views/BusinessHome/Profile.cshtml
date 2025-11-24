@@ -4,9 +4,45 @@
     Layout = "~/Views/Shared/_BusinessLayout.cshtml";
 }
 
+@helper DisplayData(string label, object value, bool isLink = false)
+{
+    string displayValue = value?.ToString() ?? "";
+
+    <div class="flex justify-between border-b border-dashed py-2">
+        <dt class="text-sm font-medium text-gray-500">@label</dt>
+        <dd class="text-sm font-semibold text-gray-800 text-right max-w-[60%] break-words">
+            @if (isLink && !string.IsNullOrEmpty(displayValue))
+            {
+                <a href="@displayValue"
+                   target="_blank"
+                   class="text-blue-600 hover:text-blue-800 underline truncate">
+                    Xem link
+                </a>
+            }
+            else if (value is DateTime dt)
+            {
+                @dt.ToString("dd/MM/yyyy HH:mm")
+            }
+            else
+            {
+                @displayValue
+            }
+        </dd>
+    </div>
+}
+
 <div class="p-6">
-    <h1 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">
-        <i class="fas fa-store text-blue-600 mr-2"></i> Hồ sơ của tôi (Thông tin Nhà hàng)
+    <h1 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center justify-between">
+        <span>
+            <i class="fas fa-store text-blue-600 mr-2"></i>
+            Hồ sơ của tôi (Thông tin Nhà hàng)
+        </span>
+
+        <!-- Nút quay lại Dashboard -->
+        <a href="@Url.Action("Index", "BusinessHome")"
+           class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 transition">
+            <i class="fas fa-arrow-left mr-1"></i> Quay lại Dashboard
+        </a>
     </h1>
 
     @if (ViewBag.ErrorMessage != null)
@@ -23,34 +59,127 @@
     }
     else
     {
-        <div class="bg-white p-6 rounded-lg shadow-md space-y-4 max-w-2xl">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">@Model.name</h2>
-            <dl class="space-y-3">
-                <div class="flex justify-between border-b pb-2">
-                    <dt class="text-gray-500">Địa chỉ</dt>
-                    <dd class="font-medium">@Model.address</dd>
-                </div>
-                <div class="flex justify-between border-b pb-2">
-                    <dt class="text-gray-500">Giờ mở cửa</dt>
-                    <dd class="font-medium">@Model.opening_hours</dd>
-                </div>
-                <div class="flex justify-between border-b pb-2">
-                    <dt class="text-gray-500">Sức chứa tối đa</dt>
-                    <dd class="font-medium">@Model.max_tables bàn</dd>
-                </div>
-                <div class="flex justify-between border-b pb-2">
-                    <dt class="text-gray-500">Trạng thái duyệt</dt>
-                    <dd class="font-medium @(Model.is_approved == true ? "text-green-600" : "text-yellow-600")">@(Model.is_approved == true ? "Đã duyệt" : "Chờ duyệt")</dd>
-                </div>
-            </dl>
-        </div>
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-6xl mx-auto space-y-8">
 
-        <div class="pt-4 border-t mt-8 text-right">
-            <a href="@Url.Action("EditRestaurant", "BusinessHome", new { id = Model.restaurant_id })"
-               class="inline-flex items-center justify-center py-2 px-6 border border-transparent shadow-md text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition transform hover:scale-105">
-                <i class="fas fa-edit mr-2"></i> Chỉnh sửa thông tin
-            </a>
+            <!-- 1. Thông tin cơ bản -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="md:col-span-2 space-y-3">
+                    <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-3">
+                        Thông tin cơ bản
+                    </h3>
+
+                    @* ID (nếu bạn không muốn show cho đối tác, có thể bỏ) *@
+                    @DisplayData("Mã nhà hàng (ID)", Model.restaurant_id)
+
+                    <div class="flex justify-between border-b border-dashed py-2">
+                        <dt class="text-sm font-medium text-gray-500">Chủ sở hữu</dt>
+                        <dd class="text-sm font-semibold text-gray-800 text-right max-w-[60%] break-words">
+                            @(Model.Users != null
+                                ? string.Format("{0} ({1})", Model.Users.full_name, Model.Users.email)
+                                : "Chưa gán")
+                        </dd>
+                    </div>
+
+                    @DisplayData("Địa chỉ", Model.address)
+                    @DisplayData("Latitude", Model.latitude)
+                    @DisplayData("Longitude", Model.longitude)
+                    @DisplayData("Ngày tạo", Model.created_at)
+
+                    <div class="flex justify-between border-b border-dashed py-2">
+                        <dt class="text-sm font-medium text-gray-500">Trạng thái duyệt</dt>
+                        <dd class="text-sm font-semibold @(Model.is_approved.GetValueOrDefault(false) ? "text-green-600" : "text-yellow-600") text-right">
+                            @(Model.is_approved.GetValueOrDefault(false) ? "Đã duyệt" : "Chờ duyệt")
+                        </dd>
+                    </div>
+
+                    @DisplayData("Số bàn tối đa", Model.max_tables)
+                    @DisplayData("Giờ mở cửa", Model.opening_hours)
+
+                    <!-- Thông tin liên hệ -->
+                    @DisplayData("Tên người liên hệ", Model.ContactName)
+                    @DisplayData("Số điện thoại liên hệ", Model.ContactPhone)
+                    @DisplayData("Vai trò người liên hệ", Model.ContactRole)
+                    @DisplayData("Website", Model.Website, true)
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-3">Ảnh đại diện</h3>
+                    <img src="@(string.IsNullOrEmpty(Model.Image)
+                                    ? "https://via.placeholder.com/300x200.png?text=No+Image"
+                                    : Model.Image)"
+                         alt="Ảnh nhà hàng"
+                         class="w-full h-48 object-cover rounded-lg border shadow-sm mb-2" />
+
+                    @if (!string.IsNullOrEmpty(Model.Image))
+                    {
+                        <a href="@Model.Image" target="_blank" class="text-sm text-blue-600 hover:underline">
+                            <i class="fas fa-external-link-alt mr-1"></i> Xem ảnh gốc
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- 2. Dịch vụ & vận hành -->
+            <div class="pt-6 border-t space-y-4">
+                <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-3">Dịch vụ & Vận hành</h3>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="space-y-2">
+                        @DisplayData("Phong cách Ẩm thực", Model.CuisineStyle)
+                        @DisplayData("Loại hình Dịch vụ", Model.ServiceDescription)
+                        @DisplayData("Kiểu phục vụ", Model.ServiceTypes)
+                        @DisplayData("Hóa đơn TB/người", Model.AverageBill)
+                        @DisplayData("Món đặc sắc", Model.SignatureDishes)
+                    </div>
+
+                    <div class="space-y-2">
+                        @DisplayData("Số tầng/khu vực", Model.FloorCount)
+                        @DisplayData("Phòng riêng", Model.PrivateRoomCount)
+                        @DisplayData("Kiểu chỗ ngồi", Model.SeatingType)
+                        @DisplayData("Khung giờ đông khách", Model.BusyHours)
+                        @DisplayData("Khung giờ vắng khách", Model.SlowHours)
+                        @DisplayData("Địa điểm gần đó", Model.NearbyLandmark)
+                    </div>
+
+                    <div class="space-y-2">
+                        @DisplayData("Tiện ích cơ bản", Model.Amenities)
+                        @DisplayData("Tiện ích khác", Model.AmenitiesOther)
+                        @DisplayData("Mô tả không gian", Model.SpaceDescription)
+                        @DisplayData("Mô tả chi tiết", Model.description)
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Ảnh view gallery -->
+            @if (Model.RestaurantImages != null && Model.RestaurantImages.Any())
+            {
+                <div class="pt-6 border-t">
+                    <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-3">Ảnh View (Gallery)</h3>
+                    <div class="flex flex-wrap gap-3">
+                        @foreach (var img in Model.RestaurantImages)
+                        {
+                            <a href="@img.image_url" target="_blank" title="@img.description">
+                                <img src="@img.image_url"
+                                     alt="Ảnh View"
+                                     class="w-32 h-20 object-cover rounded-md border shadow-sm hover:opacity-90 transition" />
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- 4. Nút hành động -->
+            <div class="pt-6 border-t mt-6 flex justify-between items-center">
+                <a href="@Url.Action("Index", "BusinessHome")"
+                   class="inline-flex items-center text-gray-600 hover:text-gray-900">
+                    <i class="fas fa-arrow-left mr-1"></i> Quay lại Dashboard
+                </a>
+
+                <a href="@Url.Action("EditRestaurant", "BusinessHome", new { id = Model.restaurant_id })"
+                   class="inline-flex items-center justify-center py-2 px-6 border border-transparent shadow-md text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition transform hover:scale-105">
+                    <i class="fas fa-edit mr-2"></i> Chỉnh sửa thông tin
+                </a>
+            </div>
         </div>
     }
-
 </div>

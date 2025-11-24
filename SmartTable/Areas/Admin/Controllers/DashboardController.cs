@@ -1,13 +1,13 @@
-﻿using BCrypt.Net; // Để băm mật khẩu
-using SmartTable.Filters; // <-- Thêm filter
-using SmartTable.Helpers; // Để dùng EmailHelper
-using SmartTable.Models; // <-- Thêm Model
-using System.Linq; // <-- Thêm Linq
-using System.Text; // Để tạo nội dung email
+﻿using BCrypt.Net; 
+using SmartTable.Filters;
+using SmartTable.Helpers; 
+using SmartTable.Models;
+using System.Linq; 
+using System.Text; 
 using System.Web.Mvc;
 using System;
-using System.Configuration; // <-- Thêm: Cần cho ConfigurationManager
-using System.Net.Mail; // <-- Thêm: Cần cho MailAddress
+using System.Configuration; 
+using System.Net.Mail; 
 using System.Security.Cryptography;
 using System.Data.Entity;
 
@@ -47,10 +47,9 @@ namespace SmartTable.Areas.Admin.Controllers
             }
             return new string(result);
         }
-        [HttpGet] // <-- Action này chỉ để router tìm thấy đường dẫn
+        [HttpGet] 
         public ActionResult RejectPartner(int? leadId)
         {
-            // Lệnh này ngăn người dùng truy cập trực tiếp bằng URL (bằng phương thức GET)
             return HttpNotFound();
         }
         protected override void Dispose(bool disposing)
@@ -101,7 +100,7 @@ namespace SmartTable.Areas.Admin.Controllers
                     // 2. LƯU THAY ĐỔI LẦN 1 (BẮT BUỘC để có partnerUser.user_id)
                     db.SaveChanges();
 
-                    // 3. TẠO VÀ LIÊN KẾT NHÀ HÀNG MỚI (CHỈ CẦN CODE NÀY)
+                    // 3. TẠO VÀ LIÊN KẾT NHÀ HÀNG MỚI
                     var newRestaurant = new Restaurants
                     {
                         user_id = partnerUser.user_id,
@@ -116,7 +115,7 @@ namespace SmartTable.Areas.Admin.Controllers
                         // === CHUYỂN DỮ LIỆU CHI TIẾT TỪ PARTNERLEADS ===
                         CuisineStyle = lead.CuisineStyle,
                         ServiceDescription = lead.ServiceDescription,
-                        ServiceTypes = lead.ServiceTypes, // Kiểu phục vụ (Gọi món, Buffet)
+                        ServiceTypes = lead.ServiceTypes, // Kiểu phục vụ 
                         AverageBill = lead.AverageBill,
                         FloorCount = lead.FloorCount,
                         BusyHours = lead.BusyHours,
@@ -130,7 +129,6 @@ namespace SmartTable.Areas.Admin.Controllers
                         Website = lead.Website,
                         SpaceDescription = lead.SpaceDescription,
                         Amenities = lead.Amenities
-                        // ... (Không cần các trường Other và Previous Partnership)
                     };
                     db.Restaurants.Add(newRestaurant);
 
@@ -147,9 +145,8 @@ namespace SmartTable.Areas.Admin.Controllers
                         EmailHelper.SendEmail(partnerUser.email, subject, body);
                     }
 
-                    // cuối cùng cập nhật lead.Status và lưu
                     lead.Status = "Đã duyệt";
-                    db.SaveChanges(); // Lưu nốt Nhà hàng và trạng thái Lead
+                    db.SaveChanges(); 
 
                     tran.Commit();
                     TempData["SuccessMessage"] = "Đã duyệt đối tác.";
@@ -158,13 +155,11 @@ namespace SmartTable.Areas.Admin.Controllers
                 catch (Exception ex)
                 {
                     tran.Rollback();
-                    // log ex
                     TempData["ErrorMessage"] = "Duyệt thất bại.";
                     return RedirectToAction("PartnerLeads");
                 }
             }
         }
-        // (Trong file Areas/Admin/Controllers/DashboardController.cs)
 
         [AuthorizeAdmin]
         public ActionResult PartnerLeadDetails(int id)
@@ -174,7 +169,7 @@ namespace SmartTable.Areas.Admin.Controllers
             {
                 return HttpNotFound();
             }
-            return View(lead); // Gửi Model PartnerLeads chi tiết sang View
+            return View(lead); 
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -188,12 +183,10 @@ namespace SmartTable.Areas.Admin.Controllers
 
             try
             {
-                // 1. GỬI EMAIL THÔNG BÁO TỪ CHỐI
                 string subject = "Thông báo về đơn đăng ký đối tác Smart-Table của bạn";
                 string body = $"Kính gửi {lead.ContactName},\n\n" +
                               $"Cảm ơn bạn đã quan tâm và gửi đơn đăng ký đối tác nhà hàng Smart-Table cho nhà hàng **{lead.RestaurantName}**.\n\n" +
                               $"Sau khi xem xét, chúng tôi rất tiếc phải thông báo rằng đơn đăng ký của bạn **chưa thể được phê duyệt** vào thời điểm này.\n\n" +
-                              // Lý do giả định (bạn có thể tùy chỉnh)
                               $"Lý do chính có thể bao gồm: Thông tin chưa đầy đủ, hoặc khu vực của bạn đã có đủ đối tác trong mạng lưới hiện tại của chúng tôi.\n\n" +
                               $"Bạn có thể liên hệ với chúng tôi để biết thêm chi tiết hoặc nộp lại đơn đăng ký sau 03 tháng.\n\n" +
                               $"Trân trọng,\nĐội ngũ Smart-Table.";
@@ -201,7 +194,6 @@ namespace SmartTable.Areas.Admin.Controllers
                 // Sử dụng EmailHelper để gửi email
                 SmartTable.Helpers.EmailHelper.SendEmail(lead.Email, subject, body);
 
-                // 2. Cập nhật trạng thái và lưu lần cuối
                 lead.Status = "Đã từ chối";
                 db.SaveChanges();
 
@@ -210,7 +202,6 @@ namespace SmartTable.Areas.Admin.Controllers
             }
             catch (Exception ex)
             {
-                // Nếu lỗi xảy ra (thường là lỗi gửi email hoặc lỗi DB)
                 TempData["ErrorMessage"] = "Lỗi khi từ chối đơn đăng ký. Vui lòng kiểm tra cấu hình Email hoặc Database. Lỗi: " + ex.Message;
                 return RedirectToAction("PartnerLeads");
             }

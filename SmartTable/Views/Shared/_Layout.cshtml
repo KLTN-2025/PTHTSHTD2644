@@ -9,8 +9,29 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    @Styles.Render("~/Content/css") @* Đảm bảo BundleConfig nạp output.css và site.css *@
+    @Styles.Render("~/Content/css")
+
+    <style>
+        /* Custom Scrollbar cho khung chat */
+        #chatMessages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chatMessages::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        #chatMessages::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+
+        .font-chat {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
 
     @Scripts.Render("~/bundles/modernizr")
     @RenderSection("styles", required: false)
@@ -22,161 +43,185 @@
            new[] { "Login", "Register", "ForgotPassword" }.Contains(ViewContext.RouteData.Values["action"]?.ToString())))
     {
         <header class="bg-blue-600 text-white shadow-md sticky top-0 z-50 text-sm">
-            <div class="container mx-auto max-w-7xl px-6 h-10 flex justify-between items-center border-b border-blue-500 border-opacity-50">
+            <div class="container mx-auto max-w-7xl px-6 h-14 flex justify-between items-center border-b border-blue-500 border-opacity-50">
 
                 <a href="@Url.Action("Index", "Home")"
                    class="text-2xl font-extrabold hover:text-amber-300 transition-all duration-300 flex-shrink-0 mr-8 transform hover:scale-105 tracking-tight">
                     Smart-Table
-                </a> @* <-- ĐÃ ĐÓNG THẺ <a> Ở ĐÂY *@
+                </a>
+
                 @{
-                    // Lấy role từ Session và xác định URL chính xác
                     var userRole = Session["role"]?.ToString();
                     var homeUrl = (userRole == "business" || userRole == "Admin") ?
                                   Url.Action("Index", "BusinessHome") :
                                   Url.Action("Index", "Home");
                 }
-                <nav class="flex flex-grow justify-center items-center gap-x-8 font-medium text-sm">
-                    <a href="@homeUrl" class="menu-link-header whitespace-nowrap">Trang chủ</a> @* <-- ĐÃ SỬA DÒNG NÀY *@
-                    <a href="@Url.Action("Nearby", "PublicRestaurant")" class="menu-link-header whitespace-nowrap">
-                        <i class="fas fa-map-marker-alt"></i> Nhà hàng gần bạn
+
+                <nav class="hidden lg:flex flex-grow justify-center items-center gap-x-8 font-medium text-sm">
+                    <a href="@homeUrl" class="hover:text-blue-200 transition">Trang chủ</a>
+                    <a href="@Url.Action("Nearby", "PublicRestaurant")" class="hover:text-blue-200 transition flex items-center gap-1">
+                        <i class="fas fa-map-marker-alt"></i> Gần bạn
                     </a>
-                    <a href="#" class="menu-link-header whitespace-nowrap">Nhà hàng uy tín</a>
-                    <a href="#" class="menu-link-header whitespace-nowrap">Ưu đãi hot</a>
-                    <a href="@Url.Action("Index","Business")" class="menu-link-header whitespace-nowrap">Đăng ký đối tác</a>
+                    <a href="#" class="hover:text-blue-200 transition">Nhà hàng uy tín</a>
+                    <a href="#" class="hover:text-blue-200 transition">Ưu đãi hot</a>
+                    <a href="@Url.Action("Index","Business")" class="hover:text-blue-200 transition">Đăng ký đối tác</a>
                 </nav>
 
                 <div class="flex items-center space-x-3 flex-shrink-0">
                     @if (Session["user"] == null)
                     {
                         <a href="@Url.Action("Login", "Account")"
-                           class="px-4 py-2 bg-white text-blue-600 font-semibold rounded-full shadow hover:bg-blue-50 transition text-sm flex items-center space-x-2 whitespace-nowrap transform hover:scale-105">
+                           class="hidden sm:flex px-4 py-2 bg-white text-blue-600 font-semibold rounded-full shadow hover:bg-blue-50 transition text-sm items-center space-x-2 whitespace-nowrap transform hover:scale-105">
                             <i class="fas fa-sign-in-alt"></i> <span>Login</span>
                         </a>
                         <a href="@Url.Action("Register", "Account")"
-                           class="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-full shadow hover:from-orange-600 hover:to-red-600 transition text-sm flex items-center space-x-2 whitespace-nowrap transform hover:scale-105">
+                           class="hidden sm:flex px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-full shadow hover:from-orange-600 hover:to-red-600 transition text-sm items-center space-x-2 whitespace-nowrap transform hover:scale-105">
                             <i class="fas fa-user-plus"></i> <span>Register</span>
                         </a>
+
+                        <button id="mobileMenuButton" class="lg:hidden text-white text-2xl focus:outline-none">
+                            <i class="fas fa-bars"></i>
+                        </button>
                     }
                     else
                     {
                         var users = (SmartTable.Models.Users)Session["user"];
                         <div class="relative">
-                            <button id="profileMenuToggleDesktop" class="flex items-center space-x-1.5 hover:text-amber-300 transition-colors duration-300">
+                            <button id="profileMenuToggleDesktop" class="flex items-center space-x-1.5 hover:text-amber-300 transition-colors duration-300 focus:outline-none">
                                 <i class="fas fa-user-circle text-2xl"></i>
-                                <span class="text-sm font-semibold whitespace-nowrap">@users.full_name</span>
+                                <span class="text-sm font-semibold whitespace-nowrap hidden sm:inline">@users.full_name</span>
                                 <i class="fas fa-chevron-down text-xs ml-1"></i>
                             </button>
-                            <ul id="dropdownMenuDesktop" class="hidden absolute bg-white border border-gray-200 rounded-lg shadow-xl mt-3 py-1 right-0 w-48 text-gray-800 z-10 text-sm">
-                                <li><a href="@Url.Action("AccountInfo", "Account")" class="flex items-center space-x-2 px-3 py-1.5 hover:bg-gray-100 transition"><i class="fas fa-user-edit w-4 text-center text-blue-500"></i><span>Profile</span></a></li>
-                                <li><a href="@Url.Action("DanhSachBanDaDat", "DatBan")" class="flex items-center space-x-2 px-3 py-1.5 hover:bg-gray-100 transition"><i class="fas fa-calendar-check w-4 text-center text-green-500"></i><span>Bàn đã đặt</span></a></li>
-                                <li><a href="@Url.Action("Logout", "Account")" class="flex items-center space-x-2 px-3 py-1.5 hover:bg-gray-100 transition text-red-600"><i class="fas fa-sign-out-alt w-4 text-center"></i><span>Đăng xuất</span></a></li>
+
+                            <ul id="dropdownMenuDesktop" class="hidden absolute bg-white border border-gray-200 rounded-lg shadow-xl mt-3 py-1 right-0 w-48 text-gray-800 z-20 text-sm">
+                                <li>
+                                    <a href="@Url.Action("AccountInfo", "Account")" class="flex items-center space-x-2 px-4 py-2 hover:bg-gray-100 transition">
+                                        <i class="fas fa-user-edit w-5 text-center text-blue-500"></i><span>Profile</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="@Url.Action("DanhSachBanDaDat", "DatBan")" class="flex items-center space-x-2 px-4 py-2 hover:bg-gray-100 transition">
+                                        <i class="fas fa-calendar-check w-5 text-center text-green-500"></i><span>Lịch sử đặt bàn</span>
+                                    </a>
+                                </li>
+                                <li class="border-t border-gray-100 my-1"></li>
+                                <li>
+                                    <a href="@Url.Action("Logout", "Account")" class="flex items-center space-x-2 px-4 py-2 hover:bg-red-50 transition text-red-600 font-medium">
+                                        <i class="fas fa-sign-out-alt w-5 text-center"></i><span>Đăng xuất</span>
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     }
                 </div>
             </div>
 
-            <div class="bg-blue-600">
-                <div class="container mx-auto max-w-7xl px-6 py-3 flex justify-center items-center">
-                    <form method="get" action="@Url.Action("Index", "Home")"
-                          class="flex items-center overflow-hidden rounded-md bg-white shadow-inner border border-transparent h-10 w-full max-w-3xl relative">
-
-                        <div class="relative h-full">
-                            <select name="city"
-                                    class="pl-4 pr-8 bg-gray-50 text-gray-700 focus:outline-none text-sm rounded-l-md cursor-pointer appearance-none h-full border-r border-gray-300 font-medium">
-                                <option>HN</option>
-                                <option selected>HCM</option>
-                                <option>ĐN</option>
-                            </select>
-                            <i class="fas fa-chevron-down text-gray-400 text-xs absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"></i>
-                        </div>
-
-                        <input type="text" name="search" placeholder="Bạn muốn đặt chỗ ở đâu?"
-                               class="flex-grow px-4 bg-white focus:outline-none text-gray-800 placeholder-gray-500 text-sm h-full w-full"
-                               autocomplete="off" id="searchBox">
-
-                        <button type="submit"
-                                class="w-32 h-10 px-5 bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors flex items-center justify-center text-sm flex-shrink-0 rounded-r-md">
-                            <i class="fas fa-search mr-2 text-xs"></i> Tìm kiếm
-                        </button>
-                    </form>
-                </div>
+            <div id="mobileMenu" class="hidden lg:hidden bg-blue-700 text-white border-t border-blue-500 px-4 py-2 space-y-2 shadow-inner">
+                <a href="@homeUrl" class="block py-2 hover:text-amber-300">Trang chủ</a>
+                <a href="@Url.Action("Nearby", "PublicRestaurant")" class="block py-2 hover:text-amber-300">Nhà hàng gần bạn</a>
+                <a href="#" class="block py-2 hover:text-amber-300">Nhà hàng uy tín</a>
+                @if (Session["user"] == null)
+                {
+                    <div class="flex gap-3 pt-2 border-t border-blue-500 mt-2">
+                        <a href="@Url.Action("Login", "Account")" class="flex-1 text-center bg-white text-blue-600 py-2 rounded-lg font-bold">Login</a>
+                        <a href="@Url.Action("Register", "Account")" class="flex-1 text-center bg-orange-500 text-white py-2 rounded-lg font-bold">Register</a>
+                    </div>
+                }
             </div>
         </header>
-
     }
 
-    <main class="container mx-auto max-w-7xl pt-8 pb-8 px-6">
+    <main class="min-h-screen">
         @RenderBody()
     </main>
 
-    <button id="chatOpen" class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 flex items-center justify-center z-[51] transition-colors transform hover:scale-110">
-        <i class="fas fa-comments text-xl"></i>
+    <button id="chatOpen"
+            class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-2xl hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300 z-[9998] flex items-center justify-center group">
+        <span class="sr-only">Mở trợ lý ảo</span>
+        <i class="fas fa-comments text-2xl group-hover:scale-110 transition-transform"></i>
+        <span class="absolute top-0 right-0 -mt-1 -mr-1 flex h-4 w-4">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-white"></span>
+        </span>
     </button>
 
-    <div id="chatContainer" class="hidden fixed bottom-[85px] right-6 w-96 h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col z-[50] border border-gray-200 overflow-hidden">
+    <div id="chatContainer" class="hidden fixed bottom-[90px] right-6 w-[380px] h-[550px] bg-white rounded-2xl shadow-2xl flex flex-col z-[9999] overflow-hidden font-chat transition-all duration-300 ease-in-out border border-gray-100 transform origin-bottom-right">
 
-        <div class="bg-blue-600 p-4 flex justify-between items-center text-white">
-            <div class="flex items-center gap-2">
-                <i class="fas fa-robot"></i>
-                <span class="font-bold">SmartTable AI</span>
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-4 flex justify-between items-center text-white shadow-md shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <div class="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                        <i class="fas fa-robot text-sm"></i>
+                    </div>
+                    <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 border-2 border-blue-600 rounded-full"></span>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm leading-tight">SmartTable AI</h3>
+                    <p class="text-[10px] text-blue-100 opacity-90">Hỗ trợ trực tuyến 24/7</p>
+                </div>
             </div>
-            <button id="chatClose" class="hover:text-gray-200"><i class="fas fa-times"></i></button>
+
+            <div class="flex items-center gap-1">
+                <button id="chatReset" title="Kết thúc & Nhập lại" class="hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors text-blue-50">
+                    <i class="fas fa-redo-alt text-xs"></i>
+                </button>
+                <button id="chatClose" title="Đóng cửa sổ" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors text-white">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
         </div>
 
-        <div id="chatInfoForm" class="flex-1 p-6 flex flex-col justify-center bg-gray-50">
-            <div class="text-center mb-6">
-                
-                <h3 class="text-lg font-bold text-gray-800">Xin chào!</h3>
-                <p class="text-sm text-gray-500">Vui lòng để lại thông tin để chúng tôi hỗ trợ bạn tốt hơn.</p>
+        <div id="chatInfoForm" class="flex-1 flex flex-col justify-center p-8 bg-white relative">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                    <i class="fas fa-comment-dots text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Xin chào! 👋</h3>
+                <p class="text-sm text-gray-500 px-2">Để bắt đầu, vui lòng cho chúng tôi biết tên của bạn.</p>
             </div>
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Họ tên</label>
-                    <input type="text" id="guestName" class="w-full p-3 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="VD: Anh Phong">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Họ và Tên</label>
+                    <div class="relative">
+                        <i class="fas fa-user absolute left-3 top-3.5 text-gray-400"></i>
+                        <input type="text" id="guestName" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="VD: Anh Phong">
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Số điện thoại</label>
-                    <input type="tel" id="guestPhone" class="w-full p-3 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="VD: 0912...">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Số điện thoại</label>
+                    <div class="relative">
+                        <i class="fas fa-phone absolute left-3 top-3.5 text-gray-400"></i>
+                        <input type="tel" id="guestPhone" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="VD: 0912...">
+                    </div>
                 </div>
-                <button id="btnStartChat" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-md">
-                    BẮT ĐẦU CHÁT
+                <button id="btnStartChat" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all duration-200 mt-2">
+                    BẮT ĐẦU TRÒ CHUYỆN
                 </button>
             </div>
         </div>
 
-        <div id="chatMainInterface" class="flex-1 flex flex-col hidden h-full">
-            <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50">
+        <div id="chatMainInterface" class="flex-1 flex flex-col hidden h-full bg-gray-50">
+            <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3">
             </div>
 
-            <div class="p-3 border-t bg-white flex gap-2">
-                <input type="text" id="chatInput" placeholder="Hỏi gì đó..." class="flex-grow px-4 py-2 border rounded-full focus:outline-none focus:border-blue-500 text-sm" />
-                <button id="chatSend" class="w-10 h-10 bg-blue-600 text-white rounded-full hover:bg-blue-700 flex items-center justify-center">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
-    </div>
+            <div class="p-3 bg-white border-t border-gray-100 shrink-0">
+                <div class="relative flex items-end gap-2 bg-gray-50 p-1.5 rounded-3xl border border-gray-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                    <input type="text" id="chatInput" placeholder="Nhập câu hỏi..." class="flex-grow bg-transparent border-none focus:ring-0 px-4 py-2.5 text-sm text-gray-700 max-h-24 overflow-y-auto resize-none placeholder-gray-400" autocomplete="off" />
 
-    <div id="nearbyModal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg animate-fade-in-down">
-            <div class="flex justify-between items-center border-b p-4">
-                <h3 class="text-lg font-semibold text-gray-800">
-                    <i class="fas fa-location-dot text-blue-500 mr-2"></i>Nhà hàng gần bạn
-                </h3>
-                <button id="nearbyModalClose" class="text-gray-400 hover:text-gray-600 transition-colors p-1">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <div id="nearbyList" class="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
+                    <button id="chatSend" class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 active:scale-95 transition-all shadow-sm shrink-0 mb-0.5 mr-0.5">
+                        <i class="fas fa-paper-plane text-sm translate-x-[-1px] translate-y-[1px]"></i>
+                    </button>
+                </div>
+                <div class="text-center mt-1">
+                    <span class="text-[10px] text-gray-400">AI Powered by Smart-Table</span>
+                </div>
             </div>
         </div>
     </div>
 
     @Scripts.Render("~/bundles/jquery")
-    @Scripts.Render("~/bundles/main")
-    @RenderSection("Scripts", required: false)
+    @Scripts.Render("~/bundles/main") @RenderSection("Scripts", required: false)
 
 </body>
 </html>

@@ -215,7 +215,7 @@
                     <p class="text-red-100 text-xs mt-1">Miễn phí • Xác nhận ngay</p>
                 </div>
                 <div class="p-6 space-y-5">
-                    @using (Html.BeginForm("DatBan", "DatBan", FormMethod.Get, new { @class = "space-y-4" }))
+                    @using (Html.BeginForm("datban", "DatBan", FormMethod.Get, new { @class = "space-y-4" }))
                     {
                         @Html.Hidden("id", Model.Restaurant.restaurant_id)
                         <div>

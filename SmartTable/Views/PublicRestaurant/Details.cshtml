@@ -148,7 +148,7 @@
                     Đặt Bàn Ngay
                 </h2>
 
-                @using (Html.BeginForm("DatBan", "DatBan", FormMethod.Get, new { @class = "space-y-4" }))
+                @using (Html.BeginForm("datban", "DatBan", FormMethod.Get, new { @class = "space-y-4" }))
                 {
                     @Html.Hidden("id", Model.restaurant_id)
                     @Html.AntiForgeryToken()

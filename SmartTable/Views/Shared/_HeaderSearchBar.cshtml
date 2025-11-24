@@ -1,0 +1,31 @@
+﻿@{
+    var cities = ViewBag.AvailableCities as List<string>;
+    string currentCity = Request.QueryString["City"];
+    string currentKeyword = Request.QueryString["SearchKeyword"];
+}
+
+<form action="@Url.Action("Search", "Home")" method="get" class="flex items-center overflow-hidden rounded-md bg-white shadow-inner border border-transparent h-10 w-full max-w-3xl relative">
+
+    <div class="relative h-full border-r border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
+        <select name="City" class="pl-3 pr-8 h-full bg-transparent focus:outline-none text-sm font-bold text-gray-700 cursor-pointer appearance-none w-auto min-w-[80px]">
+            <option value="">T.Phố</option>
+            @if (cities != null)
+            {
+                foreach (var city in cities)
+                {
+                    <option value="@city" @(city == currentCity ? "selected" : "")>@city</option>
+                }
+            }
+        </select>
+        <i class="fas fa-chevron-down text-gray-400 text-[10px] absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none"></i>
+    </div>
+
+    <div class="flex-grow relative h-full">
+        <input type="text" name="SearchKeyword" value="@currentKeyword" placeholder="Tìm nhà hàng, món ăn..."
+               class="w-full h-full pl-4 pr-4 bg-white focus:outline-none text-gray-800 placeholder-gray-400 text-sm" autocomplete="off" />
+    </div>
+
+    <button type="submit" class="h-full px-5 bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors flex items-center justify-center text-sm flex-shrink-0">
+        <i class="fas fa-search"></i>
+    </button>
+</form>

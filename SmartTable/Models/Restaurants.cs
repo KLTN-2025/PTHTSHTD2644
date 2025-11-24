@@ -53,9 +53,12 @@ namespace SmartTable.Models
         public string SpaceDescription { get; set; }
         public string Amenities { get; set; }
         public string AmenitiesOther { get; set; }
+
         public string SeatingType { get; set; }
         public string PrivateRoomCount { get; set; }
         public string NearbyLandmark { get; set; }
+        public string City { get; set; }
+        public string Area { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Bookings> Bookings { get; set; }

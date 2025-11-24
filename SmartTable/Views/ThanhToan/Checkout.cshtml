@@ -1,0 +1,64 @@
+﻿@model SmartTable.Models.ViewModels.PaymentViewModel
+@{
+    ViewBag.Title = "Thanh toán đặt bàn";
+}
+
+<div class="max-w-3xl mx-auto mt-10 bg-white rounded-2xl shadow-lg p-8">
+    <h1 class="text-2xl font-bold mb-6 text-gray-800">Thanh toán đặt bàn</h1>
+
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
+        <div class="space-y-2 text-sm text-gray-700">
+            <p><span class="font-semibold">Nhà hàng:</span> @Model.RestaurantName</p>
+            <p><span class="font-semibold">Thời gian:</span> @Model.BookingTime.ToString("dd/MM/yyyy HH:mm")</p>
+            <p><span class="font-semibold">Số khách:</span> @Model.NumberOfGuests</p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4 text-right">
+            <p class="text-sm text-gray-500">Tổng thanh toán</p>
+            <p class="text-2xl font-bold text-blue-600">
+                @Model.Amount.ToString("N0") đ
+            </p>
+        </div>
+    </div>
+
+    @using (Html.BeginForm("Checkout", "ThanhToan", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.BookingId)
+        @Html.HiddenFor(m => m.Amount)
+
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-3 text-gray-800">Chọn phương thức thanh toán</h2>
+
+            <div class="space-y-3">
+                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:border-blue-500">
+                    <input type="radio" name="PaymentMethod" value="Tiền mặt tại nhà hàng" class="h-4 w-4" checked />
+                    <div>
+                        <div class="font-semibold text-sm">Thanh toán tại nhà hàng</div>
+                        <div class="text-xs text-gray-500">Thanh toán trực tiếp khi đến nhà hàng.</div>
+                    </div>
+                </label>
+
+                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:border-blue-500">
+                    <input type="radio" name="PaymentMethod" value="Chuyển khoản ngân hàng" class="h-4 w-4" />
+                    <div>
+                        <div class="font-semibold text-sm">Chuyển khoản ngân hàng</div>
+                        <div class="text-xs text-gray-500">Bạn sẽ nhận thông tin tài khoản sau khi xác nhận.</div>
+                    </div>
+                </label>
+
+                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:border-blue-500">
+                    <input type="radio" name="PaymentMethod" value="Ví điện tử (VNPay / Momo)" class="h-4 w-4" />
+                    <div>
+                        <div class="font-semibold text-sm">Ví điện tử (VNPay / Momo)</div>
+                        <div class="text-xs text-gray-500">Hiện tại hệ thống ghi nhận như thanh toán online (mô phỏng).</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <button type="submit"
+                class="w-full md:w-auto px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
+            Hoàn tất thanh toán
+        </button>
+    }
+</div>

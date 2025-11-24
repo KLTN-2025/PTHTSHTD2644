@@ -13,13 +13,93 @@ using System.Web.Mvc;
 
 namespace SmartTable.Areas.Admin.Controllers
 {
-    [AuthorizeAdmin] // Chỉ Admin mới được truy cập Controller này
+    [AuthorizeAdmin] 
     public class RestaurantController : Controller
     {
-        private Entities db = new Entities(); // Context EF
+        private Entities db = new Entities();
 
-        // Danh sách các thuộc tính được phép bind từ form
-        private const string BIND_PROPERTIES = "restaurant_id,user_id,name,address,description,max_tables,opening_hours,is_approved,Image,CuisineStyle,ServiceDescription,ServiceTypes,AverageBill,FloorCount,BusyHours,SlowHours,SignatureDishes,PartnershipGoal,ServicePackage,ContactName,ContactPhone,ContactRole,Website,SpaceDescription,Amenities,AmenitiesOther,SeatingType,PrivateRoomCount,NearbyLandmark";
+        private const string BIND_PROPERTIES =
+            "restaurant_id,user_id,name,address,description,max_tables,opening_hours,is_approved,Image," +
+            "CuisineStyle,ServiceDescription,ServiceTypes,AverageBill,FloorCount,BusyHours,SlowHours," +
+            "SignatureDishes,PartnershipGoal,ServicePackage,ContactName,ContactPhone,ContactRole," +
+            "Website,SpaceDescription,Amenities,AmenitiesOther,SeatingType,PrivateRoomCount,NearbyLandmark";
+
+        // ====== CẤU HÌNH UPLOAD ẢNH  ======
+
+        private const int MaxImageSizeBytes = 5 * 1024 * 1024; // 5MB
+
+        private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
+        private static readonly string[] AllowedContentTypes = { "image/jpeg", "image/png", "image/webp" };
+
+        /// <summary>
+        /// Kiểm tra file ảnh hợp lệ (kích thước + đuôi + content-type)
+        /// </summary>
+        private bool ValidateImage(HttpPostedFileBase file, out string errorMessage)
+        {
+            errorMessage = null;
+
+            if (file == null || file.ContentLength <= 0)
+            {
+                errorMessage = "File tải lên không hợp lệ.";
+                return false;
+            }
+
+            if (file.ContentLength > MaxImageSizeBytes)
+            {
+                errorMessage = "Kích thước ảnh quá lớn (tối đa 5MB).";
+                return false;
+            }
+
+            var ext = Path.GetExtension(file.FileName);
+            if (string.IsNullOrEmpty(ext) || !AllowedExtensions.Contains(ext.ToLower()))
+            {
+                errorMessage = "Định dạng file không được hỗ trợ. Chỉ chấp nhận: JPG, PNG, WEBP.";
+                return false;
+            }
+
+            if (!AllowedContentTypes.Contains(file.ContentType))
+            {
+                errorMessage = "Kiểu nội dung file không hợp lệ.";
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Upload file ảnh vào thư mục /Content/Images/Restaurants/[subFolder]
+        /// Trả về đường dẫn tương đối để lưu DB: /Content/Images/Restaurants/[subFolder]/fileName
+        /// Nếu fail -> trả null
+        /// </summary>
+        private string UploadFile(HttpPostedFileBase file, string fileName, string subFolder = "")
+        {
+            try
+            {
+                string error;
+                if (!ValidateImage(file, out error))
+                {
+                    return null;
+                }
+
+                string relativeFolder = "~/Content/Images/Restaurants/" +
+                                        (string.IsNullOrEmpty(subFolder) ? "" : subFolder + "/");
+                string physicalFolder = Server.MapPath(relativeFolder);
+
+                if (!Directory.Exists(physicalFolder))
+                {
+                    Directory.CreateDirectory(physicalFolder);
+                }
+
+                string physicalPath = Path.Combine(physicalFolder, fileName);
+                file.SaveAs(physicalPath);
+
+                return relativeFolder.Replace("~", "") + fileName;
+            }
+            catch
+            {
+                return null;
+            }
+        }
 
         #region Index & Details
 
@@ -36,8 +116,8 @@ namespace SmartTable.Areas.Admin.Controllers
             if (id == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
 
             var restaurant = db.Restaurants
-                .Include(r => r.Users) // Tải dữ liệu User
-                .Include(r => r.RestaurantImages) // Tải danh sách ảnh view
+                .Include(r => r.Users) 
+                .Include(r => r.RestaurantImages) 
                 .FirstOrDefault(r => r.restaurant_id == id);
 
             if (restaurant == null) return HttpNotFound();
@@ -61,7 +141,6 @@ namespace SmartTable.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = BIND_PROPERTIES)] Restaurants restaurant, string latitudeStr, string longitudeStr)
         {
-            // Chuyển đổi tọa độ từ string sang double (culture invariant)
             if (!string.IsNullOrEmpty(latitudeStr))
                 restaurant.latitude = double.Parse(latitudeStr, CultureInfo.InvariantCulture);
 
@@ -70,7 +149,7 @@ namespace SmartTable.Areas.Admin.Controllers
 
             if (ModelState.IsValid)
             {
-                restaurant.created_at = DateTime.Now; // Thời gian tạo
+                restaurant.created_at = DateTime.Now; 
                 db.Restaurants.Add(restaurant);
                 db.SaveChanges();
 
@@ -78,7 +157,6 @@ namespace SmartTable.Areas.Admin.Controllers
                 return RedirectToAction("Index");
             }
 
-            // Nếu form không hợp lệ, trả về form với dữ liệu cũ
             ViewBag.user_id = new SelectList(db.Users.Where(u => u.role == "business"), "user_id", "email", restaurant.user_id);
             return View(restaurant);
         }
@@ -93,7 +171,7 @@ namespace SmartTable.Areas.Admin.Controllers
             if (id == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
 
             var restaurant = db.Restaurants
-                .Include(r => r.RestaurantImages) // Tải danh sách ảnh view
+                .Include(r => r.RestaurantImages) 
                 .FirstOrDefault(r => r.restaurant_id == id);
 
             if (restaurant == null) return HttpNotFound();
@@ -142,11 +220,13 @@ namespace SmartTable.Areas.Admin.Controllers
             List<string> amenityList = new List<string>();
             if (AmenitiesCheckbox != null && AmenitiesCheckbox.Length > 0)
             {
-                var selectedAmenities = AmenitiesCheckbox.Where(a => a != "false" && !string.IsNullOrWhiteSpace(a));
+                var selectedAmenities = AmenitiesCheckbox
+                    .Where(a => a != "false" && !string.IsNullOrWhiteSpace(a));
                 amenityList.AddRange(selectedAmenities);
             }
             if (!string.IsNullOrEmpty(restaurant.AmenitiesOther))
                 amenityList.Add($"Khác: {restaurant.AmenitiesOther}");
+
             restaurant.Amenities = amenityList.Count > 0 ? string.Join(", ", amenityList) : null;
 
             if (ModelState.IsValid)
@@ -159,26 +239,27 @@ namespace SmartTable.Areas.Admin.Controllers
                 if (originalRestaurant == null)
                     return HttpNotFound();
 
-                // 4. Cập nhật tất cả giá trị từ form vào đối tượng gốc
+                // 4. Cập nhật tất cả giá trị primitive từ form vào đối tượng gốc
                 db.Entry(originalRestaurant).CurrentValues.SetValues(restaurant);
 
-                // 5. Xử lý ảnh đại diện
+                // 5. Xử lý ảnh đại diện (dùng helper UploadFile)
                 if (uploadedImage != null && uploadedImage.ContentLength > 0)
                 {
-                    string uniqueFileName = Guid.NewGuid() + Path.GetExtension(uploadedImage.FileName);
-                    string serverPath = Server.MapPath("~/Content/Images/Restaurants/");
-                    if (!Directory.Exists(serverPath)) Directory.CreateDirectory(serverPath);
-                    uploadedImage.SaveAs(Path.Combine(serverPath, uniqueFileName));
+                    string fileName = $"main_{originalRestaurant.restaurant_id}_{Guid.NewGuid()}.jpg";
+                    string savePath = UploadFile(uploadedImage, fileName);
 
-                    originalRestaurant.Image = "/Content/Images/Restaurants/" + uniqueFileName;
-                }
-                else
-                {
-                    // Giữ nguyên ảnh cũ nếu không upload
-                    db.Entry(originalRestaurant).Property(r => r.Image).IsModified = false;
+                    if (savePath != null)
+                    {
+                        originalRestaurant.Image = savePath;
+                    }
+                    else
+                    {
+                         ModelState.AddModelError("uploadedImage", "Ảnh không hợp lệ hoặc tải lên thất bại.");
+                         return View(restaurant);
+                    }
                 }
 
-                // Ngăn không thay đổi trường hệ thống
+                // Không cho chỉnh created_at
                 db.Entry(originalRestaurant).Property(r => r.created_at).IsModified = false;
 
                 // 6. Xóa ảnh view cũ nếu có chọn
@@ -189,29 +270,40 @@ namespace SmartTable.Areas.Admin.Controllers
                         var imageToDelete = originalRestaurant.RestaurantImages.FirstOrDefault(i => i.image_id == imageId);
                         if (imageToDelete != null)
                         {
-                            string path = Server.MapPath(imageToDelete.image_url);
-                            if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
+                            try
+                            {
+                                string path = Server.MapPath("~" + imageToDelete.image_url);
+                                if (System.IO.File.Exists(path))
+                                    System.IO.File.Delete(path);
+                            }
+                            catch
+                            {
+                            }
+
                             db.RestaurantImages.Remove(imageToDelete);
                         }
                     }
                 }
 
                 // 7. Upload ảnh view mới
-                if (viewImages != null && viewImages.Any(f => f != null && f.ContentLength > 0))
+                if (viewImages != null)
                 {
-                    foreach (var file in viewImages.Where(f => f != null && f.ContentLength > 0))
+                    foreach (var file in viewImages)
                     {
-                        string uniqueFileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-                        string serverPath = Server.MapPath("~/Content/Images/Restaurants/");
-                        if (!Directory.Exists(serverPath)) Directory.CreateDirectory(serverPath);
-                        file.SaveAs(Path.Combine(serverPath, uniqueFileName));
+                        if (file == null || file.ContentLength <= 0) continue;
 
-                        db.RestaurantImages.Add(new RestaurantImages
+                        string fileName = $"gallery_{originalRestaurant.restaurant_id}_{Guid.NewGuid()}.jpg";
+                        string savePath = UploadFile(file, fileName, "Gallery");
+
+                        if (savePath != null)
                         {
-                            restaurant_id = originalRestaurant.restaurant_id,
-                            image_url = "/Content/Images/Restaurants/" + uniqueFileName,
-                            description = "Ảnh View Chi tiết",
-                        });
+                            originalRestaurant.RestaurantImages.Add(new RestaurantImages
+                            {
+                                restaurant_id = originalRestaurant.restaurant_id,
+                                image_url = savePath,
+                                description = "Ảnh View"
+                            });
+                        }
                     }
                 }
 
@@ -242,15 +334,27 @@ namespace SmartTable.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Delete(int id)
         {
-            var restaurant = db.Restaurants.Find(id);
+            var restaurant = db.Restaurants
+                .Include(r => r.RestaurantImages)
+                .FirstOrDefault(r => r.restaurant_id == id);
+
             if (restaurant != null)
             {
                 // Xóa tất cả ảnh view liên quan
-                var images = db.RestaurantImages.Where(i => i.restaurant_id == id).ToList();
+                var images = restaurant.RestaurantImages.ToList();
                 foreach (var img in images)
                 {
-                    string path = Server.MapPath(img.image_url);
-                    if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
+                    try
+                    {
+                        string path = Server.MapPath("~" + img.image_url);
+                        if (System.IO.File.Exists(path))
+                            System.IO.File.Delete(path);
+                    }
+                    catch
+                    {
+                        // ignore lỗi file
+                    }
+
                     db.RestaurantImages.Remove(img);
                 }
 
@@ -278,7 +382,7 @@ namespace SmartTable.Areas.Admin.Controllers
         // Tính khoảng cách 2 điểm địa lý theo km
         private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
         {
-            double R = 6371; // bán kính Trái đất
+            double R = 6371; 
             var dLat = ToRadians(lat2 - lat1);
             var dLon = ToRadians(lon2 - lon1);
             var a = Math.Pow(Math.Sin(dLat / 2), 2) +

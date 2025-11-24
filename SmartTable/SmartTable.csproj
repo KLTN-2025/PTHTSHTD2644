@@ -132,6 +132,7 @@
     <Compile Include="Areas\Admin\Controllers\RoleController.cs" />
     <Compile Include="Areas\Admin\Controllers\UsersController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\DatBanController.cs" />
     <Compile Include="Controllers\BusinessController.cs" />
     <Compile Include="Controllers\BusinessHomeController.cs" />
     <Compile Include="Controllers\ChatController.cs" />
@@ -139,6 +140,7 @@
     <Compile Include="Controllers\Filters\AuthorizeUserAttribute.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\PublicRestaurantController.cs" />
+    <Compile Include="Controllers\ThanhToanController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -193,8 +195,10 @@
     <Compile Include="Models\Users.cs">
       <DependentUpon>SmartTableSystem2.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\ViewModels\BookingViewMode.cs" />
+    <Compile Include="Models\ViewModels\BookingViewModel.cs" />
     <Compile Include="Models\ViewModels\PartnerRegistrationViewModel.cs" />
+    <Compile Include="Models\ViewModels\PaymentViewModel.cs" />
+    <Compile Include="Models\ViewModels\RestaurantFilterViewModel.cs" />
     <Compile Include="Models\ViewModels\SmartTableDetailViewModel.cs" />
     <Compile Include="Models\ViewModels\StatisticsViewModelController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -327,16 +331,19 @@
     <Content Include="Views\BusinessHome\EditRestaurant.cshtml" />
     <Content Include="Views\PublicRestaurant\Nearby.cshtml" />
     <Content Include="Views\PublicRestaurant\Details.cshtml" />
+    <Content Include="Views\Home\Search.cshtml" />
+    <Content Include="Views\DatBan\datban.cshtml" />
     <None Include="Views\Shared\_BusinessLayout.cshtml" />
+    <Content Include="Views\Shared\_HeaderSearchBar.cshtml" />
+    <Content Include="Views\ThanhToan\Checkout.cshtml" />
+    <Content Include="Views\ThanhToan\HoanTat.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Areas\Admin\Models\" />
     <Folder Include="Views\Chat\" />
-    <Folder Include="Views\DatBan\" />
     <Folder Include="Views\DetailNhaHang\" />
     <Folder Include="Views\Menu\" />
-    <Folder Include="Views\ThanhToan\" />
     <Folder Include="Views\ThongBaoUser\" />
     <Folder Include="Views\ThongBao\" />
   </ItemGroup>

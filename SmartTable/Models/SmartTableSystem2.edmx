@@ -146,6 +146,8 @@
           <Property Name="SeatingType" Type="nvarchar" MaxLength="500" />
           <Property Name="PrivateRoomCount" Type="nvarchar" MaxLength="50" />
           <Property Name="NearbyLandmark" Type="nvarchar" MaxLength="500" />
+          <Property Name="City" Type="nvarchar" MaxLength="100" />
+          <Property Name="Area" Type="nvarchar" MaxLength="255" />
         </EntityType>
         <EntityType Name="Reviews">
           <Key>
@@ -714,6 +716,8 @@
           <NavigationProperty Name="Reviews" Relationship="SmartTableSystemModel.FK_Reviews_Restaurants" FromRole="Restaurants" ToRole="Reviews" />
           <NavigationProperty Name="Tables" Relationship="SmartTableSystemModel.FK_Tables_Restaurants" FromRole="Restaurants" ToRole="Tables" />
           <NavigationProperty Name="RestaurantImages" Relationship="SmartTableSystemModel.FK_RestaurantImages_Restaurants" FromRole="Restaurants" ToRole="RestaurantImages" />
+          <Property Name="City" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="Area" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
         </EntityType>
         <Association Name="FK_Bookings_Restaurants">
           <End Type="SmartTableSystemModel.Restaurants" Role="Restaurants" Multiplicity="0..1" />
@@ -948,6 +952,8 @@
           <EntitySetMapping Name="Restaurants">
             <EntityTypeMapping TypeName="SmartTableSystemModel.Restaurants">
               <MappingFragment StoreEntitySet="Restaurants">
+                <ScalarProperty Name="Area" ColumnName="Area" />
+                <ScalarProperty Name="City" ColumnName="City" />
                 <ScalarProperty Name="NearbyLandmark" ColumnName="NearbyLandmark" />
                 <ScalarProperty Name="PrivateRoomCount" ColumnName="PrivateRoomCount" />
                 <ScalarProperty Name="SeatingType" ColumnName="SeatingType" />

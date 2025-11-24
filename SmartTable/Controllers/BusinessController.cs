@@ -64,7 +64,7 @@ namespace SmartTable.Controllers
                     AverageBillOther = model.AverageBillOther,
                     TotalSeats = model.TotalSeats,
                     FloorCount = model.FloorCount,
-                    OpeningDate = model.OpeningDate.Value,
+                    OpeningDate = model.OpeningDate ?? DateTime.Today,
                     OpeningTime = model.OpeningTime,
                     ClosingTime = model.ClosingTime,
                     SlowHours = model.SlowHours,
@@ -141,5 +141,5 @@ namespace SmartTable.Controllers
             base.Dispose(disposing);
         }
 
-    } // <-- Đóng class BusinessController
-} // <-- Đóng namespace
+    } 
+} 
