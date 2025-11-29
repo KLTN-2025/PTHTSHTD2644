@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Web.Mvc;
+using System.Data.Entity;
 using SmartTable.Models;
 using SmartTable.Models.ViewModels;
-using System.Data.Entity;
 
 namespace SmartTable.Controllers
 {
@@ -17,13 +17,20 @@ namespace SmartTable.Controllers
             base.Dispose(disposing);
         }
 
-        // ========== BƯỚC 1: MÀN HÌNH THANH TOÁN ==========
+        // ================== BƯỚC 1: MÀN HÌNH THANH TOÁN (GET) ==================
         [HttpGet]
         public ActionResult Checkout(int bookingId)
         {
-            // Nếu DB trống / không có booking -> xử lý an toàn
+            // Nếu bookingId không hợp lệ
+            if (bookingId <= 0)
+            {
+                TempData["ErrorMessage"] = "Thiếu mã đặt bàn (bookingId).";
+                return RedirectToAction("Index", "Home");
+            }
+
             var booking = db.Bookings
                             .Include(b => b.Restaurants)
+                            .Include(b => b.Users)
                             .FirstOrDefault(b => b.booking_id == bookingId);
 
             if (booking == null)
@@ -32,80 +39,146 @@ namespace SmartTable.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // Tính tạm số tiền: ví dụ 100.000 / khách
-            // Sau này bạn thay bằng giá thật (từ menu, combo, v.v.)
-            var soKhach = booking.number_of_guests ?? 1;
-            decimal amount = soKhach * 100000m;
+            // number_of_guests: int (NON-nullable)
+            var soKhach = booking.number_of_guests;
+            if (soKhach <= 0) soKhach = 1;
+
+            // Tạm tính: 50.000 / khách
+            decimal amount = soKhach * 50000m;
 
             var vm = new PaymentViewModel
             {
                 BookingId = booking.booking_id,
                 RestaurantName = booking.Restaurants != null ? booking.Restaurants.name : "Nhà hàng",
-                BookingTime = booking.booking_time ?? DateTime.Now,
+                RestaurantAddress = booking.Restaurants != null ? booking.Restaurants.address : null,
+                RestaurantImage = booking.Restaurants != null ? booking.Restaurants.Image : null,
+
+                BookingTime = booking.booking_time,       // DateTime non-nullable
                 NumberOfGuests = soKhach,
+                SpecialRequest = booking.special_request,
+
                 Amount = amount,
-                Status = "Pending"
+                PaymentMethod = "Chuyển khoản",
+                Status = "Pending",
+
+                CustomerName = booking.Users != null ? booking.Users.full_name : null,
+                TransferContent = $"SMARTTABLE-{booking.booking_id}"
             };
 
-            return View(vm);   // Views/ThanhToan/Checkout.cshtml
+            return View(vm);   // Views/ThanhToan/Checkout.cshtml (model: PaymentViewModel)
         }
 
-        // ========== BƯỚC 2: XỬ LÝ KHI USER ẤN "HOÀN TẤT THANH TOÁN" ==========
+        // ================== BƯỚC 2: SUBMIT FORM THANH TOÁN (POST) ==================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Checkout(PaymentViewModel model)
         {
             if (!ModelState.IsValid)
             {
+                // Trả về lại view với model hiện tại để hiển thị lỗi
                 return View(model);
             }
 
-            var booking = db.Bookings.FirstOrDefault(b => b.booking_id == model.BookingId);
+            var booking = db.Bookings
+                            .Include(b => b.Restaurants)
+                            .Include(b => b.Users)
+                            .FirstOrDefault(b => b.booking_id == model.BookingId);
+
             if (booking == null)
             {
-                ModelState.AddModelError("", "Không tìm thấy thông tin đặt bàn.");
-                return View(model);
+                TempData["ErrorMessage"] = "Không tìm thấy thông tin đặt bàn.";
+                return RedirectToAction("Index", "Home");
             }
 
-            // Ở đây nếu tích hợp cổng thanh toán (VNPay/MoMo) thì:
-            // - Gửi request tới gateway
-            // - Nhận callback
-            // - Nếu OK thì status = "Đã thanh toán"
-            // Tạm thời mock luôn là "Đã thanh toán"
+            // Nếu Amount trên view = 0 thì tính lại cho chắc
+            var soKhach = booking.number_of_guests;
+            if (soKhach <= 0) soKhach = 1;
+
+            var amount = model.Amount > 0 ? model.Amount : soKhach * 50000m;
+
+            // Tạo bản ghi thanh toán
             var payment = new Payments
             {
                 booking_id = booking.booking_id,
-                amount = model.Amount,
-                payment_method = model.PaymentMethod,       // từ form
-                status = "Đã thanh toán",                  // mock
-                transaction_id = Guid.NewGuid().ToString() // mã giao dịch giả lập
+                amount = amount,
+                payment_method = string.IsNullOrEmpty(model.PaymentMethod)
+                                    ? "Chuyển khoản"
+                                    : model.PaymentMethod,
+                status = "Đã thanh toán",
+                transaction_id = Guid.NewGuid().ToString()
             };
 
             db.Payments.Add(payment);
 
-            // Nếu bảng Bookings có cột status thì cập nhật
-            // (nếu không có cột này thì bỏ dòng này đi)
+            // Cập nhật trạng thái booking nếu có field status
             try
             {
                 booking.status = "Đã thanh toán";
             }
             catch
             {
-                // nếu không có trường status thì ignore, không crash
+                // Nếu Bookings không có cột status thì bỏ qua, không crash
             }
 
             db.SaveChanges();
 
+            // Chuyển sang trang hoàn tất
             return RedirectToAction("HoanTat", new { bookingId = booking.booking_id });
         }
 
-        // ========== BƯỚC 3: TRANG HOÀN TẤT ==========
+        // ================== API XÁC NHẬN THANH TOÁN (CHO NÚT "TÔI ĐÃ CHUYỂN KHOẢN") ==================
+        [HttpPost]
+        public ActionResult ConfirmPayment(int bookingId)
+        {
+            var booking = db.Bookings
+                            .Include(b => b.Payments)
+                            .FirstOrDefault(b => b.booking_id == bookingId);
+
+            if (booking == null)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Không tìm thấy thông tin đặt bàn."
+                });
+            }
+
+            var payment = booking.Payments
+                                 .OrderByDescending(p => p.payment_id)
+                                 .FirstOrDefault();
+
+            if (payment != null)
+            {
+                payment.status = "Đã thanh toán";
+            }
+
+            try
+            {
+                booking.status = "Đã thanh toán";
+            }
+            catch
+            {
+            }
+
+            db.SaveChanges();
+
+            return Json(new { success = true });
+        }
+
+        // ================== BƯỚC 3: TRANG HOÀN TẤT ==================
         [HttpGet]
         public ActionResult HoanTat(int bookingId)
         {
+            if (bookingId <= 0)
+            {
+                TempData["ErrorMessage"] = "Thiếu mã đặt bàn (bookingId).";
+                return RedirectToAction("Index", "Home");
+            }
+
             var booking = db.Bookings
                             .Include(b => b.Restaurants)
                             .Include(b => b.Payments)
+                            .Include(b => b.Users)
                             .FirstOrDefault(b => b.booking_id == bookingId);
 
             if (booking == null)
@@ -118,19 +191,29 @@ namespace SmartTable.Controllers
                                  .OrderByDescending(p => p.payment_id)
                                  .FirstOrDefault();
 
+            var soKhach = booking.number_of_guests;
+            if (soKhach <= 0) soKhach = 1;
+
+            decimal amount = payment != null ? payment.amount : soKhach * 50000m;
+
             var vm = new PaymentViewModel
             {
                 BookingId = booking.booking_id,
                 RestaurantName = booking.Restaurants != null ? booking.Restaurants.name : "Nhà hàng",
-                BookingTime = booking.booking_time ?? DateTime.Now,
-                NumberOfGuests = booking.number_of_guests ?? 0,
-                Amount = payment != null ? payment.amount : 0,
+                RestaurantAddress = booking.Restaurants != null ? booking.Restaurants.address : null,
+                RestaurantImage = booking.Restaurants != null ? booking.Restaurants.Image : null,
+
+                BookingTime = booking.booking_time,
+                NumberOfGuests = soKhach,
+                SpecialRequest = booking.special_request,
+
+                Amount = amount,
                 PaymentMethod = payment != null ? payment.payment_method : null,
-                Status = payment != null ? payment.status : "Chưa thanh toán"
+                Status = payment != null ? payment.status : "Chờ xác nhận",
+                CustomerName = booking.Users != null ? booking.Users.full_name : null
             };
 
-            return View(vm);   // Views/ThanhToan/HoanTat.cshtml
+            return View(vm); // Views/ThanhToan/HoanTat.cshtml (model: PaymentViewModel)
         }
     }
 }
-    

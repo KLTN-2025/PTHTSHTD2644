@@ -1,5 +1,6 @@
 ﻿using SmartTable.Filters;
 using SmartTable.Models;
+using SmartTable.Models.ViewModels;   // <-- THÊM DÒNG NÀY
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -28,6 +29,7 @@ namespace SmartTable.Controllers
         {
             return Session["role"] != null && Session["role"].ToString() == "business";
         }
+
         // Giới hạn & whitelist cho file ảnh
         private const int MaxImageSizeBytes = 5 * 1024 * 1024; // 5MB
 
@@ -60,14 +62,12 @@ namespace SmartTable.Controllers
 
             if (!AllowedContentTypes.Contains(file.ContentType))
             {
-                // Không tin hoàn toàn ContentType, nhưng vẫn check để lọc bớt
                 errorMessage = "Kiểu nội dung file không hợp lệ.";
                 return false;
             }
 
             return true;
         }
-
 
         // Helper: Upload file (đã có validate ảnh)
         private string UploadFile(HttpPostedFileBase file, string fileName, string subFolder = "")
@@ -77,8 +77,6 @@ namespace SmartTable.Controllers
                 string error;
                 if (!ValidateImage(file, out error))
                 {
-                    // Có thể lưu ModelState/TempData nếu muốn show ra View
-                    // Ở controller khác anh có thể dùng ModelState.AddModelError(...)
                     return null;
                 }
 
@@ -94,16 +92,15 @@ namespace SmartTable.Controllers
                 string physicalPath = Path.Combine(physicalFolder, fileName);
                 file.SaveAs(physicalPath);
 
-                // Trả về đường dẫn để lưu DB (VD: /Content/Images/Restaurants/abc.jpg)
                 return relativeFolder.Replace("~", "") + fileName;
             }
             catch
             {
-                // TODO: log lỗi nếu cần
                 return null;
             }
         }
 
+        // ================== DASHBOARD BUSINESS ==================
         // [GET] /BusinessHome/Index
         public ActionResult Index()
         {
@@ -127,6 +124,7 @@ namespace SmartTable.Controllers
             return View(restaurant);
         }
 
+        // ================== TRANG PROFLE NHÀ HÀNG ==================
         // [GET] /BusinessHome/Profile
         public ActionResult Profile()
         {
@@ -200,7 +198,6 @@ namespace SmartTable.Controllers
             if (userId == null)
                 return RedirectToAction("Login", "Account");
 
-            // Nếu validation fail: load lại dữ liệu cũ để view không vỡ
             if (!ModelState.IsValid)
             {
                 var currentDbItem = db.Restaurants
@@ -222,19 +219,17 @@ namespace SmartTable.Controllers
                 return View(model);
             }
 
-            // 2. Lấy dữ liệu gốc
             var originalRestaurant = db.Restaurants
                                        .Include(r => r.RestaurantImages)
                                        .FirstOrDefault(r => r.restaurant_id == model.restaurant_id);
 
-            // Security check
             if (originalRestaurant == null || originalRestaurant.user_id != userId.Value)
             {
                 TempData["ErrorMessage"] = "Bạn không có quyền chỉnh sửa nhà hàng này.";
                 return RedirectToAction("Profile");
             }
 
-            // 3. Cập nhật thông tin text
+            // Cập nhật thông tin text
             originalRestaurant.name = model.name;
             originalRestaurant.address = model.address;
             originalRestaurant.Website = model.Website;
@@ -288,7 +283,7 @@ namespace SmartTable.Controllers
                 originalRestaurant.longitude = lng;
             }
 
-            // 4. Ảnh đại diện
+            // Ảnh đại diện
             if (uploadedImage != null && uploadedImage.ContentLength > 0)
             {
                 string fileName = $"main_{originalRestaurant.restaurant_id}_{Guid.NewGuid()}.jpg";
@@ -299,7 +294,7 @@ namespace SmartTable.Controllers
                 }
             }
 
-            // 5. Xóa ảnh view được chọn
+            // Xóa ảnh view
             if (DeleteImages != null && DeleteImages.Length > 0)
             {
                 var imagesToDelete = originalRestaurant.RestaurantImages
@@ -312,7 +307,6 @@ namespace SmartTable.Controllers
                     {
                         try
                         {
-                            // img.image_url dạng "/Content/Images/Restaurants/xxx.jpg"
                             string physicalPath = Server.MapPath("~" + img.image_url);
                             if (System.IO.File.Exists(physicalPath))
                             {
@@ -321,7 +315,6 @@ namespace SmartTable.Controllers
                         }
                         catch
                         {
-                            // Nếu xóa file lỗi thì bỏ qua, vẫn xóa record trong DB
                         }
                     }
 
@@ -329,7 +322,7 @@ namespace SmartTable.Controllers
                 }
             }
 
-            // 6. Thêm ảnh view mới
+            // Thêm ảnh view mới
             if (viewImages != null)
             {
                 foreach (var file in viewImages)
@@ -351,10 +344,7 @@ namespace SmartTable.Controllers
                 }
             }
 
-            // 7. Chốt đơn (SaveChanges)
             db.Entry(originalRestaurant).State = EntityState.Modified;
-
-            // Bảo vệ các field hệ thống / không cho business chỉnh
             db.Entry(originalRestaurant).Property(r => r.created_at).IsModified = false;
             db.Entry(originalRestaurant).Property(r => r.user_id).IsModified = false;
             db.Entry(originalRestaurant).Property(r => r.is_approved).IsModified = false;
@@ -365,6 +355,139 @@ namespace SmartTable.Controllers
             return RedirectToAction("Profile");
         }
 
+        // ================== DOANH NGHIỆP QUẢN LÝ ĐẶT BÀN ==================
+        // [GET] /BusinessHome/Bookings
+        [HttpGet]
+        public ActionResult Bookings(string statusFilter = null)
+        {
+            if (!IsBusiness())
+                return RedirectToAction("Index", "Home");
+
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            // Lấy tất cả booking của các nhà hàng thuộc user hiện tại
+            var query = db.Bookings
+                          .Include(b => b.Restaurants)
+                          .Include(b => b.Users)
+                          .Include(b => b.Payments)
+                          .Where(b => b.Restaurants != null &&
+                                      b.Restaurants.user_id == userId.Value);
+
+            // Lọc theo trạng thái nếu có chọn
+            if (!string.IsNullOrEmpty(statusFilter))
+            {
+                query = query.Where(b => b.status == statusFilter);
+            }
+
+            var bookingList = query
+                .OrderByDescending(b => b.booking_time)
+                .ToList();
+
+            var list = new List<BusinessBookingItemViewModel>();
+
+            foreach (var b in bookingList)
+            {
+                var lastPayment = b.Payments
+                                   .OrderByDescending(p => p.payment_id)
+                                   .FirstOrDefault();
+
+                decimal? depositAmount = null;
+                string paymentStatus = "Chưa thanh toán";
+
+                if (lastPayment != null)
+                {
+                    depositAmount = lastPayment.amount;
+                    paymentStatus = string.IsNullOrEmpty(lastPayment.status)
+                        ? "Chưa cập nhật"
+                        : lastPayment.status;
+                }
+
+                var vm = new BusinessBookingItemViewModel
+                {
+                    BookingId = b.booking_id,
+                    RestaurantName = b.Restaurants != null ? b.Restaurants.name : "Nhà hàng",
+                    RestaurantAddress = b.Restaurants != null ? b.Restaurants.address : "",
+                    RestaurantImage = (b.Restaurants != null && !string.IsNullOrEmpty(b.Restaurants.Image))
+                                      ? b.Restaurants.Image
+                                      : "https://via.placeholder.com/120",
+
+                    CustomerName = b.Users != null ? b.Users.full_name : "Khách lẻ",
+                    CustomerPhone = b.Users != null ? b.Users.phone : "",
+
+                    BookingTime = b.booking_time,
+                    NumberOfGuests = b.number_of_guests,
+                    SpecialRequest = b.special_request,
+
+                    BookingStatus = string.IsNullOrEmpty(b.status) ? "Chờ xác nhận" : b.status,
+                    DepositAmount = depositAmount,
+                    PaymentStatus = paymentStatus
+                };
+
+                list.Add(vm);
+            }
+
+            ViewBag.StatusFilter = statusFilter;
+
+            // View: Views/BusinessHome/Bookings.cshtml
+            return View("Bookings", list);
+        }
+
+        // [POST] /BusinessHome/ConfirmPayment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ConfirmPayment(int bookingId)
+        {
+            if (!IsBusiness())
+                return RedirectToAction("Index", "Home");
+
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            var booking = db.Bookings
+                            .Include(b => b.Restaurants)
+                            .Include(b => b.Payments)
+                            .FirstOrDefault(b => b.booking_id == bookingId &&
+                                                 b.Restaurants.user_id == userId.Value);
+
+            if (booking == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy thông tin đặt bàn hoặc bạn không có quyền.";
+                return RedirectToAction("Bookings");
+            }
+
+            var lastPayment = booking.Payments
+                                     .OrderByDescending(p => p.payment_id)
+                                     .FirstOrDefault();
+
+            if (lastPayment == null)
+            {
+                lastPayment = new Payments
+                {
+                    booking_id = booking.booking_id,
+                    amount = 0, // nếu có số tiền cọc thực, sau này set đúng
+                    payment_method = "Chuyển khoản / Doanh nghiệp xác nhận",
+                    status = "Đã thanh toán (doanh nghiệp xác nhận)",
+                    transaction_id = Guid.NewGuid().ToString()
+                };
+                db.Payments.Add(lastPayment);
+            }
+            else
+            {
+                lastPayment.status = "Đã thanh toán (doanh nghiệp xác nhận)";
+            }
+
+            booking.status = "Đã cọc thành công";
+
+            db.SaveChanges();
+
+            TempData["SuccessMessage"] = $"Đã xác nhận thanh toán cho mã đặt bàn #{booking.booking_id}.";
+            return RedirectToAction("Bookings");
+        }
+
+        // ================== DISPOSE ==================
         protected override void Dispose(bool disposing)
         {
             if (disposing)

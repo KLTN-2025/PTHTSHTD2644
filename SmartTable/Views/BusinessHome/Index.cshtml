@@ -3,16 +3,24 @@
     ViewBag.Title = "Tổng quan Dashboard";
     Layout = "~/Views/Shared/_BusinessLayout.cshtml";
 
-    var currentUser = (SmartTable.Models.Users)Session["user"];
-    var todayCount = ViewBag.TodayReservationCount ?? 0;
+    var currentUser = Session["user"] as SmartTable.Models.Users;
+
+    int todayCount = 0;
+    if (ViewBag.TodayReservationCount != null)
+    {
+        int.TryParse(ViewBag.TodayReservationCount.ToString(), out todayCount);
+    }
 }
 
 <div class="p-6">
-    <h1 class="text-2xl font-bold text-gray-800">Chào mừng, @(currentUser?.full_name)!</h1>
+    <h1 class="text-2xl font-bold text-gray-800">
+        Chào mừng, @(currentUser != null ? currentUser.full_name : "Đối tác")!
+    </h1>
     <p class="mt-2 text-gray-600">
         Đây là trang tổng quan quản lý nhà hàng của bạn.
     </p>
 
+    @* Thông báo lỗi / thành công *@
     @if (ViewBag.ErrorMessage != null)
     {
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4" role="alert">
@@ -35,11 +43,15 @@
     }
     else
     {
+        <!-- THẺ THỐNG KÊ NHANH -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
             <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                 <h3 class="text-gray-500 text-sm font-medium">Nhà hàng đang quản lý</h3>
                 <p class="text-2xl font-bold text-blue-600 mt-2">@Model.name</p>
-                <p class="text-sm text-gray-500 mt-1">@Model.address</p>
+                <p class="text-sm text-gray-500 mt-1 flex items-start gap-2">
+                    <i class="fas fa-map-marker-alt text-red-500 mt-0.5"></i>
+                    <span>@Model.address</span>
+                </p>
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
@@ -51,33 +63,54 @@
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                <h3 class="text-gray-500 text-sm font-medium">Trạng thái</h3>
+                <h3 class="text-gray-500 text-sm font-medium">Trạng thái nhà hàng</h3>
                 <p class="text-xl font-bold @(Model.is_approved == true ? "text-green-600" : "text-yellow-600") mt-2">
                     @(Model.is_approved == true ? "Đang hoạt động" : "Chờ duyệt")
                 </p>
+                @if (Model.is_approved != true)
+                {
+                    <p class="text-xs text-gray-500 mt-1">
+                        Vui lòng hoàn thiện hồ sơ để được duyệt nhanh hơn.
+                    </p>
+                }
             </div>
         </div>
 
+        <!-- CÁC TÁC VỤ NHANH -->
         <div class="mt-10 p-6 bg-white rounded-xl shadow-sm border border-gray-100">
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Các tác vụ nhanh</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-                <a href="#"
-                   class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-blue-50 transition">
+                <!-- QUẢN LÝ ĐẶT BÀN -->
+                <a href="@Url.Action("Bookings", "BusinessHome")"
+                   class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-blue-50 hover:border-blue-400 transition">
                     <i class="fas fa-calendar-alt text-3xl text-blue-600 mb-2"></i>
                     <span class="text-sm font-medium text-gray-700">Quản lý Đặt bàn</span>
+                    <span class="text-xs text-gray-500 mt-1">Xem & xác nhận các lượt đặt chỗ</span>
                 </a>
 
+                <!-- QUẢN LÝ NHÀ HÀNG (CHỈNH SỬA THÔNG TIN) -->
+                <a href="@Url.Action("EditRestaurant", "BusinessHome", new { id = Model.restaurant_id })"
+                   class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-green-50 hover:border-green-400 transition">
+                    <i class="fas fa-store-alt text-3xl text-green-600 mb-2"></i>
+                    <span class="text-sm font-medium text-gray-700">Quản lý Nhà hàng</span>
+                    <span class="text-xs text-gray-500 mt-1">Cập nhật thông tin, không gian, tiện ích</span>
+                </a>
+
+                <!-- CẬP NHẬT MENU (để sau nối controller khác) -->
                 <a href="#"
-                   class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-blue-50 transition">
+                   class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-red-50 hover:border-red-400 transition">
                     <i class="fas fa-list text-3xl text-red-600 mb-2"></i>
                     <span class="text-sm font-medium text-gray-700">Cập nhật Menu</span>
+                    <span class="text-xs text-gray-500 mt-1">Thêm/sửa món ăn, giá, combo</span>
                 </a>
 
+                <!-- THÔNG TIN CƠ SỞ -->
                 <a href="@Url.Action("Profile", "BusinessHome")"
-                   class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-blue-50 transition">
-                    <i class="fas fa-store text-3xl text-orange-600 mb-2"></i>
+                   class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-orange-50 hover:border-orange-400 transition">
+                    <i class="fas fa-info-circle text-3xl text-orange-500 mb-2"></i>
                     <span class="text-sm font-medium text-gray-700">Thông tin Cơ sở</span>
+                    <span class="text-xs text-gray-500 mt-1">Xem tổng quan hồ sơ đăng ký</span>
                 </a>
 
             </div>

@@ -8,37 +8,70 @@
     var userName = user != null ? user.full_name : "";
     var userPhone = user != null ? user.phone : "";
 
-    // 2. Lấy dữ liệu đã chọn từ trang trước (nếu có)
-    var preDate = ViewBag.PreSelectedDate != null ? ViewBag.PreSelectedDate.ToString() : DateTime.Now.ToString("yyyy-MM-dd");
-    var prePeople = ViewBag.PreSelectedPeople ?? 2;
+    // 2. Ngày & số khách đã chọn trước (nếu có)
+    string preDate;
+    if (ViewBag.PreSelectedDate != null)
+    {
+        try
+        {
+            DateTime d = (DateTime)ViewBag.PreSelectedDate;
+            preDate = d.ToString("yyyy-MM-dd");
+        }
+        catch
+        {
+            preDate = DateTime.Now.ToString("yyyy-MM-dd");
+        }
+    }
+    else
+    {
+        preDate = DateTime.Now.ToString("yyyy-MM-dd");
+    }
 
-    // 3. LOGIC TẠO DANH SÁCH GIỜ (Dựa trên giờ mở cửa thực tế)
-    string startHourStr = "09:00"; 
-    string endHourStr = "22:00";   
+    int prePeople = 2;
+    if (ViewBag.PreSelectedPeople != null)
+    {
+        int temp;
+        if (int.TryParse(ViewBag.PreSelectedPeople.ToString(), out temp))
+        {
+            prePeople = temp;
+        }
+    }
+
+    // 3. Tạo dải giờ mở cửa
+    string startHourStr = "09:00";
+    string endHourStr = "22:00";
 
     if (!string.IsNullOrEmpty(Model.opening_hours))
     {
-        // Xử lý chuỗi dạng "09:00 - 22:00"
-        var parts = Model.opening_hours.Split(new[] { '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length >= 1) { startHourStr = parts[0]; }
-        if (parts.Length >= 2) { endHourStr = parts[parts.Length - 1]; }
+        // ví dụ "09:00 - 22:00"
+        var parts = Model.opening_hours.Split(new[] { '-', '–' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 1)
+        {
+            startHourStr = parts[0].Trim();
+        }
+        if (parts.Length >= 2)
+        {
+            endHourStr = parts[1].Trim();
+        }
     }
 
-    TimeSpan openTime, closeTime;
-    TimeSpan.TryParse(startHourStr, out openTime);
-    TimeSpan.TryParse(endHourStr, out closeTime);
+    TimeSpan openTime;
+    TimeSpan closeTime;
 
-    // Nếu parse lỗi thì dùng mặc định
-    if (openTime == TimeSpan.Zero && closeTime == TimeSpan.Zero) 
-    { 
-        openTime = new TimeSpan(9, 0, 0); 
-        closeTime = new TimeSpan(22, 0, 0); 
+    if (!TimeSpan.TryParse(startHourStr, out openTime))
+    {
+        openTime = new TimeSpan(9, 0, 0);
+    }
+
+    if (!TimeSpan.TryParse(endHourStr, out closeTime))
+    {
+        closeTime = new TimeSpan(22, 0, 0);
     }
 
     var timeSlots = new List<string>();
     var current = openTime;
-    
-    // Tạo slot mỗi 30 phút, dừng trước giờ đóng cửa 1 tiếng
+
+    // Slot mỗi 30 phút, dừng trước giờ đóng 1 tiếng
     while (current <= closeTime.Subtract(TimeSpan.FromMinutes(60)))
     {
         timeSlots.Add(current.ToString(@"hh\:mm"));
@@ -48,16 +81,18 @@
 
 <div class="bg-gray-50 min-h-screen py-10 font-sans">
     <div class="container mx-auto max-w-6xl px-4">
-        
+
         <div class="mb-6">
-            <a href="@Url.Action("Details", "PublicRestaurant", new { id = Model.restaurant_id })" class="text-gray-500 hover:text-blue-600 text-sm flex items-center gap-1 mb-2 transition group">
+            <a href="@Url.Action("Details", "PublicRestaurant", new { id = Model.restaurant_id })"
+               class="text-gray-500 hover:text-blue-600 text-sm flex items-center gap-1 mb-2 transition group">
                 <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i> Quay lại chi tiết nhà hàng
             </a>
             <h1 class="text-3xl font-bold text-gray-800">Xác nhận đặt chỗ</h1>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+
+            <!-- Cột trái: Form đặt bàn -->
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-5 text-white flex items-center gap-4">
@@ -71,35 +106,43 @@
                     </div>
 
                     <div class="p-6 md:p-8">
-                        @using (Html.BeginForm("LuuDatBan", "DatBan", FormMethod.Post, new { @class = "space-y-8", id = "bookingForm" }))
+                        @using (Html.BeginForm("LuuDatBan", "DatBan", FormMethod.Post, new { id = "bookingForm", @class = "space-y-8" }))
                         {
                             @Html.AntiForgeryToken()
                             @Html.Hidden("restaurant_id", Model.restaurant_id)
 
                             <div class="space-y-6">
+                                <!-- Ngày & giờ -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label class="block text-sm font-bold text-gray-700 mb-2">Ngày đến <span class="text-red-500">*</span></label>
-                                        <input type="date" name="booking_time" id="inputDate" required 
-                                               value="@preDate" 
+                                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                                            Ngày đến <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="date"
+                                               name="booking_time"
+                                               id="inputDate"
+                                               required
+                                               value="@preDate"
                                                min="@DateTime.Now.ToString("yyyy-MM-dd")"
                                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition bg-gray-50 focus:bg-white font-medium text-gray-700" />
                                     </div>
-                                    
+
                                     <div>
                                         <label class="block text-sm font-bold text-gray-700 mb-2">
-                                            Giờ đến <span class="text-red-500">*</span> 
+                                            Giờ đến <span class="text-red-500">*</span>
                                             <span class="text-xs font-normal text-gray-500 ml-1">(Mở cửa: @startHourStr - @endHourStr)</span>
                                         </label>
-                                        
-                                        <input type="hidden" name="booking_time_hour" id="selectedTimeInput" required />
+
+                                        <!-- input ẩn chứa giờ đã chọn -->
+                                        <input type="hidden" name="booking_time_hour" id="selectedTimeInput" />
 
                                         <div class="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
                                             @if (timeSlots.Count > 0)
                                             {
                                                 foreach (var slot in timeSlots)
                                                 {
-                                                    <button type="button" onclick="selectTime(this, '@slot')"
+                                                    <button type="button"
+                                                            onclick="selectTime(this, '@slot')"
                                                             class="time-slot-btn py-2 px-1 text-sm font-medium border border-gray-200 rounded-lg hover:border-blue-500 hover:text-blue-600 transition bg-white text-gray-600">
                                                         @slot
                                                     </button>
@@ -107,7 +150,9 @@
                                             }
                                             else
                                             {
-                                                <span class="text-sm text-red-500 col-span-4">Vui lòng liên hệ nhà hàng để biết giờ mở cửa.</span>
+                                                <span class="text-sm text-red-500 col-span-4">
+                                                    Vui lòng liên hệ nhà hàng để biết giờ mở cửa.
+                                                </span>
                                             }
                                         </div>
                                         <p class="text-xs text-red-500 mt-1 hidden font-medium" id="timeError">
@@ -116,13 +161,20 @@
                                     </div>
                                 </div>
 
+                                <!-- Số khách -->
                                 <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-3">Số lượng khách <span class="text-red-500">*</span></label>
+                                    <label class="block text-sm font-bold text-gray-700 mb-3">
+                                        Số lượng khách <span class="text-red-500">*</span>
+                                    </label>
                                     <div class="grid grid-cols-4 sm:grid-cols-8 gap-3">
                                         @for (int i = 2; i <= 10; i += 2)
                                         {
+                                            bool isChecked = (prePeople == i);
                                             <label class="cursor-pointer relative group">
-                                                <input type="radio" name="number_of_guests" value="@i" class="peer sr-only" @(Convert.ToInt32(prePeople) == i ? "checked" : "") />
+                                                <input type="radio"
+                                                       name="number_of_guests"
+                                                       value="@i"
+                                                       class="peer sr-only" @(isChecked ? "checked" : "") />
                                                 <div class="w-full py-2.5 border border-gray-200 rounded-lg text-center text-sm font-semibold text-gray-600 bg-white peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 group-hover:border-blue-400 transition shadow-sm">
                                                     @i
                                                 </div>
@@ -138,53 +190,74 @@
                                 </div>
                             </div>
 
-                            <div class="border-t border-gray-100"></div>
+                            <div class="border-t border-gray-100 my-6"></div>
 
+                            <!-- Thông tin liên hệ -->
                             <div class="space-y-6">
                                 <h4 class="font-bold text-gray-800 text-base">Thông tin liên hệ</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Họ và tên <span class="text-red-500">*</span></label>
-                                        <input type="text" name="full_name" required 
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                            Họ và tên <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text"
+                                               name="full_name"
+                                               required
                                                value="@userName"
-                                               placeholder="VD: Nguyễn Văn A" 
+                                               placeholder="VD: Nguyễn Văn A"
                                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition bg-gray-50 focus:bg-white" />
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Số điện thoại <span class="text-red-500">*</span></label>
-                                        <input type="tel" name="phone" required 
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                            Số điện thoại <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="tel"
+                                               name="phone"
+                                               required
                                                value="@userPhone"
-                                               placeholder="VD: 0912..." 
+                                               placeholder="VD: 0912..."
                                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition bg-gray-50 focus:bg-white" />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Ghi chú (Tùy chọn)</label>
-                                    <textarea name="special_request" rows="3" 
-                                              placeholder="VD: Tôi muốn ngồi gần cửa sổ, có trẻ em, tổ chức sinh nhật..." 
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                        Ghi chú (Tùy chọn)
+                                    </label>
+                                    <textarea name="special_request"
+                                              rows="3"
+                                              placeholder="VD: Tôi muốn ngồi gần cửa sổ, có trẻ em, tổ chức sinh nhật..."
                                               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition bg-gray-50 focus:bg-white"></textarea>
                                 </div>
                             </div>
 
-                            <button type="submit" class="w-full bg-red-600 text-white text-lg font-bold py-4 rounded-xl shadow-lg hover:bg-red-700 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 group">
-                                <span>HOÀN TẤT ĐẶT BÀN</span>
-                                <i class="fas fa-check-circle group-hover:scale-110 transition-transform"></i>
-                            </button>
-                            
-                            <p class="text-center text-xs text-gray-500">
-                                Bằng cách nhấn hoàn tất, bạn đồng ý với <a href="#" class="text-blue-600 hover:underline font-medium">Điều khoản sử dụng</a> của chúng tôi.
-                            </p>
+                            <div class="mt-8">
+                                <!-- NÚT SUBMIT FORM LUUĐATBAN -->
+                                <button type="submit"
+                                        class="w-full bg-red-600 text-white text-lg font-bold py-4 rounded-xl shadow-lg hover:bg-red-700 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 group">
+                                    <span>HOÀN TẤT ĐẶT BÀN</span>
+                                    <i class="fas fa-check-circle group-hover:scale-110 transition-transform"></i>
+                                </button>
+
+                                <p class="text-center text-xs text-gray-500 mt-2">
+                                    Bằng cách nhấn hoàn tất, bạn đồng ý với
+                                    <a href="#" class="text-blue-600 hover:underline font-medium">Điều khoản sử dụng</a>
+                                    của chúng tôi.
+                                </p>
+                            </div>
                         }
                     </div>
                 </div>
             </div>
 
+            <!-- Cột phải: Tóm tắt -->
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 sticky top-24">
-                    
+
                     <div class="relative h-48 rounded-xl overflow-hidden mb-5 bg-gray-100 shadow-inner">
-                        <img src="@(Model.Image ?? "https://via.placeholder.com/400x300")" class="w-full h-full object-cover transition hover:scale-105 duration-700" alt="@Model.name">
+                        <img src="@(Model.Image ?? "https://via.placeholder.com/400x300")"
+                             class="w-full h-full object-cover transition hover:scale-105 duration-700"
+                             alt="@Model.name">
                         <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4">
                             <h2 class="text-xl font-bold text-white leading-tight">@Model.name</h2>
                         </div>
@@ -192,27 +265,27 @@
 
                     <div class="space-y-4 text-sm text-gray-600 mb-6">
                         <div class="flex items-start gap-3">
-                            <div class="w-8 h-8 rounded-full bg-red-500 text-red-500 flex items-center justify-center shrink-0">
+                            <div class="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center shrink-0">
                                 <i class="fas fa-map-marker-alt"></i>
                             </div>
                             <span class="mt-1">@Model.address</span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-green-500 text-green-600 flex items-center justify-center shrink-0">
+                            <div class="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center shrink-0">
                                 <i class="fas fa-clock"></i>
                             </div>
                             <span>@Model.opening_hours</span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-orange-500 text-orange-500 flex items-center justify-center shrink-0">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
                                 <i class="fas fa-utensils"></i>
                             </div>
                             <span>@Model.CuisineStyle</span>
                         </div>
                     </div>
 
-                    <hr class="border-dashed border-gray-200 my-5">
-                    
+                    <hr class="border-dashed border-gray-200 my-5" />
+
                     <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
                         <h5 class="font-bold text-blue-800 text-xs uppercase mb-3 flex items-center gap-2">
                             <i class="fas fa-receipt"></i> Tóm tắt đặt chỗ
@@ -220,7 +293,9 @@
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between">
                                 <span class="text-gray-500">Ngày:</span>
-                                <span class="font-bold text-gray-800" id="summaryDate">@DateTime.Now.ToString("dd/MM/yyyy")</span>
+                                <span class="font-bold text-gray-800" id="summaryDate">
+                                    @DateTime.Now.ToString("dd/MM/yyyy")
+                                </span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-500">Giờ:</span>
@@ -246,66 +321,76 @@
 
 @section Scripts {
     <script>
-        // --- 1. HÀM CHỌN GIỜ ---
+        // Chọn giờ
         function selectTime(btn, timeVal) {
-            // Reset style tất cả nút
-            document.querySelectorAll('.time-slot-btn').forEach(b => {
+            document.querySelectorAll('.time-slot-btn').forEach(function (b) {
                 b.classList.remove("bg-blue-600", "text-white", "border-blue-600", "shadow-md");
                 b.classList.add("bg-white", "text-gray-600", "border-gray-200");
             });
 
-            // Active nút được chọn
             btn.classList.remove("bg-white", "text-gray-600", "border-gray-200");
             btn.classList.add("bg-blue-600", "text-white", "border-blue-600", "shadow-md");
 
-            // Cập nhật giá trị
             document.getElementById('selectedTimeInput').value = timeVal;
-            
-            // Cập nhật tóm tắt
             document.getElementById('summaryTime').textContent = timeVal;
-            
-            // Ẩn lỗi
             document.getElementById('timeError').classList.add('hidden');
         }
 
-        // --- 2. CẬP NHẬT TÓM TẮT KHI ĐỔI INPUT ---
-        // Ngày
-        document.getElementById('inputDate').addEventListener('change', function() {
-            if(this.value) {
-                const d = new Date(this.value);
-                document.getElementById('summaryDate').textContent = d.toLocaleDateString('vi-VN');
-            }
-        });
+        // Cập nhật tóm tắt ngày
+        var inputDate = document.getElementById('inputDate');
+        if (inputDate) {
+            inputDate.addEventListener('change', function () {
+                if (this.value) {
+                    var d = new Date(this.value);
+                    document.getElementById('summaryDate').textContent =
+                        d.toLocaleDateString('vi-VN');
+                }
+            });
+        }
 
-        // Số khách (Radio buttons)
-        document.querySelectorAll('input[name="number_of_guests"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                if(this.checked) {
-                    let val = this.value;
-                    if(val == "12") val = "Đoàn lớn";
+        // Cập nhật số khách
+        document.querySelectorAll('input[name="number_of_guests"]').forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                if (this.checked) {
+                    var val = this.value;
+                    if (val === "12") val = "Đoàn lớn";
                     else val += " người";
                     document.getElementById('summaryPeople').textContent = val;
                 }
             });
         });
 
-        // --- 3. VALIDATE TRƯỚC KHI SUBMIT ---
-        document.getElementById('bookingForm').addEventListener('submit', function (e) {
-            var time = document.getElementById('selectedTimeInput').value;
-            if (!time) {
-                e.preventDefault();
-                document.getElementById('timeError').classList.remove('hidden');
-                // Scroll nhẹ lên phần chọn giờ
-                document.getElementById('timeError').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        });
+        // Validate chọn giờ trước khi submit
+        var bookingForm = document.getElementById('bookingForm');
+        if (bookingForm) {
+            bookingForm.addEventListener('submit', function (e) {
+                var time = document.getElementById('selectedTimeInput').value;
+                if (!time) {
+                    e.preventDefault();
+                    var err = document.getElementById('timeError');
+                    err.classList.remove('hidden');
+                    err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        }
     </script>
-    
+
     <style>
-        /* Custom Scrollbar cho danh sách giờ */
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
     </style>
 }

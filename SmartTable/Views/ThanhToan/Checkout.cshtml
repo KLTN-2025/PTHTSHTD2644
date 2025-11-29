@@ -1,64 +1,272 @@
 ﻿@model SmartTable.Models.ViewModels.PaymentViewModel
+
 @{
-    ViewBag.Title = "Thanh toán đặt bàn";
+    ViewBag.Title = "Thanh toán đặt cọc";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // ====== TÍNH SỐ TIỀN CỌC ======
+    decimal amount = 0m;
+
+    if (Model != null)
+    {
+        amount = Model.Amount;
+    }
+
+    // Nếu Amount chưa set từ controller → fallback 50k/khách
+    if (amount <= 0)
+    {
+        int guests = 0;
+
+        if (Model != null)
+        {
+            guests = Model.NumberOfGuests;
+        }
+
+        if (guests <= 0)
+        {
+            guests = 1;
+        }
+
+        amount = guests * 50000m;
+    }
+
+    // ====== NỘI DUNG CHUYỂN KHOẢN ======
+    string content = "";
+
+    if (Model != null && !string.IsNullOrWhiteSpace(Model.TransferContent))
+    {
+        content = Model.TransferContent;
+    }
+    else if (Model != null)
+    {
+        content = $"SMARTTABLE-{Model.BookingId}";
+    }
+    else
+    {
+        content = "SMARTTABLE";
+    }
+
+    // ====== CẤU HÌNH TÀI KHOẢN NHẬN TIỀN ======
+    string bankId = "MB";              // Mã ngân hàng: MB Bank
+    string accountNo = "0912345678";   // Số TK của bạn
+    string template = "compact2";
+    string accountName = "SMART TABLE";
+
+    string encodedContent = System.Uri.EscapeDataString(content);
+    string encodedAccName = System.Uri.EscapeDataString(accountName);
+
+    // Link VietQR
+    string qrUrl =
+        $"https://img.vietqr.io/image/{bankId}-{accountNo}-{template}.jpg?amount={amount}&addInfo={encodedContent}&accountName={encodedAccName}";
+
+    // ====== THÔNG TIN HIỂN THỊ ======
+    string restaurantName = (Model != null && !string.IsNullOrEmpty(Model.RestaurantName))
+        ? Model.RestaurantName
+        : "Nhà hàng";
+
+    string restaurantAddress = Model != null ? (Model.RestaurantAddress ?? "") : "";
+
+    string restaurantImage =
+        Model != null && !string.IsNullOrEmpty(Model.RestaurantImage)
+            ? Model.RestaurantImage
+            : "https://via.placeholder.com/100";
+
+    string customerName =
+        Model != null && !string.IsNullOrEmpty(Model.CustomerName)
+            ? Model.CustomerName
+            : "Khách hàng";
+
+    string specialRequest = Model != null ? (Model.SpecialRequest ?? "") : "";
+
+    DateTime bookingTime = Model != null ? Model.BookingTime : DateTime.Now;
+    int numberOfGuests = Model != null ? Model.NumberOfGuests : 0;
 }
 
-<div class="max-w-3xl mx-auto mt-10 bg-white rounded-2xl shadow-lg p-8">
-    <h1 class="text-2xl font-bold mb-6 text-gray-800">Thanh toán đặt bàn</h1>
+<div class="bg-gray-50 min-h-screen py-10">
+    <div class="container mx-auto max-w-5xl px-4">
 
-    <div class="grid md:grid-cols-2 gap-6 mb-8">
-        <div class="space-y-2 text-sm text-gray-700">
-            <p><span class="font-semibold">Nhà hàng:</span> @Model.RestaurantName</p>
-            <p><span class="font-semibold">Thời gian:</span> @Model.BookingTime.ToString("dd/MM/yyyy HH:mm")</p>
-            <p><span class="font-semibold">Số khách:</span> @Model.NumberOfGuests</p>
-        </div>
-        <div class="bg-gray-50 rounded-xl p-4 text-right">
-            <p class="text-sm text-gray-500">Tổng thanh toán</p>
-            <p class="text-2xl font-bold text-blue-600">
-                @Model.Amount.ToString("N0") đ
-            </p>
-        </div>
-    </div>
-
-    @using (Html.BeginForm("Checkout", "ThanhToan", FormMethod.Post))
-    {
-        @Html.AntiForgeryToken()
-        @Html.HiddenFor(m => m.BookingId)
-        @Html.HiddenFor(m => m.Amount)
-
-        <div class="mb-6">
-            <h2 class="text-lg font-semibold mb-3 text-gray-800">Chọn phương thức thanh toán</h2>
-
-            <div class="space-y-3">
-                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:border-blue-500">
-                    <input type="radio" name="PaymentMethod" value="Tiền mặt tại nhà hàng" class="h-4 w-4" checked />
-                    <div>
-                        <div class="font-semibold text-sm">Thanh toán tại nhà hàng</div>
-                        <div class="text-xs text-gray-500">Thanh toán trực tiếp khi đến nhà hàng.</div>
-                    </div>
-                </label>
-
-                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:border-blue-500">
-                    <input type="radio" name="PaymentMethod" value="Chuyển khoản ngân hàng" class="h-4 w-4" />
-                    <div>
-                        <div class="font-semibold text-sm">Chuyển khoản ngân hàng</div>
-                        <div class="text-xs text-gray-500">Bạn sẽ nhận thông tin tài khoản sau khi xác nhận.</div>
-                    </div>
-                </label>
-
-                <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:border-blue-500">
-                    <input type="radio" name="PaymentMethod" value="Ví điện tử (VNPay / Momo)" class="h-4 w-4" />
-                    <div>
-                        <div class="font-semibold text-sm">Ví điện tử (VNPay / Momo)</div>
-                        <div class="text-xs text-gray-500">Hiện tại hệ thống ghi nhận như thanh toán online (mô phỏng).</div>
-                    </div>
-                </label>
+        <!-- Bước tiến trình -->
+        <div class="flex justify-center mb-10">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 text-gray-400">
+                    <span class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center font-bold">1</span>
+                    <span>Đặt bàn</span>
+                </div>
+                <div class="w-12 h-0.5 bg-gray-300"></div>
+                <div class="flex items-center gap-2 text-blue-600 font-bold">
+                    <span class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center">2</span>
+                    <span>Thanh toán cọc</span>
+                </div>
+                <div class="w-12 h-0.5 bg-gray-300"></div>
+                <div class="flex items-center gap-2 text-gray-400">
+                    <span class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center font-bold">3</span>
+                    <span>Hoàn tất</span>
+                </div>
             </div>
         </div>
 
-        <button type="submit"
-                class="w-full md:w-auto px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
-            Hoàn tất thanh toán
-        </button>
-    }
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <!-- CỘT TRÁI: QR & THÔNG TIN CK -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 text-center">
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Thanh toán chuyển khoản</h2>
+                <p class="text-sm text-gray-500 mb-6">
+                    Vui lòng quét mã QR hoặc chuyển khoản theo thông tin bên dưới
+                </p>
+
+                <div class="bg-blue-50 p-4 rounded-xl inline-block mb-6 border border-blue-100">
+                    <img src="@qrUrl"
+                         alt="Mã QR Thanh Toán"
+                         class="w-64 h-auto rounded-lg shadow-sm mx-auto mix-blend-multiply" />
+                </div>
+
+                <div class="text-left space-y-4 bg-gray-50 p-5 rounded-xl border border-gray-200">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500 text-sm">Ngân hàng:</span>
+                        <span class="font-bold text-gray-800">MB Bank (Quân Đội)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500 text-sm">Số tài khoản:</span>
+                        <span class="font-bold text-blue-600 tracking-wider">@accountNo</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500 text-sm">Chủ tài khoản:</span>
+                        <span class="font-bold text-gray-800 uppercase">@accountName</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500 text-sm">Số tiền:</span>
+                        <span class="font-bold text-red-600 text-lg">@amount.ToString("#,##0") đ</span>
+                    </div>
+                    <div class="flex justify-between border-t border-gray-200 pt-3 mt-2">
+                        <span class="text-gray-500 text-sm">Nội dung CK:</span>
+                        <span class="font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-100">
+                            @content
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <button onclick="confirmPayment()"
+                            class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                        <i class="fas fa-check-circle"></i>
+                        <span>TÔI ĐÃ CHUYỂN KHOẢN</span>
+                    </button>
+                    <p class="text-xs text-gray-400 mt-3">
+                        Hệ thống sẽ tự động xác nhận sau 1-3 phút.
+                    </p>
+                </div>
+            </div>
+
+            <!-- CỘT PHẢI: CHI TIẾT ĐẶT BÀN -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 h-fit sticky top-24">
+                <h3 class="text-lg font-bold text-gray-800 mb-6 border-b pb-4">
+                    Chi tiết đặt bàn #@Model.BookingId
+                </h3>
+
+                <div class="flex items-center gap-4 mb-6">
+                    <img src="@restaurantImage"
+                         class="w-20 h-20 rounded-lg object-cover shadow-sm" />
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-lg">@restaurantName</h4>
+                        @if (!string.IsNullOrEmpty(restaurantAddress))
+                        {
+                            <p class="text-sm text-gray-500 flex items-center gap-1">
+                                <i class="fas fa-map-marker-alt text-red-500"></i> @restaurantAddress
+                            </p>
+                        }
+                    </div>
+                </div>
+
+                <div class="space-y-4 text-sm text-gray-600">
+                    <div class="flex justify-between">
+                        <span>Khách hàng:</span>
+                        <span class="font-medium text-gray-900">@customerName</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Thời gian:</span>
+                        <span class="font-medium text-gray-900">
+                            @bookingTime.ToString("HH:mm - dd/MM/yyyy")
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Số khách:</span>
+                        <span class="font-medium text-gray-900">
+                            @numberOfGuests người
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Ghi chú:</span>
+                        <span class="font-medium text-gray-900 italic">
+                            @(string.IsNullOrEmpty(specialRequest) ? "Không có" : specialRequest)
+                        </span>
+                    </div>
+                </div>
+
+                <hr class="border-dashed border-gray-200 my-6" />
+
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-600">Phí giữ chỗ (50k/người)</span>
+                    <span class="font-medium">@amount.ToString("#,##0") đ</span>
+                </div>
+                <div class="flex justify-between items-center text-xl font-bold text-red-600 mt-4">
+                    <span>Tổng thanh toán</span>
+                    <span>@amount.ToString("#,##0") đ</span>
+                </div>
+
+                <div class="mt-6 bg-yellow-50 border border-yellow-100 p-3 rounded-lg text-xs text-yellow-800">
+                    <strong>Chính sách hoàn tiền:</strong> Hoàn 100% nếu hủy trước 24h. Không hoàn tiền nếu hủy sau đó.
+                </div>
+            </div>
+
+        </div>
+    </div>
 </div>
+
+<!-- MODAL THÀNH CÔNG -->
+<div id="successModal"
+     class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-md text-center">
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">
+            <i class="fas fa-check text-4xl"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 mb-2">Thanh toán thành công!</h3>
+        <p class="text-gray-500 mb-6">
+            Cảm ơn bạn đã đặt bàn. Nhà hàng đã nhận được thông tin và sẽ liên hệ sớm nhất.
+        </p>
+        <a href="@Url.Action("Index", "Home")"
+           class="block w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">
+            Về trang chủ
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmPayment() {
+            const btn = document.querySelector('button[onclick="confirmPayment()"]');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+            btn.disabled = true;
+
+            fetch('@Url.Action("ConfirmPayment", "ThanhToan")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookingId: @Model.BookingId })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('successModal').classList.remove('hidden');
+                    } else {
+                        alert("Lỗi: " + data.message);
+                        btn.innerHTML = '<i class="fas fa-check-circle"></i> TÔI ĐÃ CHUYỂN KHOẢN';
+                        btn.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    alert("Có lỗi xảy ra: " + err);
+                    btn.innerHTML = '<i class="fas fa-check-circle"></i> TÔI ĐÃ CHUYỂN KHOẢN';
+                    btn.disabled = false;
+                });
+        }
+    </script>
+}
