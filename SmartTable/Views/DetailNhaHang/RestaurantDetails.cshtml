@@ -1,0 +1,749 @@
+﻿@using System.Globalization
+@using System.Linq
+@model SmartTable.Models.ViewModels.SmartTableDetailViewModel
+
+@{
+    ViewBag.Title = Model.Restaurant.name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    @helper DetailRow(string iconClass, string label, object value)
+    {
+        string val = (value == null || string.IsNullOrWhiteSpace(value.ToString()))
+            ? "Đang cập nhật"
+            : value.ToString();
+
+        <div class="flex items-start py-4 px-3 bg-gradient-to-r from-gray-50 to-white
+                rounded-xl border border-gray-100 hover:border-red-200 hover:shadow-sm
+                transition-all duration-200">
+            <div class="w-10 h-10 flex-shrink-0 rounded-lg
+                    bg-gradient-to-br from-red-400 to-red-600
+                    flex items-center justify-center mr-4 shadow-sm">
+                <i class="@iconClass text-white text-lg"></i>
+            </div>
+
+            <div class="flex-grow">
+                <span class="text-xs font-semibold text-gray-600 uppercase tracking-wider block mb-1">
+                    @label
+                </span>
+                <span class="text-base text-gray-900 font-medium">
+                    @val
+                </span>
+            </div>
+        </div>
+    }
+
+
+
+
+    var reviewCount = Model.Reviews?.Count ?? 0;
+    double avgRating = reviewCount > 0 ? Model.Reviews.Average(r => (double)r.rating) : 0;
+    string avgRatingStr = avgRating > 0 ? avgRating.ToString("0.0", CultureInfo.InvariantCulture) : "0.0";
+}
+<style>
+    .restaurant-page i,
+    .restaurant-page svg {
+        opacity: 1 !important;
+        filter: none !important;
+    }
+
+    .restaurant-page .nav-pill.active {
+        color: #dc2626;
+        border-bottom-color: #dc2626;
+    }
+
+    #map-container {
+        width: 100% !important;
+        height: 380px !important;
+        display: block;
+    }
+
+        #map-container.leaflet-container {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+    .rating-star.text-gray-300 {
+        color: #d1d5db;
+    }
+
+    .rating-star.text-yellow-400 {
+        color: #facc15;
+    }
+
+    .menu-filter {
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #4b5563;
+        background: #f9fafb;
+        cursor: pointer;
+        transition: all .2s;
+        white-space: nowrap;
+    }
+
+        .menu-filter:hover {
+            background: #fee2e2;
+            border-color: #fecaca;
+            color: #b91c1c;
+        }
+
+        .menu-filter.active {
+            background: #dc2626;
+            border-color: #dc2626;
+            color: #fff;
+        }
+</style>
+
+<div class="restaurant-page min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <!-- HERO -->
+    <div class="relative bg-gradient-to-br from-gray-900 to-gray-800 text-white overflow-hidden">
+
+        <div class="absolute inset-0 group cursor-pointer" onclick="openHeroImage()">
+            <div class="absolute inset-0"
+                 style="background-image: url('@(Model.Restaurant.Image ?? "https://via.placeholder.com/1920x600")'); background-size: cover; background-position: center;">
+            </div>
+            <div class="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition"></div>
+        </div>
+
+        <div class="container mx-auto px-4 lg:px-8 py-12 lg:py-16 relative z-10">
+            <div class="max-w-4xl">
+                <div class="flex items-center gap-2 text-sm text-gray-300 mb-4">
+                    <a href="@Url.Action("Index","Home")" class="hover:text-white transition-colors">Trang chủ</a>
+                    <i class="fas fa-chevron-right text-xs text-gray-400"></i>
+                    <span class="text-red-200 font-medium">@Model.Restaurant.name</span>
+                </div>
+
+                <h1 class="text-4xl lg:text-5xl font-bold mb-4 leading-tight">
+                    @Model.Restaurant.name
+                </h1>
+
+                <div class="flex items-center gap-2 text-lg mb-6">
+                    <i class="fas fa-map-marker-alt text-red-400"></i>
+                    <span class="text-gray-100">@Model.Restaurant.address</span>
+                </div>
+
+                <div class="flex flex-wrap gap-3">
+                    <div class="flex items-center gap-2 bg-white/15 rounded-full px-4 py-2 shadow-sm">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        @if (reviewCount > 0)
+                        {
+                            <span class="font-semibold">@avgRatingStr</span>
+                            <span class="text-gray-200 text-sm">(@reviewCount đánh giá)</span>
+                        }
+                        else
+                        {
+                            <span class="font-semibold">0.0</span>
+                            <span class="text-gray-200 text-sm">(Chưa có đánh giá)</span>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Restaurant.opening_hours))
+                    {
+                        <div class="flex items-center gap-2 bg-white/15 rounded-full px-4 py-2 shadow-sm">
+                            <i class="fas fa-clock text-emerald-300"></i>
+                            <span class="text-gray-100">@Model.Restaurant.opening_hours</span>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Restaurant.CuisineStyle))
+                    {
+                        <div class="flex items-center gap-2 bg-white/15 rounded-full px-4 py-2 shadow-sm">
+                            <i class="fas fa-utensils text-orange-300"></i>
+                            <span class="text-gray-100">@Model.Restaurant.CuisineStyle</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 lg:px-8 py-8">
+        <div class="flex flex-col lg:flex-row gap-8">
+            <div class="lg:w-2/3 space-y-8">
+                <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                    <div class="relative">
+                        <img src="@(Model.Restaurant.Image ?? "https://via.placeholder.com/1200x600")"
+                             alt="Ảnh nhà hàng"
+                             class="w-full h-96 object-cover hover:scale-105 transition-transform duration-700 cursor-zoom-in"
+                             id="main-image" />
+
+                        @if (Model.Restaurant.RestaurantImages != null && Model.Restaurant.RestaurantImages.Any())
+                        {
+                            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 bg-black/30 rounded-full px-3 py-2">
+                                @foreach (var img in Model.Restaurant.RestaurantImages.Take(4))
+                                {
+                                    <button type="button"
+                                            class="w-20 h-12 rounded-lg overflow-hidden border-2 border-white/70 shadow-lg hover:scale-110 transition-transform duration-200"
+                                            onclick="changeMainImage('@img.image_url')">
+                                        <img src="@img.image_url" alt="Thumbnail" class="w-full h-full object-cover" />
+                                    </button>
+                                }
+                                @if (Model.Restaurant.RestaurantImages.Count > 4)
+                                {
+                                    <div class="w-20 h-12 rounded-lg bg-gray-900/80 text-white flex items-center justify-center font-semibold text-sm">
+                                        +@(Model.Restaurant.RestaurantImages.Count - 4)
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="sticky top-20 z-30 bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+                    <div class="flex overflow-x-auto scrollbar-hide">
+                        <a href="#gioi-thieu" class="nav-pill flex-1 min-w-0 px-6 py-4 text-center font-semibold text-gray-700 border-b-2 border-transparent hover:text-red-600 hover:border-red-500 transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="fas fa-info-circle"></i><span>Thông tin</span>
+                        </a>
+                        <a href="#thuc-don" class="nav-pill flex-1 min-w-0 px-6 py-4 text-center font-semibold text-gray-700 border-b-2 border-transparent hover:text-red-600 hover:border-red-500 transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="fas fa-utensils"></i><span>Thực đơn</span>
+                        </a>
+                        <a href="#ban-do" class="nav-pill flex-1 min-w-0 px-6 py-4 text-center font-semibold text-gray-700 border-b-2 border-transparent hover:text-red-600 hover:border-red-500 transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="fas fa-map-marked-alt"></i><span>Bản đồ</span>
+                        </a>
+                        <a href="#danh-gia" class="nav-pill flex-1 min-w-0 px-6 py-4 text-center font-semibold text-gray-700 border-b-2 border-transparent hover:text-red-600 hover:border-red-500 transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="fas fa-star"></i><span>Đánh giá</span>
+                            @if (reviewCount > 0)
+                            {
+                                <span class="bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full font-semibold">@reviewCount</span>
+                            }
+                        </a>
+                    </div>
+                </div>
+
+                <div class="space-y-10">
+                    <section id="gioi-thieu" class="scroll-mt-24">
+                        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                                    <i class="fas fa-info-circle text-white text-xl"></i>
+                                </div>
+                                <h2 class="text-2xl font-bold text-gray-900">Giới thiệu nhà hàng</h2>
+                            </div>
+
+                            <div class="text-gray-700 leading-relaxed">
+                                @(string.IsNullOrEmpty(Model.Restaurant.description)
+                                    ? "Nhà hàng hiện đang cập nhật thông tin mô tả. Quý khách vui lòng liên hệ trực tiếp để biết thêm chi tiết."
+                                    : Model.Restaurant.description)
+                            </div>
+
+                            <div class="grid md:grid-cols-2 gap-6 mt-10">
+                                <div class="space-y-4">
+                                    <h3 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">Đặc điểm & Dịch vụ</h3>
+                                    @DetailRow("fas fa-dollar-sign", "Khoảng giá", Model.Restaurant.AverageBill)
+                                    @DetailRow("fas fa-concierge-bell", "Loại hình", Model.Restaurant.ServiceDescription)
+                                    @DetailRow("fas fa-hands-helping", "Phục vụ", Model.Restaurant.ServiceTypes)
+                                    @DetailRow("fas fa-crown", "Món đặc sắc", Model.Restaurant.SignatureDishes)
+                                </div>
+                                <div class="space-y-4">
+                                    <h3 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">Không gian & Tiện ích</h3>
+                                    @DetailRow("fas fa-chair", "Sức chứa", Model.Restaurant.max_tables.HasValue ? $"{Model.Restaurant.max_tables} bàn" : null)
+                                    @DetailRow("fas fa-door-closed", "Phòng riêng", Model.Restaurant.PrivateRoomCount)
+                                    @DetailRow("fas fa-couch", "Chỗ ngồi", Model.Restaurant.SeatingType)
+                                    @DetailRow("fas fa-wifi", "Tiện ích", Model.Restaurant.Amenities)
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- THỰC ĐƠN + DANH MỤC -->
+                    <section id="thuc-don" class="scroll-mt-24">
+                        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                                    <i class="fas fa-utensils text-white text-xl"></i>
+                                </div>
+                                <h2 class="text-2xl font-bold text-gray-900">Thực đơn</h2>
+                            </div>
+
+                            @if (Model.MenuItems == null || !Model.MenuItems.Any())
+                            {
+                                <div class="text-center py-12">
+                                    <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-orange-100 flex items-center justify-center">
+                                        <i class="fas fa-utensils text-3xl text-orange-400"></i>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Menu đang được cập nhật</h3>
+                                    <p class="text-gray-500">Nhà hàng đang hoàn thiện thực đơn, vui lòng quay lại sau.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="flex flex-wrap gap-2 mb-6">
+                                    <button type="button" class="menu-filter active" data-category="all">Tất cả</button>
+                                    <button type="button" class="menu-filter" data-category="Món khai vị">Món khai vị</button>
+                                    <button type="button" class="menu-filter" data-category="Món chính">Món chính</button>
+                                    <button type="button" class="menu-filter" data-category="Tráng miệng">Tráng miệng</button>
+                                    <button type="button" class="menu-filter" data-category="Đồ uống">Đồ uống</button>
+                                </div>
+
+                                <div class="grid md:grid-cols-2 gap-6" id="menu-list">
+                                    @foreach (var item in Model.MenuItems.OrderBy(m => m.name))
+                                    {
+                                        var lowerName = (item.name ?? "").ToLowerInvariant();
+                                        string cat;
+                                        if (lowerName.Contains("khai vị") || lowerName.Contains("salad") || lowerName.Contains("gỏi"))
+                                        {
+                                            cat = "Món khai vị";
+                                        }
+                                        else if (lowerName.Contains("lẩu") || lowerName.Contains("cơm") || lowerName.Contains("mì")
+                                              || lowerName.Contains("phở") || lowerName.Contains("bún")
+                                              || lowerName.Contains("steak") || lowerName.Contains("main"))
+                                        {
+                                            cat = "Món chính";
+                                        }
+                                        else if (lowerName.Contains("tráng miệng") || lowerName.Contains("dessert")
+                                              || lowerName.Contains("chè") || lowerName.Contains("kem"))
+                                        {
+                                            cat = "Tráng miệng";
+                                        }
+                                        else if (lowerName.Contains("nước") || lowerName.Contains("cafe") || lowerName.Contains("cà phê")
+                                              || lowerName.Contains("soda") || lowerName.Contains("trà")
+                                              || lowerName.Contains("juice") || lowerName.Contains("bia") || lowerName.Contains("wine"))
+                                        {
+                                            cat = "Đồ uống";
+                                        }
+                                        else
+                                        {
+                                            cat = "Món chính";
+                                        }
+
+                                        <div class="menu-item-card group bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-100 p-5 hover:shadow-xl hover:border-red-200 transition-all duration-300"
+                                             data-category="@cat">
+                                            <div class="flex gap-4">
+                                                <div class="flex-shrink-0">
+                                                    <div class="w-24 h-24 rounded-xl overflow-hidden shadow-md">
+                                                        @if (!string.IsNullOrEmpty(item.Image))
+                                                        {
+                                                            <img src="@item.Image" alt="@item.name"
+                                                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="w-full h-full bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center">
+                                                                <i class="fas fa-utensils text-2xl text-orange-400"></i>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+
+                                                <div class="flex-grow">
+                                                    <div class="flex items-center justify-between mb-1">
+                                                        <h4 class="font-bold text-gray-900 text-lg">@item.name</h4>
+                                                        <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-semibold">
+                                                            @cat
+                                                        </span>
+                                                    </div>
+
+                                                    @if (!string.IsNullOrWhiteSpace(item.description))
+                                                    {
+                                                        <p class="text-sm text-gray-600 whitespace-pre-wrap mb-2">@item.description</p>
+                                                    }
+
+                                                    <div class="text-xl font-bold text-red-600">
+                                                        @item.price.ToString("N0") đ
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </section>
+
+                    <!-- BẢN ĐỒ -->
+                    <section id="ban-do" class="scroll-mt-24">
+                        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                                    <i class="fas fa-map-marked-alt text-white text-xl"></i>
+                                </div>
+                                <h2 class="text-2xl font-bold text-gray-900">Vị trí nhà hàng</h2>
+                            </div>
+
+                            @if (Model.Restaurant.latitude.HasValue && Model.Restaurant.longitude.HasValue
+                                && (Model.Restaurant.latitude.Value != 0 || Model.Restaurant.longitude.Value != 0))
+                            {
+                                var latStr = Model.Restaurant.latitude.Value.ToString(CultureInfo.InvariantCulture);
+                                var lngStr = Model.Restaurant.longitude.Value.ToString(CultureInfo.InvariantCulture);
+
+                                <div class="rounded-xl overflow-hidden shadow-lg mb-4">
+                                    <iframe width="100%"
+                                            height="380"
+                                            style="border:0;"
+                                            loading="lazy"
+                                            referrerpolicy="no-referrer-when-downgrade"
+                                            src="https://www.openstreetmap.org/export/embed.html?bbox=@(lngStr),@(latStr),@(lngStr),@(latStr)&layer=mapnik&marker=@(latStr),@(lngStr)">
+                                    </iframe>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="h-96 w-full rounded-xl overflow-hidden shadow-lg mb-4 bg-gray-100 flex items-center justify-center text-gray-500">
+                                    Bản đồ sẽ hiển thị khi nhà hàng cập nhật tọa độ.
+                                </div>
+                            }
+
+                            <div class="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
+                                <i class="fas fa-map-marker-alt text-2xl text-red-500"></i>
+                                <div>
+                                    <p class="font-semibold text-gray-900">Địa chỉ</p>
+                                    <p class="text-gray-700">@Model.Restaurant.address</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+
+                    <!-- ĐÁNH GIÁ -->
+                    <section id="danh-gia" class="scroll-mt-24">
+                        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+                            <div class="flex items-center justify-between mb-8">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
+                                        <i class="fas fa-star text-white text-xl"></i>
+                                    </div>
+                                    <h2 class="text-2xl font-bold text-gray-900">Đánh giá từ khách hàng</h2>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-3xl font-bold text-gray-900">
+                                        @avgRatingStr <span class="text-yellow-500"><i class="fas fa-star ml-1"></i></span>
+                                    </div>
+                                    <p class="text-sm text-gray-500">@reviewCount đánh giá</p>
+                                </div>
+                            </div>
+
+                            @if (Model.Reviews == null || !Model.Reviews.Any())
+                            {
+                                <div class="text-center py-12">
+                                    <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-yellow-100 flex items-center justify-center">
+                                        <i class="fas fa-star text-3xl text-yellow-400"></i>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Chưa có đánh giá nào</h3>
+                                    <p class="text-gray-500">Hãy là người đầu tiên chia sẻ trải nghiệm của bạn.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                                    @foreach (var r in Model.Reviews.OrderByDescending(x => x.created_at).Take(4))
+                                    {
+                                        <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-100 p-6">
+                                            <div class="flex items-center justify-between mb-4">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center font-semibold text-red-600">
+                                                        @(r.Users?.full_name?.Substring(0, 1) ?? "K")
+                                                    </div>
+                                                    <div>
+                                                        <p class="font-semibold text-gray-900">@(r.Users?.full_name ?? "Khách ẩn danh")</p>
+                                                        <p class="text-xs text-gray-500">@r.created_at?.ToString("dd/MM/yyyy")</p><p class="text-xs text-gray-500">
+                                                            @(r.created_at.HasValue
+                                                            ? r.created_at.Value.ToString("dd/MM/yyyy")
+                                                            : "")
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex gap-1">
+                                                    @for (int i = 1; i <= 5; i++)
+                                                    {
+                                                        <i class="fas fa-star @(i <= r.rating ? "text-yellow-400" : "text-gray-300")"></i>
+                                                    }
+                                                </div>
+                                            </div>
+
+                                            <p class="text-gray-700 line-clamp-3 mb-2">@r.comment</p>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-6">
+                                <h3 class="text-lg font-bold text-gray-900 mb-4">Chia sẻ trải nghiệm của bạn</h3>
+
+                                @using (Html.BeginForm("PostReview", "DetailNhaHang", FormMethod.Post, new { @class = "space-y-4" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    @Html.Hidden("restaurant_id", Model.Restaurant.restaurant_id)
+
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Đánh giá của bạn</label>
+                                        <div class="flex gap-1 mb-2" id="rating-stars">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="fas fa-star text-2xl cursor-pointer rating-star text-gray-300" data-value="@i"></i>
+                                            }
+                                        </div>
+                                        <input type="hidden" name="rating" id="rating-value" value="5" />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Nhận xét</label>
+                                        <textarea name="comment"
+                                                  rows="4"
+                                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                                                  placeholder="Chia sẻ chi tiết trải nghiệm của bạn tại nhà hàng..."></textarea>
+                                    </div>
+
+                                    <div class="flex justify-end">
+                                        <button type="submit"
+                                                class="px-8 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-bold rounded-xl hover:shadow-xl hover:from-red-700 hover:to-red-800 transition-all duration-300">
+                                            <i class="fas fa-paper-plane mr-2"></i>Gửi đánh giá
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- BOOKING -->
+            <div class="lg:w-1/3">
+                <div class="sticky top-24 space-y-6">
+                    <div class="bg-gradient-to-br from-cyan-900 to-blue-500 rounded-2xl shadow-2xl overflow-hidden">
+                        <div class="p-6 text-white">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                    <i class="fas fa-calendar-check text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold">Đặt bàn ngay</h3>
+                                    <p class="text-red-100 text-sm">Miễn phí • Xác nhận tức thì</p>
+                                </div>
+                            </div>
+
+                            @using (Html.BeginForm("DatBan", "DatBan", FormMethod.Get, new { @class = "space-y-4" }))
+                            {
+                                @Html.Hidden("id", Model.Restaurant.restaurant_id)
+
+                                <div>
+                                    <label class="block text-white font-semibold mb-2 text-sm">
+                                        <i class="fas fa-users mr-2"></i>Số khách
+                                    </label>
+                                    <div class="relative">
+                                        <input type="number" name="NumberOfPeople" min="1" max="20" value="2"
+                                               class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent">
+                                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/70">
+                                            <i class="fas fa-user-friends"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-white font-semibold mb-2 text-sm">
+                                        <i class="fas fa-calendar-day mr-2"></i>Ngày đến
+                                    </label>
+                                    <input type="date" name="ReservationDate" required
+                                           value="@DateTime.Now.ToString("yyyy-MM-dd")"
+                                           min="@DateTime.Now.ToString("yyyy-MM-dd")"
+                                           max="@DateTime.Now.AddMonths(3).ToString("yyyy-MM-dd")"
+                                           class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent">
+                                </div>
+
+                                <div>
+                                    <label class="block text-white font-semibold mb-2 text-sm">
+                                        <i class="fas fa-clock mr-2"></i>Giờ đến
+                                    </label>
+                                    <input type="time"
+                                           name="ReservationTime"
+                                           value="19:00"
+                                           class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent" />
+                                </div>
+                                <button type="submit"
+                                        class="w-full mt-2 px-6 py-4
+                                               bg-red-500 text-white font-bold text-lg
+                                               rounded-xl
+                                               shadow-xl
+                                               hover:bg-red-500
+                                               hover:shadow-2xl
+                                               transform hover:-translate-y-0.5
+                                               active:scale-95 active:shadow-inner
+                                               transition-all duration-200">
+                                    <i class="fas fa-check-circle mr-2"></i> ĐẶT BÀN NGAY
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <i class="fas fa-headset text-red-500"></i><span>Thông tin liên hệ</span>
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                                <div class="w-10 h-10 rounded-lg bg-red-400 flex items-center justify-center">
+                                    <i class="fas fa-phone text-red-600"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-300">Hotline</p>
+                                    <p class="font-semibold text-gray-900">0941326591</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                                <div class="w-10 h-10 rounded-lg bg-blue-300 flex items-center justify-center">
+                                    <i class="fas fa-envelope text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500">Email</p>
+                                    <p class="font-semibold text-gray-900">Phamhuynhduyphong0308@gmail.com</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                                <div class="w-10 h-10 rounded-lg bg-green-400 flex items-center justify-center">
+                                    <i class="fas fa-globe text-green-600"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500">Website</p>
+                                    <p class="font-semibold text-gray-900">www.SmartTable.com</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="image-modal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden items-center justify-center">
+    <button onclick="closeModal()" class="absolute top-6 right-6 text-white text-3xl hover:text-red-400">
+        <i class="fas fa-times"></i>
+    </button>
+    <img id="modal-image" class="max-w-4xl max-h-[90vh] rounded-lg" />
+</div>
+<script>
+
+    function changeMainImage(src) {
+        var main = document.getElementById('main-image');
+        if (main) {
+            main.src = src;
+        }
+    }
+
+    function openModal(src) {
+        var modalImg = document.getElementById('modal-image');
+        var modal = document.getElementById('image-modal');
+        if (modalImg && modal) {
+            modalImg.src = src;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+
+    function closeModal() {
+        var modal = document.getElementById('image-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+    }
+
+    function openHeroImage() {
+        var main = document.getElementById('main-image');
+        if (main && main.src) {
+            openModal(main.src);
+        } else {
+            var heroUrl = '@(Model.Restaurant.Image ?? "https://via.placeholder.com/1200x600")';
+            openModal(heroUrl);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var main = document.getElementById('main-image');
+        if (main) {
+            main.addEventListener('click', function () {
+                openModal(this.src);
+            });
+        }
+
+        const stars = document.querySelectorAll('.rating-star');
+        const ratingInput = document.getElementById('rating-value');
+
+        function paintStars(value) {
+            stars.forEach(s => {
+                const v = parseInt(s.getAttribute('data-value'));
+                if (v <= value) {
+                    s.classList.remove('text-gray-300');
+                    s.classList.add('text-yellow-400');
+                } else {
+                    s.classList.remove('text-yellow-400');
+                    s.classList.add('text-gray-300');
+                }
+            });
+        }
+
+        if (stars.length && ratingInput) {
+            const defaultValue = parseInt(ratingInput.value || '5');
+            paintStars(defaultValue);
+
+            stars.forEach(star => {
+                star.addEventListener('click', function () {
+                    const value = parseInt(this.getAttribute('data-value'));
+                    ratingInput.value = value;
+                    paintStars(value);
+                });
+            });
+        }
+
+        document.querySelectorAll('.restaurant-page a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const targetId = this.getAttribute('href');
+                if (!targetId || targetId === '#') return;
+                const target = document.querySelector(targetId);
+                if (!target) return;
+
+                e.preventDefault();
+                const offset = 80;
+                const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                window.scrollTo({ top: top, behavior: 'smooth' });
+            });
+        });
+
+        const sections = document.querySelectorAll('.restaurant-page section[id]');
+        const navLinks = document.querySelectorAll('.restaurant-page .nav-pill');
+
+        function updateActiveNav() {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (window.scrollY >= (sectionTop - 150)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (current && link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveNav);
+        updateActiveNav();
+
+        const filterButtons = document.querySelectorAll('.menu-filter');
+        const menuCards = document.querySelectorAll('.menu-item-card');
+
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const cat = this.getAttribute('data-category');
+                filterButtons.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                menuCards.forEach(card => {
+                    const c = card.getAttribute('data-category');
+                    if (cat === 'all' || c === cat) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+            });
+        });
+    });
+</script>

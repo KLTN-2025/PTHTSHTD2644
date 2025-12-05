@@ -20,12 +20,12 @@ namespace SmartTable.Models.ViewModels
         [Display(Name = "Yêu cầu đặc biệt")]
         public string SpecialRequest { get; set; }
 
-        // Thông tin khách hàng (nếu chưa đăng nhập)
         [Required(ErrorMessage = "Vui lòng nhập họ tên")]
         public string CustomerName { get; set; }
 
         [Required(ErrorMessage = "Vui lòng nhập số điện thoại")]
         [RegularExpression(@"^0\d{9,10}$", ErrorMessage = "Số điện thoại không hợp lệ")]
         public string CustomerPhone { get; set; }
+
     }
 }

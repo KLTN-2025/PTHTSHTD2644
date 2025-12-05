@@ -2,7 +2,6 @@
 @{
     ViewBag.Title = "Chỉnh sửa Nhà hàng";
 
-    // Danh sách tiện ích
     List<string> availableAmenities = ViewBag.AvailableAmenities as List<string> ?? new List<string>
 {
         "Karaoke riêng", "Karaoke chung", "Tivi/Máy chiếu", "Loa mic",
@@ -13,7 +12,6 @@
         .Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries)
         ?? new string[0];
 
-    // Lấy tọa độ để init map (Nếu null thì dùng mặc định TP.HCM)
     var latInit = Model.latitude.HasValue
         ? Model.latitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)
         : "10.8231";

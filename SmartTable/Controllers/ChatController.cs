@@ -28,7 +28,6 @@ namespace SmartTable.Controllers
         private static readonly TimeSpan RestaurantsCacheDuration = TimeSpan.FromMinutes(10);
 
         [HttpPost]
-        // [ValidateAntiForgeryToken] // Uncomment nếu bạn đã xử lý gửi token từ client
         public async Task<ActionResult> SendMessage()
         {
             // 1. Đọc nội dung tin nhắn
@@ -62,7 +61,7 @@ namespace SmartTable.Controllers
             _lastCall[clientKey] = DateTime.UtcNow;
 
             // 3. TÌM KIẾM THÔNG MINH & LẤY DỮ LIỆU (CONTEXT)
-            // Logic mới: Tìm các nhà hàng LIÊN QUAN đến câu hỏi trước, thay vì lấy bừa 20 quán.
+            
 
             List<object> restaurantsContext = new List<object>();
             try
@@ -71,11 +70,10 @@ namespace SmartTable.Controllers
                 string keyword = userMessage.ToLower();
 
                 var query = db.Restaurants
-                    .Include(r => r.MenuItems) // Nạp Menu
+                    .Include(r => r.MenuItems)
                     .Where(r => r.is_approved == true);
 
-                // Lọc sơ bộ: Chỉ lấy những quán có tên/địa chỉ/món ăn khớp với câu hỏi (để giảm token)
-                // Nếu câu hỏi ngắn quá (dưới 3 ký tự) hoặc chung chung, thì lấy top quán nổi bật.
+            
                 var matchedRestaurants = new List<Restaurants>();
 
                 if (keyword.Length > 3)
@@ -88,7 +86,6 @@ namespace SmartTable.Controllers
                     ).Take(5).ToList();
                 }
 
-                // Nếu không tìm thấy (hoặc câu hỏi chung chung), lấy 10 quán ngẫu nhiên/mới nhất
                 if (matchedRestaurants.Count == 0)
                 {
                     matchedRestaurants = query.OrderByDescending(r => r.restaurant_id).Take(10).ToList();
@@ -102,13 +99,13 @@ namespace SmartTable.Controllers
                     GioMoCua = r.opening_hours,
                     SDT = r.ContactPhone ?? "Không có",
                     MoTa = r.description ?? "Không có mô tả",
-                    AnhDaiDien = r.Image, // Link ảnh
+                    AnhDaiDien = r.Image, 
 
                     // Chi tiết dịch vụ
                     PhongCach = r.CuisineStyle,
                     LoaiHinh = r.ServiceDescription,
                     GiaTB = r.AverageBill,
-                    TienIch = r.Amenities, // Wifi, Máy lạnh...
+                    TienIch = r.Amenities, 
 
                     // Thực đơn ĐẦY ĐỦ (Lấy tên và giá)
                     ThucDon = r.MenuItems.Select(m => $"{m.name} ({m.price:N0}đ)").ToList()
@@ -150,7 +147,7 @@ namespace SmartTable.Controllers
                     new DeepSeekMessage { Role = "user", Content = userMessage }
                 },
                 Temperature = 0.7,
-                MaxTokens = 1500 // Tăng token để AI trả lời dài hơn nếu cần (menu)
+                MaxTokens = 1500 
             };
 
             // 5. Gọi API thông qua Helper
@@ -159,7 +156,6 @@ namespace SmartTable.Controllers
             // 6. Xử lý kết quả & Fallback (Dự phòng khi quá tải)
             if (!deepResult.Success)
             {
-                // Nếu lỗi Rate Limit (429)
                 if ((deepResult.Status != null && deepResult.Status.Contains("429")) ||
                     (deepResult.Reply != null && deepResult.Reply.Contains("rate limit")))
                 {

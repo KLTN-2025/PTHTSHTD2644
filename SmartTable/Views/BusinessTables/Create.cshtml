@@ -1,0 +1,63 @@
+﻿@model SmartTable.Models.Tables
+@{
+    ViewBag.Title = "Thêm bàn mới";
+    Layout = "~/Views/Shared/_BusinessLayout.cshtml";
+}
+
+<div class="bg-gray-50 min-h-screen py-8">
+    <div class="container mx-auto max-w-xl px-4">
+
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">Thêm bàn mới</h1>
+
+        @Html.ValidationSummary(true, "", new { @class = "text-red-600 mb-3 text-sm" })
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            @using (Html.BeginForm())
+            {
+                @Html.AntiForgeryToken()
+
+                @Html.HiddenFor(m => m.restaurant_id)
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">
+                        Số bàn / Mã bàn <span class="text-red-500">*</span>
+                    </label>
+                    @Html.TextBoxFor(m => m.table_number,
+                        new { @class = "w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" })
+                    @Html.ValidationMessageFor(m => m.table_number, "", new { @class = "text-xs text-red-500" })
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">
+                        Sức chứa (số khách) <span class="text-red-500">*</span>
+                    </label>
+                    @Html.TextBoxFor(m => m.capacity,
+                        new { type = "number", min = "1", @class = "w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" })
+                    @Html.ValidationMessageFor(m => m.capacity, "", new { @class = "text-xs text-red-500" })
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">
+                        Loại bàn (VD: Thường, VIP, Phòng riêng…)
+                    </label>
+                    @Html.TextBoxFor(m => m.type,
+                        new { @class = "w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" })
+                </div>
+
+                
+
+                <div class="flex items-center justify-between">
+                    <a href="@Url.Action("Index", "BusinessTables")"
+                       class="text-sm text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách
+                    </a>
+                    <button type="submit"
+                            class="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700">
+                        Lưu bàn
+                    </button>
+                </div>
+            }
+        </div>
+
+    </div>
+</div>

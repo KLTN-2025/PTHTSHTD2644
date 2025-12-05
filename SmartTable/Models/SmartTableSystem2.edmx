@@ -16,6 +16,7 @@
           <Property Name="number_of_guests" Type="int" Nullable="false" />
           <Property Name="status" Type="nvarchar" MaxLength="50" />
           <Property Name="special_request" Type="nvarchar(max)" />
+          <Property Name="cancel_reason" Type="nvarchar" MaxLength="500" />
         </EntityType>
         <EntityType Name="LoyaltyPoints">
           <Key>
@@ -409,6 +410,7 @@
           <NavigationProperty Name="Orders" Relationship="Self.FK_Orders_Bookings" FromRole="Bookings" ToRole="Orders" />
           <NavigationProperty Name="Payments" Relationship="Self.FK_Payments_Bookings" FromRole="Bookings" ToRole="Payments" />
           <NavigationProperty Name="Restaurants" Relationship="SmartTableSystemModel.FK_Bookings_Restaurants" FromRole="Bookings" ToRole="Restaurants" />
+          <Property Name="cancel_reason" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="LoyaltyPoints">
           <Key>
@@ -812,6 +814,7 @@
           <EntitySetMapping Name="Bookings">
             <EntityTypeMapping TypeName="SmartTableSystemModel.Bookings">
               <MappingFragment StoreEntitySet="Bookings">
+                <ScalarProperty Name="cancel_reason" ColumnName="cancel_reason" />
                 <ScalarProperty Name="booking_id" ColumnName="booking_id" />
                 <ScalarProperty Name="user_id" ColumnName="user_id" />
                 <ScalarProperty Name="restaurant_id" ColumnName="restaurant_id" />

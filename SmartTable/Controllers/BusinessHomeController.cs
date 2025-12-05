@@ -69,7 +69,7 @@ namespace SmartTable.Controllers
             return true;
         }
 
-        // Helper: Upload file (đã có validate ảnh)
+        // Helper: Upload file 
         private string UploadFile(HttpPostedFileBase file, string fileName, string subFolder = "")
         {
             try
@@ -119,8 +119,19 @@ namespace SmartTable.Controllers
                 return View((Restaurants)null);
             }
 
-            // TODO: Khi có bảng Bookings, thay 0 bằng số liệu thực
-            ViewBag.TodayReservationCount = 0;
+            // ====== LƯỢT ĐẶT BÀN HÔM NAY ======
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+
+            var todayReservationCount = db.Bookings
+                .Where(b => b.restaurant_id == restaurant.restaurant_id
+                            && b.booking_time >= today
+                            && b.booking_time < tomorrow
+                            && b.status != "Đã hủy")
+                .Count();
+
+            ViewBag.TodayReservationCount = todayReservationCount;
+
             return View(restaurant);
         }
 
@@ -187,8 +198,8 @@ namespace SmartTable.Controllers
             string latitudeStr,
             string longitudeStr,
             string[] AmenitiesCheckbox,
-            HttpPostedFileBase uploadedImage,              // Ảnh đại diện
-            IEnumerable<HttpPostedFileBase> viewImages,    // Ảnh gallery
+            HttpPostedFileBase uploadedImage,             
+            IEnumerable<HttpPostedFileBase> viewImages,    
             int[] DeleteImages)
         {
             if (!IsBusiness())
@@ -367,7 +378,6 @@ namespace SmartTable.Controllers
             if (userId == null)
                 return RedirectToAction("Login", "Account");
 
-            // Lấy tất cả booking của các nhà hàng thuộc user hiện tại
             var query = db.Bookings
                           .Include(b => b.Restaurants)
                           .Include(b => b.Users)
@@ -375,14 +385,14 @@ namespace SmartTable.Controllers
                           .Where(b => b.Restaurants != null &&
                                       b.Restaurants.user_id == userId.Value);
 
-            // Lọc theo trạng thái nếu có chọn
             if (!string.IsNullOrEmpty(statusFilter))
             {
                 query = query.Where(b => b.status == statusFilter);
             }
 
             var bookingList = query
-                .OrderByDescending(b => b.booking_time)
+                .OrderByDescending(b => b.booking_time)   
+                .ThenByDescending(b => b.booking_id)      
                 .ToList();
 
             var list = new List<BusinessBookingItemViewModel>();
@@ -422,18 +432,51 @@ namespace SmartTable.Controllers
 
                     BookingStatus = string.IsNullOrEmpty(b.status) ? "Chờ xác nhận" : b.status,
                     DepositAmount = depositAmount,
-                    PaymentStatus = paymentStatus
+                    PaymentStatus = paymentStatus,
+
+                    CancelReason = b.cancel_reason
                 };
 
                 list.Add(vm);
             }
 
             ViewBag.StatusFilter = statusFilter;
-
-            // View: Views/BusinessHome/Bookings.cshtml
             return View("Bookings", list);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CancelBooking(int bookingId, string cancelReason)
+        {
+            if (!IsBusiness())
+                return RedirectToAction("Index", "Home");
+
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            var booking = db.Bookings
+                            .Include(b => b.Restaurants)
+                            .FirstOrDefault(b => b.booking_id == bookingId &&
+                                                 b.Restaurants.user_id == userId.Value);
+
+            if (booking == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy thông tin đặt bàn hoặc bạn không có quyền.";
+                return RedirectToAction("Bookings");
+            }
+
+            booking.status = "Đã hủy";
+
+            booking.cancel_reason = string.IsNullOrWhiteSpace(cancelReason)
+                ? "Doanh nghiệp hủy, không ghi rõ lý do."
+                : cancelReason.Trim();
+
+            db.SaveChanges();
+
+            TempData["SuccessMessage"] = $"Đã hủy đặt bàn #{booking.booking_id}.";
+            return RedirectToAction("Bookings");
+        }
         // [POST] /BusinessHome/ConfirmPayment
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -467,7 +510,7 @@ namespace SmartTable.Controllers
                 lastPayment = new Payments
                 {
                     booking_id = booking.booking_id,
-                    amount = 0, // nếu có số tiền cọc thực, sau này set đúng
+                    amount = 0, 
                     payment_method = "Chuyển khoản / Doanh nghiệp xác nhận",
                     status = "Đã thanh toán (doanh nghiệp xác nhận)",
                     transaction_id = Guid.NewGuid().ToString()
@@ -495,6 +538,73 @@ namespace SmartTable.Controllers
                 db.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        [HttpGet]
+        public ActionResult Statistics()
+        {
+            if (!IsBusiness())
+                return RedirectToAction("Index", "Home");
+
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            var bookings = db.Bookings
+                             .Include(b => b.Restaurants)
+                             .Include(b => b.Payments)
+                             .Where(b => b.Restaurants != null &&
+                                         b.Restaurants.user_id == userId.Value)
+                             .ToList();
+
+            var vm = new StatisticsViewModel();
+
+            vm.TotalBookings = bookings.Count;
+
+            var paidPayments = bookings
+                .SelectMany(b => b.Payments)
+                .Where(p => !string.IsNullOrEmpty(p.status) &&
+                            (p.status.Contains("Đã thanh toán") ||
+                             p.status.Contains("VNPAY")));
+
+            vm.TotalDeposit = paidPayments
+                .Select(p => (decimal?)p.amount)
+                .Sum() ?? 0;
+
+            vm.RestaurantStats = bookings
+                .GroupBy(b => new { b.restaurant_id, b.Restaurants.name })
+                .Select(g => new RestaurantStatistics
+                {
+                    RestaurantId = g.Key.restaurant_id ?? 0,
+                    RestaurantName = g.Key.name,
+                    BookingCount = g.Count(),
+                    DepositAmount = g.SelectMany(b => b.Payments)
+                                     .Where(p => !string.IsNullOrEmpty(p.status) &&
+                                                 (p.status.Contains("Đã thanh toán") ||
+                                                  p.status.Contains("VNPAY")))
+                                     .Select(p => (decimal?)p.amount)
+                                     .Sum() ?? 0
+                })
+                .OrderByDescending(r => r.BookingCount) 
+                .ToList();
+
+            vm.DailyStats = bookings
+            .GroupBy(b => b.booking_time.Date) 
+            .Select(g => new DailyStatistics
+            {
+                Date = g.Key,                     
+                BookingCount = g.Count(),
+                DepositAmount = g.SelectMany(b => b.Payments)
+                                 .Where(p => !string.IsNullOrEmpty(p.status) &&
+                                             (p.status.Contains("Đã thanh toán") ||
+                                              p.status.Contains("VNPAY")))
+                                 .Select(p => (decimal?)p.amount)
+                                 .Sum() ?? 0
+            })
+            .OrderByDescending(d => d.Date)
+            .ToList();
+
+            return View(vm);  
         }
     }
 }

@@ -28,6 +28,7 @@ namespace SmartTable.Models
         public int number_of_guests { get; set; }
         public string status { get; set; }
         public string special_request { get; set; }
+        public string cancel_reason { get; set; }
     
         public virtual Users Users { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]

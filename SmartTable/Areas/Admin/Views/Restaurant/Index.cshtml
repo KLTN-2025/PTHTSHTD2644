@@ -6,7 +6,6 @@
 @section styles {
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        /* CSS FIX: Buộc Font Awesome hiển thị đúng */
         .fas, .far, .fab, .fa-solid {
             font-family: "Font Awesome 6 Solid" !important;
             font-weight: 900 !important;
@@ -14,7 +13,6 @@
             font-size: 0.9rem;
         }
 
-        /* CSS cho nút text buttons */
         .btn-action-text {
             padding: 0.375rem 0.75rem;
             font-size: 0.75rem;
@@ -38,7 +36,6 @@
                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             }
 
-        /* Map Container */
         #map-container {
             height: 450px;
             width: 100%;
@@ -210,7 +207,6 @@
 
         function initMap() {
             // 1. Khởi tạo Map (Tắt scroll zoom để không bị cuộn trang nhầm)
-            // Mặc định center ở VN, nhưng sẽ auto-fit ngay sau đó
             map = L.map('map-container', { scrollWheelZoom: false }).setView(DEFAULT_POS, 6);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

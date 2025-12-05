@@ -10,26 +10,21 @@ namespace SmartTable.Controllers
 {
     public class BusinessController : Controller
     {
-        private Entities db = new Entities(); // Khởi tạo DbContext
+        private Entities db = new Entities(); 
 
-        // [GET] /Business/Index (Trang giới thiệu)
         public ActionResult Index()
         {
-            // Trả về trang giới thiệu (Index.cshtml)
-            // Trang này không cần model
+            
             return View();
         }
 
-        // [GET] /Business/RegisterPartner (Hiển thị Form)
         [HttpGet]
         public ActionResult RegisterPartner()
         {
-            // Trả về trang form (RegisterPartner.cshtml)
             var model = new PartnerRegistrationViewModel();
             return View(model);
         }
 
-        // [POST] /Business/RegisterPartner (Xử lý Form)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult RegisterPartner(PartnerRegistrationViewModel model)
@@ -37,13 +32,11 @@ namespace SmartTable.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["ErrorMessage"] = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại các trường bắt buộc.";
-                // Quan trọng: Trả về View "RegisterPartner" chứ không phải "Index"
                 return View("RegisterPartner", model);
             }
 
             try
             {
-                // === BƯỚC 1: LƯU VÀO DATABASE ===
 
                 string serviceTypes = (model.ServiceTypes != null) ? string.Join(", ", model.ServiceTypes) : null;
                 string amenities = (model.Amenities != null) ? string.Join(", ", model.Amenities) : null;
@@ -94,7 +87,7 @@ namespace SmartTable.Controllers
                 db.SaveChanges();
 
 
-                // === BƯỚC 2: GỬI EMAIL CHO ADMIN ===
+                // ===GỬI EMAIL CHO ADMIN ===
                 var adminEmail = ConfigurationManager.AppSettings["FromEmailAddress"] ?? "phamhuynhduyphong0308@gmail.com";
                 string subject = "Đối tác nhà hàng MỚI đăng ký: " + model.RestaurantName;
 
@@ -107,16 +100,13 @@ namespace SmartTable.Controllers
                 body.AppendLine($"SĐT: {model.ContactPhone}");
                 body.AppendLine("----------------------------------------");
 
-                // (Đảm bảo bạn đã tạo file Helpers/EmailHelper.cs)
                 EmailHelper.SendEmail(adminEmail, subject, body.ToString());
 
-                // 3. Gửi thông báo thành công
                 TempData["SuccessMessage"] = "Gửi thông tin thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất có thể.";
-                return RedirectToAction("Index"); // Quay về trang Giới thiệu (Index)
+                return RedirectToAction("Index"); 
             }
             catch (Exception ex)
             {
-                // 4. Xử lý nếu có lỗi
                 System.Diagnostics.Debug.WriteLine("LỖI RegisterPartner: " + ex.Message);
                 TempData["ErrorMessage"] = "Đã xảy ra lỗi khi gửi thông tin. Vui lòng thử lại.";
                 return View("RegisterPartner", model); 
@@ -127,11 +117,9 @@ namespace SmartTable.Controllers
         [HttpGet]
         public ActionResult Login()
         {
-            // Trả về View "Login" và gửi một model "Users" rỗng
             return View(new SmartTable.Models.Users());
         }
 
-        // Ghi đè phương thức Dispose
         protected override void Dispose(bool disposing)
         {
             if (disposing)

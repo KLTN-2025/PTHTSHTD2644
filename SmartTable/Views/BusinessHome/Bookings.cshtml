@@ -10,7 +10,6 @@
 <div class="bg-gray-50 min-h-screen py-8">
     <div class="container mx-auto max-w-6xl px-4">
 
-        <!-- Header + Bộ lọc -->
         <div class="flex items-center justify-between mb-6">
             <div>
                 <h1 class="text-2xl font-bold text-gray-800">
@@ -36,7 +35,6 @@
             </form>
         </div>
 
-        <!-- Thông báo -->
         @if (TempData["SuccessMessage"] != null)
         {
             <div class="mb-4 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm flex items-center gap-2">
@@ -53,7 +51,6 @@
             </div>
         }
 
-        <!-- Bảng danh sách đặt bàn -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
@@ -73,13 +70,27 @@
                     {
                         foreach (var item in Model)
                         {
+                            // *** PHẦN ĐÃ SỬA LỖI: Bỏ @{} bao quanh khối logic C# bên trong foreach ***
+                            var isPaidByVnpay = !string.IsNullOrEmpty(item.PaymentStatus)
+                                                 && item.PaymentStatus.IndexOf("VNPAY", StringComparison.OrdinalIgnoreCase) >= 0;
+
+                            var isPaidByBusiness = string.Equals(
+                                item.PaymentStatus,
+                                "Đã thanh toán (doanh nghiệp xác nhận)",
+                                StringComparison.OrdinalIgnoreCase
+                            );
+
+                            var isCanceled = string.Equals(
+                                item.BookingStatus,
+                                "Đã hủy",
+                                StringComparison.OrdinalIgnoreCase
+                            );
+
                             <tr class="hover:bg-gray-50">
-                                <!-- Mã booking -->
                                 <td class="px-4 py-3 align-top">
                                     <span class="font-semibold text-gray-800">#@item.BookingId</span>
                                 </td>
 
-                                <!-- Thông tin nhà hàng -->
                                 <td class="px-4 py-3 align-top">
                                     <div class="flex items-center gap-3">
                                         <img src="@item.RestaurantImage"
@@ -97,7 +108,6 @@
                                     </div>
                                 </td>
 
-                                <!-- Khách hàng -->
                                 <td class="px-4 py-3 align-top">
                                     <div class="font-medium text-gray-800">@item.CustomerName</div>
                                     @if (!string.IsNullOrEmpty(item.CustomerPhone))
@@ -108,21 +118,18 @@
                                     }
                                 </td>
 
-                                <!-- Thời gian -->
                                 <td class="px-4 py-3 align-top">
                                     <div class="text-gray-800 font-medium">
                                         @item.BookingTime.ToString("HH:mm dd/MM/yyyy")
                                     </div>
                                 </td>
 
-                                <!-- Số khách -->
                                 <td class="px-4 py-3 align-top text-center">
                                     <span class="inline-flex items-center justify-center px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">
                                         @item.NumberOfGuests người
                                     </span>
                                 </td>
 
-                                <!-- Trạng thái đặt bàn -->
                                 <td class="px-4 py-3 align-top">
                                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold
                                         @(item.BookingStatus == "Đã cọc thành công"
@@ -132,15 +139,22 @@
                                                 : "bg-yellow-50 text-yellow-700")">
                                         @item.BookingStatus
                                     </span>
+
                                     @if (!string.IsNullOrEmpty(item.SpecialRequest))
                                     {
                                         <div class="mt-1 text-xs text-gray-500">
-                                            <span class="font-semibold">Ghi chú:</span> @item.SpecialRequest
+                                            <span class="font-semibold">Ghi chú khách:</span> @item.SpecialRequest
+                                        </div>
+                                    }
+
+                                    @if (item.BookingStatus == "Đã hủy" && !string.IsNullOrEmpty(item.CancelReason))
+                                    {
+                                        <div class="mt-1 text-xs text-red-500">
+                                            <span class="font-semibold">Lý do hủy:</span> @item.CancelReason
                                         </div>
                                     }
                                 </td>
 
-                                <!-- Thông tin thanh toán -->
                                 <td class="px-4 py-3 align-top">
                                     <div class="text-xs text-gray-500 mb-1">Trạng thái:</div>
                                     <div class="font-semibold text-gray-800">@item.PaymentStatus</div>
@@ -153,14 +167,12 @@
                                     }
                                 </td>
 
-                                <!-- Thao tác -->
                                 <td class="px-4 py-3 align-top text-center">
-                                    @if (!string.Equals(item.PaymentStatus, "Đã thanh toán (doanh nghiệp xác nhận)", StringComparison.OrdinalIgnoreCase)
-                                         && !string.Equals(item.BookingStatus, "Đã hủy", StringComparison.OrdinalIgnoreCase))
+                                    @if (!isPaidByVnpay && !isPaidByBusiness && !isCanceled)
                                     {
                                         <form action="@Url.Action("ConfirmPayment", "BusinessHome")"
                                               method="post"
-                                              class="inline-block">
+                                              class="inline-block mb-2">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="bookingId" value="@item.BookingId" />
 
@@ -169,11 +181,26 @@
                                                 Xác nhận đã nhận tiền
                                             </button>
                                         </form>
+
+                                        <form id="cancelForm-@item.BookingId"
+                                              action="@Url.Action("CancelBooking", "BusinessHome")"
+                                              method="post"
+                                              class="inline-block">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="bookingId" value="@item.BookingId" />
+                                            <input type="hidden" name="cancelReason" value="" />
+
+                                            <button type="button"
+                                                    onclick="openCancelPrompt(@item.BookingId)"
+                                                    class="mt-1 px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 shadow-sm">
+                                                Hủy đặt bàn
+                                            </button>
+                                        </form>
                                     }
                                     else
                                     {
                                         <span class="text-xs text-gray-400 italic">
-                                            @item.PaymentStatus
+                                            Đã xử lý
                                         </span>
                                     }
                                 </td>
@@ -194,3 +221,31 @@
 
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function openCancelPrompt(bookingId) {
+            var reason = prompt("Nhập lý do hủy bàn:");
+
+            if (reason === null) { // người dùng ấn Cancel
+                return;
+            }
+
+            reason = reason.trim();
+            if (reason.length === 0) {
+                alert("Vui lòng nhập lý do hủy.");
+                return;
+            }
+
+            var form = document.getElementById("cancelForm-" + bookingId);
+            if (!form) return;
+
+            var input = form.querySelector("input[name='cancelReason']");
+            if (input) {
+                input.value = reason;
+            }
+
+            form.submit();
+        }
+    </script>
+}

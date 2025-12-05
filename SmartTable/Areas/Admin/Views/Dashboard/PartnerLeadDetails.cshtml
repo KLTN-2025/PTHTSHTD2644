@@ -3,7 +3,6 @@
     ViewBag.Title = "Chi tiết Hồ sơ đối tác";
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 
-    // Tách các trường mảng (string.join) ra để hiển thị tốt hơn
     var serviceTypes = Model.ServiceTypes?.Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries) ?? new string[0];
     var amenities = Model.Amenities?.Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries) ?? new string[0];
 }
@@ -32,7 +31,6 @@
 }
 
 <div class="max-w-6xl mx-auto py-4">
-    @* Container chính đã căn giữa *@
 
     <div class="flex justify-between items-center border-b pb-4 mb-6">
         <h1 class="text-2xl font-bold text-gray-800">
@@ -54,7 +52,6 @@
     </p>
 
     <div class="space-y-10">
-        @* Tăng khoảng cách giữa các khối *@
 
         <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-blue-600">
             <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-3">1. Cơ sở và Liên hệ</h2>
@@ -62,7 +59,6 @@
             <div class="grid md:grid-cols-3 gap-x-12 gap-y-4">
 
                 <div class="space-y-3 pr-6 border-r border-gray-200">
-                    @* CỘT 1 - LIÊN HỆ (Có cột dọc) *@
                     <h3 class="text-base font-bold text-gray-700 border-b pb-1 mb-2">Thông tin liên hệ</h3>
                     @DisplayRow("Người liên hệ", Model.ContactName)
                     @DisplayRow("Chức vụ", Model.ContactRole)
@@ -72,7 +68,6 @@
                 </div>
 
                 <div class="space-y-3 px-6 border-r border-gray-200">
-                    @* CỘT 2 - CƠ SỞ (Có cột dọc) *@
                     <h3 class="text-base font-bold text-gray-700 border-b pb-1 mb-2">Chi tiết địa điểm</h3>
                     @DisplayRow("Tên Nhà hàng", Model.RestaurantName)
                     @DisplayRow("Tỉnh/Thành phố", Model.City)
@@ -82,7 +77,6 @@
                 </div>
 
                 <div class="space-y-3 pl-6">
-                    @* CỘT 3 - HỢP TÁC (Không có cột dọc) *@
                     <h3 class="text-base font-bold text-gray-700 border-b pb-1 mb-2">Thông tin hợp tác</h3>
                     @DisplayRow("Mong muốn hợp tác", Model.PartnershipGoal)
                     @DisplayRow("Gói dịch vụ", Model.ServicePackage)
@@ -98,7 +92,6 @@
 
             <div class="grid md:grid-cols-3 gap-x-12 gap-y-3">
                 <div class="space-y-3 pr-6 border-r border-gray-200">
-                    @* CỘT 1 - ẨM THỰC *@
                     <h3 class="text-base font-bold text-gray-700 border-b pb-1 mb-2">Ẩm thực & Phục vụ</h3>
                     @DisplayRow("Loại hình dịch vụ", Model.ServiceDescription)
                     @DisplayRow("Phong cách ẩm thực", Model.CuisineStyle)
@@ -109,7 +102,6 @@
                 </div>
 
                 <div class="space-y-3 px-6 border-r border-gray-200">
-                    @* CỘT 2 - GIỜ GIẤC & SỨC CHỨA *@
                     <h3 class="text-base font-bold text-gray-700 border-b pb-1 mb-2">Giờ Giấc & Sức chứa</h3>
                     @DisplayRow("Tổng số chỗ ngồi", Model.TotalSeats.ToString())
                     @DisplayRow("Số tầng/khu vực", Model.FloorCount)
@@ -119,7 +111,6 @@
                 </div>
 
                 <div class="space-y-3 pl-6">
-                    @* CỘT 3 - VẬN HÀNH *@
                     <h3 class="text-base font-bold text-gray-700 border-b pb-1 mb-2">Vận hành & Đặc điểm</h3>
                     @DisplayRow("Khung giờ đông khách", Model.BusyHours)
                     @DisplayRow("Khung giờ vắng khách", Model.SlowHours)

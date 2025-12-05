@@ -6,21 +6,19 @@
 
 @section styles {
     <style>
-        /* CSS FIX: Buộc Font Awesome hiển thị đúng */
         .fas, .far, .fab, .fa-solid {
             font-family: "Font Awesome 6 Solid" !important;
             font-weight: 900 !important;
             display: inline-block !important;
-            font-size: 1.1rem; /* Thêm cỡ chữ cho icon */
+            font-size: 1.1rem; 
             color: white !important;
         }
 
-        /* Style cơ bản cho tất cả các nút hành động */
         .btn-action-text {
             padding: 0.75rem 1.5rem;
             font-size: 0.875rem;
             font-weight: 600;
-            border-radius: 1.25rem; /* Tăng bo góc cho đẹp */
+            border-radius: 1.25rem; 
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease-in-out;
             cursor: pointer;
@@ -32,7 +30,6 @@
             line-height: 1.2;
         }
 
-            /* Hiệu ứng hover khi di chuột qua */
             .btn-action-text:hover {
                 transform: scale(1.05);
                 box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
@@ -41,17 +38,14 @@
         tr:hover {
             background-color: #f9fafb !important;
         }
-        /* Hiệu ứng hover hàng */
         th {
             background-color: #f3f4f6;
         }
-        /* Màu nền tiêu đề */
         .table-wrapper {
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
-        /* Bo góc và shadow cho bảng */
     </style>
 }
 
@@ -91,30 +85,25 @@
                     <td class="px-6 py-4 text-center text-gray-700 font-medium">@stt</td> @* Cột STT *@
 
                     <td class="px-6 py-4">
-                        @* Cột Nhà hàng *@
                         <div class="font-semibold text-gray-900">@item.RestaurantName</div>
                         <div class="text-xs text-gray-500">@item.Email</div>
                     </td>
 
                     <td class="px-6 py-4">
-                        @* Cột Người liên hệ *@
                         <div class="text-sm text-gray-900">@item.ContactName</div>
                         <div class="text-xs text-gray-500">@item.ContactRole</div>
                     </td>
 
                     <td class="px-6 py-4">
-                        @* Cột Địa chỉ / Gói *@
                         <div class="text-xs text-gray-700">@item.City</div>
                         <div class="text-xs text-blue-600 font-medium">@item.ServicePackage</div>
                     </td>
 
                     <td class="px-6 py-4">
-                        @* Cột Ngày *@
                         @item.SubmittedDate.ToString("dd/MM/yyyy")
                     </td>
 
                     <td class="px-6 py-4 text-center">
-                        @* Cột Hành động *@
                         <div class="flex justify-center space-x-3">
                             @using (Html.BeginForm("ApprovePartner", "Dashboard", new { area = "Admin", leadId = item.LeadId }, FormMethod.Post, new { @class = "inline-block" }))
                             {

@@ -1,14 +1,15 @@
 ﻿@model SmartTable.Models.Restaurants
+@using System.Collections.Generic
+@using SmartTable.Models
+
 @{
     ViewBag.Title = "Đặt bàn - " + Model.name;
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    // 1. Lấy thông tin User (nếu đã đăng nhập)
     var user = Session["user"] as SmartTable.Models.Users;
     var userName = user != null ? user.full_name : "";
     var userPhone = user != null ? user.phone : "";
 
-    // 2. Ngày & số khách đã chọn trước (nếu có)
     string preDate;
     if (ViewBag.PreSelectedDate != null)
     {
@@ -37,13 +38,17 @@
         }
     }
 
-    // 3. Tạo dải giờ mở cửa
+    string preTime = null;
+    if (ViewBag.PreSelectedTime != null)
+    {
+        preTime = ViewBag.PreSelectedTime.ToString(); // "HH:mm"
+    }
+
     string startHourStr = "09:00";
     string endHourStr = "22:00";
 
     if (!string.IsNullOrEmpty(Model.opening_hours))
     {
-        // ví dụ "09:00 - 22:00"
         var parts = Model.opening_hours.Split(new[] { '-', '–' }, StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length >= 1)
         {
@@ -71,28 +76,37 @@
     var timeSlots = new List<string>();
     var current = openTime;
 
-    // Slot mỗi 30 phút, dừng trước giờ đóng 1 tiếng
     while (current <= closeTime.Subtract(TimeSpan.FromMinutes(60)))
     {
         timeSlots.Add(current.ToString(@"hh\:mm"));
         current = current.Add(TimeSpan.FromMinutes(30));
     }
+
+    var preDateDisplay = DateTime.Parse(preDate).ToString("dd/MM/yyyy");
+
+    var menuItems = ViewBag.MenuItems as List<MenuItems> ?? new List<MenuItems>();
 }
 
 <div class="bg-gray-50 min-h-screen py-10 font-sans">
     <div class="container mx-auto max-w-6xl px-4">
 
         <div class="mb-6">
-            <a href="@Url.Action("Details", "PublicRestaurant", new { id = Model.restaurant_id })"
+            <a href="@Url.Action("RestaurantDetails", "DetailNhaHang", new { id = Model.restaurant_id })"
                class="text-gray-500 hover:text-blue-600 text-sm flex items-center gap-1 mb-2 transition group">
                 <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i> Quay lại chi tiết nhà hàng
             </a>
             <h1 class="text-3xl font-bold text-gray-800">Xác nhận đặt chỗ</h1>
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="mt-3 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2 rounded-lg">
+                    <i class="fas fa-exclamation-circle mr-1"></i> @TempData["ErrorMessage"]
+                </div>
+            }
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-            <!-- Cột trái: Form đặt bàn -->
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-5 text-white flex items-center gap-4">
@@ -112,7 +126,6 @@
                             @Html.Hidden("restaurant_id", Model.restaurant_id)
 
                             <div class="space-y-6">
-                                <!-- Ngày & giờ -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label class="block text-sm font-bold text-gray-700 mb-2">
@@ -133,17 +146,25 @@
                                             <span class="text-xs font-normal text-gray-500 ml-1">(Mở cửa: @startHourStr - @endHourStr)</span>
                                         </label>
 
-                                        <!-- input ẩn chứa giờ đã chọn -->
-                                        <input type="hidden" name="booking_time_hour" id="selectedTimeInput" />
+                                        <input type="hidden" name="booking_time_hour"
+                                               id="selectedTimeInput"
+                                               value="@(string.IsNullOrEmpty(preTime) ? "" : preTime)" />
 
                                         <div class="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
                                             @if (timeSlots.Count > 0)
                                             {
                                                 foreach (var slot in timeSlots)
                                                 {
+                                                    var isDefault = (!string.IsNullOrEmpty(preTime) && slot == preTime);
+
+                                                    var btnClass = "time-slot-btn py-2 px-1 text-sm font-medium border rounded-lg ";
+                                                    btnClass += isDefault
+                                                        ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                                                        : "bg-white text-gray-600 border-gray-200 hover:border-blue-500 hover:text-blue-600 transition";
+
                                                     <button type="button"
                                                             onclick="selectTime(this, '@slot')"
-                                                            class="time-slot-btn py-2 px-1 text-sm font-medium border border-gray-200 rounded-lg hover:border-blue-500 hover:text-blue-600 transition bg-white text-gray-600">
+                                                            class="@btnClass">
                                                         @slot
                                                     </button>
                                                 }
@@ -161,39 +182,27 @@
                                     </div>
                                 </div>
 
-                                <!-- Số khách -->
                                 <div>
                                     <label class="block text-sm font-bold text-gray-700 mb-3">
                                         Số lượng khách <span class="text-red-500">*</span>
                                     </label>
-                                    <div class="grid grid-cols-4 sm:grid-cols-8 gap-3">
-                                        @for (int i = 2; i <= 10; i += 2)
-                                        {
-                                            bool isChecked = (prePeople == i);
-                                            <label class="cursor-pointer relative group">
-                                                <input type="radio"
-                                                       name="number_of_guests"
-                                                       value="@i"
-                                                       class="peer sr-only" @(isChecked ? "checked" : "") />
-                                                <div class="w-full py-2.5 border border-gray-200 rounded-lg text-center text-sm font-semibold text-gray-600 bg-white peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 group-hover:border-blue-400 transition shadow-sm">
-                                                    @i
-                                                </div>
-                                            </label>
-                                        }
-                                        <label class="cursor-pointer col-span-2 sm:col-span-2 relative group">
-                                            <input type="radio" name="number_of_guests" value="12" class="peer sr-only" />
-                                            <div class="w-full py-2.5 border border-gray-200 rounded-lg text-center text-sm font-semibold text-gray-600 bg-white peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 group-hover:border-blue-400 transition shadow-sm">
-                                                Đoàn lớn
-                                            </div>
-                                        </label>
-                                    </div>
+
+                                    <input type="number"
+                                           id="number_of_guests"
+                                           name="number_of_guests"
+                                           min="1"
+                                           value="@prePeople"
+                                           class="w-full max-w-xs p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition bg-gray-50 focus:bg-white text-sm font-medium text-gray-700" />
+
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        Vui lòng nhập đúng số lượng khách thực tế.
+                                    </p>
                                 </div>
                             </div>
 
                             <div class="border-t border-gray-100 my-6"></div>
 
-                            <!-- Thông tin liên hệ -->
-                            <div class="space-y-6">
+                            <div class="space-y-6 mt-6">
                                 <h4 class="font-bold text-gray-800 text-base">Thông tin liên hệ</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
@@ -231,8 +240,97 @@
                                 </div>
                             </div>
 
+                            if (menuItems.Any())
+                            {
+                                <div class="mt-10">
+                                    <div class="text-center mb-4">
+                                        <h4 class="font-bold text-gray-900 text-lg">
+                                            Đặt món trước cho bữa ăn của bạn
+                                        </h4>
+                                        <p class="text-xs text-gray-500 mb-3">
+                                            Chọn món bạn muốn nhà hàng chuẩn bị trước. Giá chỉ mang tính tham khảo.
+                                        </p>
+                                    </div>
+
+                                    <input type="hidden" id="pre_order_note" name="pre_order_note" />
+                                    <input type="hidden" id="pre_order_total" name="pre_order_total" />
+
+                                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                                        <div class="max-h-72 overflow-y-auto custom-scrollbar divide-y divide-gray-100">
+                                            @foreach (var item in menuItems)
+                                            {
+                                                var imageUrl = string.IsNullOrEmpty(item.Image)
+                                                    ? "https://via.placeholder.com/200x150?text=Mon+an"
+                                                    : item.Image;
+
+                                                <div class="preorder-row px-3 py-3 md:px-4 md:py-4 flex flex-col md:flex-row md:items-center gap-3">
+                                                    <div class="w-full md:w-24 md:h-24 h-32 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+                                                        <img src="@imageUrl"
+                                                             alt="@item.name"
+                                                             class="w-full h-full object-cover transform hover:scale-105 transition duration-500" />
+                                                    </div>
+
+                                                    <div class="flex-1 min-w-0">
+                                                        <div class="flex items-center gap-2 mb-1">
+                                                            <h5 class="text-sm md:text-base font-semibold text-gray-900 truncate">
+                                                                @item.name
+                                                            </h5>
+                                                            @if (!string.IsNullOrWhiteSpace(item.category))
+                                                            {
+                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                                                                    @item.category
+                                                                </span>
+                                                            }
+                                                        </div>
+
+                                                        @if (!string.IsNullOrWhiteSpace(item.description))
+                                                        {
+                                                            <p class="text-[11px] md:text-xs text-gray-500 line-clamp-2 md:line-clamp-3">
+                                                                @item.description
+                                                            </p>
+                                                        }
+
+                                                        <div class="mt-2 flex items-center gap-2">
+                                                            <span class="text-xs text-gray-400">Giá tham khảo:</span>
+                                                            <span class="text-sm md:text-base font-bold text-red-600">
+                                                                @item.price.ToString("N0") đ
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="flex md:flex-col items-center md:items-end gap-2 md:gap-3">
+                                                        <div class="flex items-center gap-1">
+                                                            <span class="hidden md:inline text-[11px] text-gray-500">SL</span>
+                                                            <input type="number"
+                                                                   min="1"
+                                                                   value="1"
+                                                                   class="preorder-qty w-16 p-1.5 border border-gray-200 rounded-lg text-xs text-center focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
+                                                        </div>
+
+                                                        <label class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 cursor-pointer">
+                                                            <input type="checkbox"
+                                                                   class="preorder-check rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                                   data-name="@item.name"
+                                                                   data-price="@item.price" />
+                                                            <span>Chọn món</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="mt-6 text-center">
+                                    <p class="text-xs text-gray-400 italic">
+                                        Nhà hàng chưa cập nhật thực đơn để đặt món trước.
+                                    </p>
+                                </div>
+                            }
+
                             <div class="mt-8">
-                                <!-- NÚT SUBMIT FORM LUUĐATBAN -->
                                 <button type="submit"
                                         class="w-full bg-red-600 text-white text-lg font-bold py-4 rounded-xl shadow-lg hover:bg-red-700 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 group">
                                     <span>HOÀN TẤT ĐẶT BÀN</span>
@@ -250,7 +348,6 @@
                 </div>
             </div>
 
-            <!-- Cột phải: Tóm tắt -->
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 sticky top-24">
 
@@ -294,16 +391,26 @@
                             <div class="flex justify-between">
                                 <span class="text-gray-500">Ngày:</span>
                                 <span class="font-bold text-gray-800" id="summaryDate">
-                                    @DateTime.Now.ToString("dd/MM/yyyy")
+                                    @preDateDisplay
                                 </span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-500">Giờ:</span>
-                                <span class="font-bold text-blue-600" id="summaryTime">--:--</span>
+                                <span class="font-bold text-blue-600" id="summaryTime">
+                                    @(string.IsNullOrEmpty(preTime) ? "--:--" : preTime)
+                                </span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-500">Số khách:</span>
-                                <span class="font-bold text-gray-800" id="summaryPeople">@prePeople người</span>
+                                <span class="font-bold text-gray-800" id="summaryPeople">
+                                    @prePeople khách
+                                </span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Tiền món ước tính:</span>
+                                <span class="font-bold text-gray-800" id="summaryPreOrder">
+                                    0 đ
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -321,7 +428,6 @@
 
 @section Scripts {
     <script>
-        // Chọn giờ
         function selectTime(btn, timeVal) {
             document.querySelectorAll('.time-slot-btn').forEach(function (b) {
                 b.classList.remove("bg-blue-600", "text-white", "border-blue-600", "shadow-md");
@@ -333,34 +439,71 @@
 
             document.getElementById('selectedTimeInput').value = timeVal;
             document.getElementById('summaryTime').textContent = timeVal;
-            document.getElementById('timeError').classList.add('hidden');
+            var err = document.getElementById('timeError');
+            if (err) err.classList.add('hidden');
         }
 
-        // Cập nhật tóm tắt ngày
         var inputDate = document.getElementById('inputDate');
         if (inputDate) {
             inputDate.addEventListener('change', function () {
                 if (this.value) {
                     var d = new Date(this.value);
-                    document.getElementById('summaryDate').textContent =
-                        d.toLocaleDateString('vi-VN');
+                    var txt = d.toLocaleDateString('vi-VN');
+                    document.getElementById('summaryDate').textContent = txt;
                 }
             });
         }
 
-        // Cập nhật số khách
-        document.querySelectorAll('input[name="number_of_guests"]').forEach(function (radio) {
-            radio.addEventListener('change', function () {
-                if (this.checked) {
-                    var val = this.value;
-                    if (val === "12") val = "Đoàn lớn";
-                    else val += " người";
-                    document.getElementById('summaryPeople').textContent = val;
+        var guestInput = document.getElementById('number_of_guests');
+        if (guestInput) {
+            var updateGuestSummary = function () {
+                var v = parseInt(guestInput.value, 10);
+                if (isNaN(v) || v < 1) v = 1;
+                guestInput.value = v;
+                document.getElementById('summaryPeople').textContent = v + " khách";
+            };
+            guestInput.addEventListener('change', updateGuestSummary);
+            guestInput.addEventListener('keyup', updateGuestSummary);
+            updateGuestSummary();
+        }
+
+        // ====== ĐẶT MÓN TRƯỚC: tính tổng & build note ======
+        function updatePreOrderSummary() {
+            var total = 0;
+
+            document.querySelectorAll('.preorder-row').forEach(function (row) {
+                var cb = row.querySelector('.preorder-check');
+                if (cb && cb.checked) {
+                    var price = parseFloat(cb.getAttribute('data-price') || '0');
+                    var qtyInput = row.querySelector('.preorder-qty');
+                    var qty = 1;
+                    if (qtyInput) {
+                        var parsed = parseInt(qtyInput.value, 10);
+                        if (!isNaN(parsed) && parsed > 0) qty = parsed;
+                    }
+                    total += price * qty;
                 }
             });
+
+            var summary = document.getElementById('summaryPreOrder');
+            if (summary) {
+                summary.textContent = total.toLocaleString('vi-VN') + " đ";
+            }
+
+            var totalField = document.getElementById('pre_order_total');
+            if (totalField) {
+                totalField.value = total.toString();
+            }
+        }
+
+        document.querySelectorAll('.preorder-check').forEach(function (cb) {
+            cb.addEventListener('change', updatePreOrderSummary);
+        });
+        document.querySelectorAll('.preorder-qty').forEach(function (input) {
+            input.addEventListener('change', updatePreOrderSummary);
+            input.addEventListener('keyup', updatePreOrderSummary);
         });
 
-        // Validate chọn giờ trước khi submit
         var bookingForm = document.getElementById('bookingForm');
         if (bookingForm) {
             bookingForm.addEventListener('submit', function (e) {
@@ -368,11 +511,40 @@
                 if (!time) {
                     e.preventDefault();
                     var err = document.getElementById('timeError');
-                    err.classList.remove('hidden');
-                    err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (err) {
+                        err.classList.remove('hidden');
+                        err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    return;
                 }
+
+                var lines = [];
+                document.querySelectorAll('.preorder-row').forEach(function (row) {
+                    var cb = row.querySelector('.preorder-check');
+                    if (cb && cb.checked) {
+                        var name = cb.getAttribute('data-name');
+                        var price = parseFloat(cb.getAttribute('data-price') || '0');
+                        var qtyInput = row.querySelector('.preorder-qty');
+                        var qty = 1;
+                        if (qtyInput) {
+                            var parsed = parseInt(qtyInput.value, 10);
+                            if (!isNaN(parsed) && parsed > 0) qty = parsed;
+                        }
+                        var priceTxt = price.toLocaleString('vi-VN') + " đ";
+                        lines.push(qty + " x " + name + " (" + priceTxt + ")");
+                    }
+                });
+
+                var noteField = document.getElementById('pre_order_note');
+                if (noteField) {
+                    noteField.value = lines.join("; ");
+                }
+
+                updatePreOrderSummary();
             });
         }
+
+        updatePreOrderSummary();
     </script>
 
     <style>

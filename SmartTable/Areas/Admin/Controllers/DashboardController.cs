@@ -115,7 +115,7 @@ namespace SmartTable.Areas.Admin.Controllers
                         // === CHUYỂN DỮ LIỆU CHI TIẾT TỪ PARTNERLEADS ===
                         CuisineStyle = lead.CuisineStyle,
                         ServiceDescription = lead.ServiceDescription,
-                        ServiceTypes = lead.ServiceTypes, // Kiểu phục vụ 
+                        ServiceTypes = lead.ServiceTypes, 
                         AverageBill = lead.AverageBill,
                         FloorCount = lead.FloorCount,
                         BusyHours = lead.BusyHours,

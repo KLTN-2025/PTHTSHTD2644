@@ -1,0 +1,372 @@
+﻿@model IEnumerable<SmartTable.Models.MenuItems>
+
+@{
+    ViewBag.Title = "Quản lý món ăn";
+    Layout = "~/Views/Shared/_BusinessLayout.cshtml";
+}
+
+<div class="p-6 bg-gray-50 min-h-screen">
+    <div class="max-w-6xl mx-auto">
+
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
+                    Quản lý thực đơn
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">
+                    Thêm, chỉnh sửa và xóa món ăn trong thực đơn nhà hàng của bạn.
+                </p>
+            </div>
+        </div>
+
+        @* Thông báo *@
+        @if (TempData["Error"] != null)
+        {
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+                <i class="fas fa-exclamation-circle mr-2"></i>@TempData["Error"]
+            </div>
+        }
+        @if (TempData["Success"] != null)
+        {
+            <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4 text-sm">
+                <i class="fas fa-check-circle mr-2"></i>@TempData["Success"]
+            </div>
+        }
+
+        @* Nút thêm món *@
+        <div class="mb-6">
+            <button class="bg-amber-500 text-white px-5 py-2.5 rounded-lg hover:bg-amber-600 text-sm font-semibold shadow-sm"
+                    onclick="openAddModal();">
+                <i class="fas fa-plus-circle mr-1"></i> Thêm món ăn mới
+            </button>
+        </div>
+
+        @* Modal Thêm / Sửa *@
+        <div id="addMenuItemModal"
+             class="fixed inset-0 bg-black/40 z-40 hidden items-center justify-center">
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-md relative">
+                <button type="button"
+                        class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                        onclick="closeModal();">
+                    <i class="fas fa-times"></i>
+                </button>
+
+                <h2 id="modalTitle"
+                    class="text-xl font-bold mb-4 text-gray-800 text-center">
+                    Thêm món ăn mới
+                </h2>
+
+                <form id="menuItemForm"
+                      action="@Url.Action("Create", "Menu")"
+                      method="post"
+                      enctype="multipart/form-data"
+                      class="space-y-4">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="menu_item_id" id="menuItemId" />
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tên món ăn</label>
+                        <input type="text" name="name" id="name"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                               required />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Danh mục</label>
+                        <select name="category" id="category"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                required>
+                            <option value="Món chính">Món chính</option>
+                            <option value="Khai vị">Món khai vị</option>
+                            <option value="Tráng miệng">Tráng miệng</option>
+                            <option value="Đồ uống">Đồ uống</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Giá (VNĐ)</label>
+                        <input type="number" name="price" id="price" min="0" step="1000"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                               required />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
+                        <input type="text" name="description" id="description"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-gray-200 focus:outline-none" />
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="is_available" id="is_available"
+                               value="true"
+                               class="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                               checked />
+                        <label for="is_available" class="text-sm text-gray-700">
+                            Đang bán (có sẵn)
+                        </label>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Hình ảnh</label>
+                        <div class="mb-2">
+                            <img id="currentImage"
+                                 src=""
+                                 alt="Ảnh món ăn"
+                                 class="w-24 h-24 rounded-lg object-cover border border-gray-200 hidden" />
+                        </div>
+                        <input type="file" name="Image" id="image" accept="image/*"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                        <p class="text-xs text-gray-400 mt-1">Chấp nhận JPG, PNG, GIF. Tối đa 2MB.</p>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <button type="submit" id="submitButton"
+                                class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm">
+                            Thêm
+                        </button>
+                        <button type="button"
+                                onclick="closeModal();"
+                                class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-4 py-2 rounded-lg">
+                            Hủy
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @* Bảng danh sách món *@
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-100 text-gray-700 text-xs uppercase">
+                    <tr>
+                        <th class="px-4 py-3 text-left">#</th>
+                        <th class="px-4 py-3 text-left">Tên món</th>
+                        <th class="px-4 py-3 text-left">Danh mục</th>
+                        <th class="px-4 py-3 text-right">Giá</th>
+                        <th class="px-4 py-3 text-left">Mô tả</th>
+                        <th class="px-4 py-3 text-center">Trạng thái</th>
+                        <th class="px-4 py-3 text-center">Hình ảnh</th>
+                        <th class="px-4 py-3 text-center">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @if (Model != null && Model.Any())
+                    {
+                        var index = 1;
+
+                        foreach (var menuItem in Model)
+                        {
+                            var nameJs = (menuItem.name ?? "").Replace("'", "\\'");
+                            var descJs = (menuItem.description ?? "").Replace("'", "\\'");
+                            var imgJs = (menuItem.Image ?? "").Replace("'", "\\'");
+                            var isAvailJs = menuItem.is_available.GetValueOrDefault() ? "true" : "false";
+                            var priceJs = menuItem.price.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+                            string categoryLabel;
+                            switch (menuItem.category)
+                            {
+                                case "main": categoryLabel = "Món chính"; break;
+                                case "appetizer": categoryLabel = "Món khai vị"; break;
+                                case "dessert": categoryLabel = "Tráng miệng"; break;
+                                case "drink": categoryLabel = "Đồ uống"; break;
+                                default: categoryLabel = menuItem.category; break;
+                            }
+
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3">@index</td>
+                                <td class="px-4 py-3 font-semibold text-gray-800">@menuItem.name</td>
+                                <td class="px-4 py-3 text-gray-700">@categoryLabel</td>
+                                <td class="px-4 py-3 text-right text-gray-900 font-semibold">
+                                    @menuItem.price.ToString("N0") đ
+                                </td>
+                                <td class="px-4 py-3 text-gray-600">
+                                    @menuItem.description
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    @if (menuItem.is_available.GetValueOrDefault())
+                                    {
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold">
+                                            <span class="w-2 h-2 rounded-full bg-green-500 mr-1"></span> Đang bán
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">
+                                            <span class="w-2 h-2 rounded-full bg-gray-400 mr-1"></span> Tạm ngưng
+                                        </span>
+                                    }
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    @if (!string.IsNullOrEmpty(menuItem.Image))
+                                    {
+                                        <img src="@menuItem.Image"
+                                             alt="@menuItem.name"
+                                             class="w-12 h-12 rounded-lg object-cover border border-gray-200 mx-auto" />
+                                    }
+                                    else
+                                    {
+                                        <span class="text-xs text-gray-400">Không có ảnh</span>
+                                    }
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div class="flex items-center justify-center gap-2">
+
+                                        @* Bật / tắt bán *@
+                                        @using (Html.BeginForm("ToggleAvailable", "Menu",
+                                                FormMethod.Post,
+                                                new { @class = "inline-block" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            @Html.Hidden("id", menuItem.menu_item_id)
+
+                                            if (menuItem.is_available.GetValueOrDefault())
+                                            {
+                                                <button type="submit"
+                                                        class="inline-flex items-center justify-center px-2.5 py-1.5
+                                                               rounded-full bg-yellow-50 text-yellow-700 text-xs font-semibold
+                                                               border border-yellow-500 hover:bg-yellow-100">
+                                                    <i class="fas fa-pause mr-1"></i> Tạm ngưng
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit"
+                                                        class="inline-flex items-center justify-center px-2.5 py-1.5
+                                                               rounded-full bg-green-50 text-green-700 text-xs font-semibold
+                                                               border border-green-200 hover:bg-green-100">
+                                                    <i class="fas fa-play mr-1"></i> Bật bán
+                                                </button>
+                                            }
+                                        }
+
+                                        @* Sửa *@
+                                        <button type="button"
+                                                class="inline-flex items-center px-3 py-1.5 rounded-full
+                                                       border border-blue-300 text-blue-700 text-xs font-semibold
+                                                       bg-blue-50 hover:bg-blue-100"
+                                                onclick="openEditModal(@menuItem.menu_item_id,
+                                                                       '@nameJs',
+                                                                       '@menuItem.category',
+                                                                       @priceJs,
+                                                                       '@descJs',
+                                                                       '@isAvailJs',
+                                                                       '@imgJs');">
+                                            <i class="fas fa-edit mr-1"></i> Sửa
+                                        </button>
+
+                                        @* Xóa *@
+                                        @using (Html.BeginForm("Delete", "Menu", FormMethod.Post,
+                                                new { @class = "inline-block", onsubmit = "return confirm('Bạn có chắc muốn xóa món ăn này?');" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            @Html.Hidden("id", menuItem.menu_item_id)
+
+                                            <button type="submit"
+                                                    class="inline-flex items-center px-3 py-1.5 rounded-full
+                                                           border border-red-300 text-red-700 text-xs font-semibold
+                                                           bg-red-50 hover:bg-red-100">
+                                                <i class="fas fa-trash-alt mr-1"></i> Xóa
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+
+                            index++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="px-4 py-6 text-center text-gray-500 text-sm">
+                                Chưa có món ăn nào trong thực đơn. Hãy thêm món đầu tiên.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openAddModal() {
+            const modal = document.getElementById('addMenuItemModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            document.getElementById('modalTitle').textContent = 'Thêm món ăn mới';
+            document.getElementById('submitButton').textContent = 'Thêm';
+            document.getElementById('menuItemForm').action = '@Url.Action("Create", "Menu")';
+
+            resetForm();
+        }
+
+        function openEditModal(id, name, category, price, description, isAvailable, image) {
+            const modal = document.getElementById('addMenuItemModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            document.getElementById('modalTitle').textContent = 'Sửa món ăn';
+            document.getElementById('submitButton').textContent = 'Cập nhật';
+            document.getElementById('menuItemForm').action = '@Url.Action("Edit", "Menu")';
+
+            document.getElementById('menuItemId').value = id || '';
+            document.getElementById('name').value = name || '';
+            document.getElementById('category').value = category || 'main';
+            document.getElementById('price').value = price || 0;
+            document.getElementById('description').value = description || '';
+            document.getElementById('is_available').checked = (isAvailable === true || isAvailable === "true");
+
+            const img = document.getElementById('currentImage');
+            if (image && image !== '') {
+                img.src = image;
+                img.classList.remove('hidden');
+            } else {
+                img.classList.add('hidden');
+            }
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('addMenuItemModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            resetForm();
+        }
+
+        function resetForm() {
+            const form = document.getElementById('menuItemForm');
+            if (!form) return;
+            form.reset();
+            document.getElementById('menuItemId').value = '';
+            const img = document.getElementById('currentImage');
+            img.classList.add('hidden');
+        }
+
+        (function () {
+            const form = document.getElementById('menuItemForm');
+            if (!form) return;
+
+            form.addEventListener('submit', function (e) {
+                const imageInput = document.getElementById('image');
+                if (imageInput && imageInput.files.length > 0) {
+                    const file = imageInput.files[0];
+                    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                    const maxSize = 2 * 1024 * 1024;
+
+                    if (!validTypes.includes(file.type)) {
+                        alert('Vui lòng chọn file ảnh (JPEG, PNG, GIF).');
+                        e.preventDefault();
+                        return;
+                    }
+                    if (file.size > maxSize) {
+                        alert('Kích thước ảnh không được vượt quá 2MB.');
+                        e.preventDefault();
+                        return;
+                    }
+                }
+            });
+        })();
+    </script>
+}
+

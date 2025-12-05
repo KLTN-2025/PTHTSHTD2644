@@ -1,0 +1,133 @@
+﻿@model SmartTable.Models.Tables
+@{
+    ViewBag.Title = "Chỉnh sửa bàn";
+    Layout = "~/Views/Shared/_BusinessLayout.cshtml";
+}
+
+<div class="bg-gray-50 min-h-screen py-8">
+    <div class="container mx-auto max-w-xl px-4">
+
+        <div class="flex items-center justify-between mb-4">
+            <h1 class="text-2xl font-bold text-gray-800">
+                Chỉnh sửa bàn
+            </h1>
+
+            <a href="@Url.Action("Index", "BusinessTables")"
+               class="inline-flex items-center text-sm text-gray-500 hover:text-blue-600">
+                <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách
+            </a>
+        </div>
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="mb-3 px-4 py-2 rounded-lg bg-red-50 text-red-700 text-sm border border-red-100">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="mb-3 px-4 py-2 rounded-lg bg-green-50 text-green-700 text-sm border border-green-100">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @Html.ValidationSummary(true, "", new { @class = "text-red-600 mb-3 text-sm" })
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            @using (Html.BeginForm("Edit", "BusinessTables", FormMethod.Post, new { @class = "space-y-5" }))
+            {
+                @Html.AntiForgeryToken()
+
+                @Html.HiddenFor(m => m.table_id)
+                @Html.HiddenFor(m => m.restaurant_id)
+
+                <!-- Số bàn / mã bàn -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">
+                        Số bàn / Mã bàn <span class="text-red-500">*</span>
+                    </label>
+                    @Html.TextBoxFor(m => m.table_number,
+                        new
+                        {
+                            @class = "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50 focus:bg-white",
+                            placeholder = "VD: B01, VIP-01, Tầng 2 - Bàn 3"
+                        })
+                    @Html.ValidationMessageFor(m => m.table_number, "", new { @class = "text-xs text-red-600 mt-1" })
+                </div>
+
+                <!-- Sức chứa -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">
+                        Sức chứa (số khách tối đa) <span class="text-red-500">*</span>
+                    </label>
+                    @Html.TextBoxFor(m => m.capacity,
+                        new
+                        {
+                            type = "number",
+                            min = "1",
+                            @class = "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50 focus:bg-white",
+                            placeholder = "VD: 4, 6, 10"
+                        })
+                    @Html.ValidationMessageFor(m => m.capacity, "", new { @class = "text-xs text-red-600 mt-1" })
+                </div>
+
+                <!-- Loại bàn -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">
+                        Loại bàn (tuỳ chọn)
+                    </label>
+                    @Html.TextBoxFor(m => m.type,
+                        new
+                        {
+                            @class = "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50 focus:bg-white",
+                            placeholder = "VD: VIP, Thường, Ngoài trời..."
+                        })
+                    @Html.ValidationMessageFor(m => m.type, "", new { @class = "text-xs text-red-600 mt-1" })
+                </div>
+
+                <!-- Trạng thái bàn -->
+        <div class="flex items-center justify-between mt-2">
+            @{
+                bool isAvailable = Model.is_available ?? true;
+            }
+
+            <div class="flex items-center justify-between mt-2">
+                <div class="flex items-center">
+                    @Html.CheckBox(
+                        "is_available",         
+                        isAvailable,            
+                        new
+                        {
+                            @class = "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        }
+                    )
+                    <span class="ml-2 text-sm text-gray-700 font-medium">
+                        Bàn đang mở cho đặt chỗ
+                    </span>
+                </div>
+                <span class="text-xs text-gray-400 italic">
+                    Bỏ chọn nếu tạm ngưng sử dụng bàn này
+                </span>
+            </div>
+            <span class="text-xs text-gray-400 italic">
+                Bỏ chọn nếu tạm ngưng sử dụng bàn này
+            </span>
+        </div>
+
+                <div class="pt-4 border-t border-gray-100 mt-4 flex items-center justify-between">
+                    <a href="@Url.Action("Index", "BusinessTables")"
+                       class="inline-flex items-center px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
+                        Hủy
+                    </a>
+
+                    <button type="submit"
+                            class="inline-flex items-center px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+                        <i class="fas fa-save mr-2"></i> Lưu thay đổi
+                    </button>
+                </div>
+            }
+        </div>
+
+    </div>
+</div>

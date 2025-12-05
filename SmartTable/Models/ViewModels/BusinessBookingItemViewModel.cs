@@ -19,14 +19,12 @@ namespace SmartTable.Models.ViewModels
 
         public string BookingStatus { get; set; }
 
-        /// <summary>
-        /// Số tiền cọc mới nhất (nếu có)
-        /// </summary>
+        public string CancelReason { get; set; }
+
         public decimal? DepositAmount { get; set; }
 
-        /// <summary>
-        /// Trạng thái thanh toán mới nhất (nếu có)
-        /// </summary>
+       
         public string PaymentStatus { get; set; }
+
     }
 }

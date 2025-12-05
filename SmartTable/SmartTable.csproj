@@ -125,6 +125,11 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Content Include="Views\BusinessHome\Statistics.cshtml" />
+    <Content Include="Views\BusinessTables\Index.cshtml" />
+    <Content Include="Views\BusinessTables\Create.cshtml" />
+    <Content Include="Views\BusinessTables\Edit.cshtml" />
+    <None Include="Views\Menu\Index.cshtml" />
     <Content Include="Content\Account\register.css" />
     <Compile Include="Areas\Admin\AdminAreaRegistration.cs" />
     <Compile Include="Areas\Admin\Controllers\DashboardController.cs" />
@@ -132,19 +137,24 @@
     <Compile Include="Areas\Admin\Controllers\RoleController.cs" />
     <Compile Include="Areas\Admin\Controllers\UsersController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\BusinessTablesController.cs" />
     <Compile Include="Controllers\DatBanController.cs" />
     <Compile Include="Controllers\BusinessController.cs" />
     <Compile Include="Controllers\BusinessHomeController.cs" />
     <Compile Include="Controllers\ChatController.cs" />
+    <Compile Include="Controllers\DetailNhaHangController.cs" />
     <Compile Include="Controllers\Filters\AuthorizeAdminAttribute.cs" />
     <Compile Include="Controllers\Filters\AuthorizeUserAttribute.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\MenuController.cs" />
+    <Compile Include="Controllers\PaymentController.cs" />
     <Compile Include="Controllers\PublicRestaurantController.cs" />
     <Compile Include="Controllers\ThanhToanController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\EmailHelper.cs" />
+    <Compile Include="Librarys\VnPayLibrary.cs" />
     <Compile Include="Models\Bookings.cs">
       <DependentUpon>SmartTableSystem2.tt</DependentUpon>
     </Compile>
@@ -203,6 +213,10 @@
     <Compile Include="Models\ViewModels\RestaurantFilterViewModel.cs" />
     <Compile Include="Models\ViewModels\SmartTableDetailViewModel.cs" />
     <Compile Include="Models\ViewModels\StatisticsViewModelController.cs" />
+    <Compile Include="Models\Vnpay\PaymentInformationModel.cs" />
+    <Compile Include="Models\Vnpay\PaymentResponseModel.cs" />
+    <Compile Include="Models\Vnpay\Services\IVnPayService.cs" />
+    <Compile Include="Models\Vnpay\Services\VnPayService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -326,13 +340,12 @@
     <Content Include="Views\Business\Index.cshtml" />
     <Content Include="Views\Business\RegisterPartner.cshtml" />
     <Content Include="Views\Business\Login.cshtml" />
-    <Content Include="Views\Home\RestaurantDetails.cshtml" />
+    <Content Include="Views\DetailNhaHang\RestaurantDetails.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\BusinessHome\Index.cshtml" />
     <Content Include="Views\BusinessHome\Profile.cshtml" />
     <Content Include="Views\BusinessHome\EditRestaurant.cshtml" />
     <Content Include="Views\PublicRestaurant\Nearby.cshtml" />
-    <Content Include="Views\PublicRestaurant\Details.cshtml" />
     <Content Include="Views\Home\Search.cshtml" />
     <Content Include="Views\DatBan\datban.cshtml" />
     <Content Include="Views\DatBan\DanhSachBanDaDat.cshtml" />
@@ -346,8 +359,6 @@
     <Folder Include="App_Data\" />
     <Folder Include="Areas\Admin\Models\" />
     <Folder Include="Views\Chat\" />
-    <Folder Include="Views\DetailNhaHang\" />
-    <Folder Include="Views\Menu\" />
     <Folder Include="Views\ThongBaoUser\" />
     <Folder Include="Views\ThongBao\" />
   </ItemGroup>

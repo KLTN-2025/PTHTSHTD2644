@@ -52,7 +52,7 @@ public class PublicRestaurantController : Controller
             return HttpNotFound();
         }
 
-        return View(restaurant);
+        return View("~/Views/DetailNhaHang/RestaurantDetails.cshtml");
     }
 
 

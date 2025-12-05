@@ -5,7 +5,7 @@ using System.Web.Mvc;
 
 namespace SmartTable.Areas.Admin.Controllers
 {
-    [AuthorizeAdmin] // Chỉ cho phép Admin truy cập
+    [AuthorizeAdmin] 
     public class RoleController : Controller
     {
         private Entities db = new Entities();
@@ -13,7 +13,6 @@ namespace SmartTable.Areas.Admin.Controllers
         // GET: Admin/Role
         public ActionResult Index()
         {
-            // Trả về danh sách tất cả người dùng để Admin có thể xem và sửa Role
             var users = db.Users.ToList();
             ViewBag.Title = "Quản lý Vai trò và Tài khoản";
             return View(users);
@@ -31,7 +30,6 @@ namespace SmartTable.Areas.Admin.Controllers
                 return RedirectToAction("Index");
             }
 
-            // Logic cập nhật Role
             user.role = newRole;
             db.SaveChanges();
 

@@ -31,9 +31,7 @@ namespace SmartTable.Areas.Admin.Controllers
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
         private static readonly string[] AllowedContentTypes = { "image/jpeg", "image/png", "image/webp" };
 
-        /// <summary>
-        /// Kiểm tra file ảnh hợp lệ (kích thước + đuôi + content-type)
-        /// </summary>
+        
         private bool ValidateImage(HttpPostedFileBase file, out string errorMessage)
         {
             errorMessage = null;
@@ -66,11 +64,7 @@ namespace SmartTable.Areas.Admin.Controllers
             return true;
         }
 
-        /// <summary>
-        /// Upload file ảnh vào thư mục /Content/Images/Restaurants/[subFolder]
-        /// Trả về đường dẫn tương đối để lưu DB: /Content/Images/Restaurants/[subFolder]/fileName
-        /// Nếu fail -> trả null
-        /// </summary>
+      
         private string UploadFile(HttpPostedFileBase file, string fileName, string subFolder = "")
         {
             try
@@ -131,7 +125,6 @@ namespace SmartTable.Areas.Admin.Controllers
         // GET: Hiển thị form tạo nhà hàng mới
         public ActionResult Create()
         {
-            // DropDownList cho user là business
             ViewBag.user_id = new SelectList(db.Users.Where(u => u.role == "business"), "user_id", "email");
             return View();
         }

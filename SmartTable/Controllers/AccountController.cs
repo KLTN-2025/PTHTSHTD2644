@@ -2,17 +2,17 @@
 using System;
 using System.Linq;
 using System.Web.Mvc;
-using System.Configuration; // Thêm
-using System.Net.Mail; // Thêm
-using SmartTable.Filters; // Thêm (nếu bạn dùng AuthorizeUser)
-using BCrypt.Net; // Thêm BCrypt
-using System.Text; // Thêm
+using System.Configuration; 
+using System.Net.Mail; 
+using SmartTable.Filters; 
+using BCrypt.Net; 
+using System.Text; 
 
 namespace SmartTable.Controllers
 {
     public class AccountController : Controller
     {
-        private Entities db = new Entities(); // Giả sử DbContext của bạn tên là Entities
+        private Entities db = new Entities(); 
 
         // --- ĐĂNG KÝ ---
         [HttpGet]
@@ -25,7 +25,6 @@ namespace SmartTable.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Register(Users model)
         {
-            // (Validation thủ công)
             if (string.IsNullOrEmpty(model.email))
                 ModelState.AddModelError("email", "Email không được để trống.");
             else if (!System.Text.RegularExpressions.Regex.IsMatch(model.email, @"^[a-zA-Z0-9._%+-]+@gmail\.com$"))
@@ -80,13 +79,11 @@ namespace SmartTable.Controllers
 
                 if (user.role == "Admin")
                 {
-                    // SỬA LỖI: Chuyển "Role" thành "Dashboard"
                     return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
                 }
                 else if (user.role == "business")
                 {
-                    // SỬA LỖI: Chuyển "BusinessHome" thành "Business" (hoặc "BusinessHome" nếu bạn đã tạo)
-                    return RedirectToAction("Index", "BusinessHome"); // Giả sử bạn đã tạo BusinessHomeController
+                    return RedirectToAction("Index", "BusinessHome"); 
                 }
                 else
                 {
@@ -104,16 +101,14 @@ namespace SmartTable.Controllers
             return RedirectToAction("Login", "Account");
         }
 
-        // --- THÔNG TIN TÀI KHOẢN (Chuyển hướng) ---
-        // SỬA LỖI: Đã xóa hàm AccountInfo() cũ bị trùng
+        // THÔNG TIN TÀI KHOẢN 
         [AuthorizeUser]
         public ActionResult AccountInfo()
         {
-            // Trang này giờ chính là trang UpdateAccount
             return RedirectToAction("UpdateAccount");
         }
 
-        // --- CẬP NHẬT TÀI KHOẢN (GET) ---
+        // CẬP NHẬT TÀI KHOẢN
         [AuthorizeUser]
         [HttpGet]
         public ActionResult UpdateAccount()
@@ -144,7 +139,6 @@ namespace SmartTable.Controllers
 
             try
             {
-                // (Code cập nhật họ tên, email, phone)
                 if (!string.IsNullOrEmpty(model.full_name) && model.full_name != user.full_name)
                 {
                     user.full_name = model.full_name;
@@ -168,7 +162,6 @@ namespace SmartTable.Controllers
                     user.phone = model.phone;
                 }
 
-                // (Code cập nhật mật khẩu)
                 if (!string.IsNullOrEmpty(newPassword))
                 {
                     if (newPassword != confirmPassword)
@@ -186,7 +179,6 @@ namespace SmartTable.Controllers
 
                 db.SaveChanges();
                 ViewBag.SuccessMessage = "Cập nhật thông tin tài khoản thành công.";
-                // SỬA LỖI: Trả về View() để hiển thị thông báo, thay vì Redirect
                 return View("UpdateAccount", user);
             }
             catch (Exception ex)
@@ -200,10 +192,9 @@ namespace SmartTable.Controllers
         [HttpGet]
         public ActionResult ForgotPassword()
         {
-            return View(); // Sửa lỗi: Phải trả về View() (hoặc View(new Users()))
+            return View(); 
         }
 
-        // --- QUÊN MẬT KHẨU (POST) ---
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult ForgotPassword(Users model)
@@ -236,7 +227,6 @@ namespace SmartTable.Controllers
             return View(model);
         }
 
-        // --- SỬA LỖI CÚ PHÁP: CÁC HÀM SAU PHẢI NẰM BÊN TRONG CLASS ---
 
         // --- ĐỔI MẬT KHẨU (GET) ---
         [AuthorizeUser]
@@ -280,7 +270,6 @@ namespace SmartTable.Controllers
             return View();
         }
 
-        // --- HÀM HỖ TRỢ ---
         private string GenerateRandomPassword(int length = 8)
         {
             const string validChars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -297,7 +286,7 @@ namespace SmartTable.Controllers
 
             if (string.IsNullOrEmpty(fromPassword))
             {
-                fromPassword = "rpxrrencvhiekcxf"; // Mật khẩu App mới
+                fromPassword = "rpxrrencvhiekcxf"; 
             }
             if (string.IsNullOrEmpty(fromEmail))
             {
@@ -337,7 +326,6 @@ namespace SmartTable.Controllers
             }
         }
 
-        // Ghi đè phương thức Dispose
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -347,5 +335,5 @@ namespace SmartTable.Controllers
             base.Dispose(disposing);
         }
 
-    } // <-- Đóng class AccountController
-} // <-- Đóng namespace SmartTable.Controllers
+    } 
+} 

@@ -4,142 +4,530 @@
 @{
     ViewBag.Title = "Lịch sử đặt bàn";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var statusFilter = Request["status"];
+    var paymentFilter = Request["payment"];
+
+    var data = Model ?? Enumerable.Empty<SmartTable.Models.ViewModels.BookingHistoryItemViewModel>();
+
+    if (!string.IsNullOrEmpty(statusFilter) && statusFilter != "all")
+    {
+        data = data.Where(x =>
+            !string.IsNullOrEmpty(x.BookingStatus) &&
+            x.BookingStatus.Contains(statusFilter));
+    }
+
+    if (!string.IsNullOrEmpty(paymentFilter) && paymentFilter != "all")
+    {
+        if (paymentFilter == "paid")
+        {
+            data = data.Where(x =>
+                !string.IsNullOrEmpty(x.PaymentStatus) &&
+                x.PaymentStatus.Contains("Đã thanh toán"));
+        }
+        else if (paymentFilter == "unpaid")
+        {
+            data = data.Where(x => string.IsNullOrEmpty(x.PaymentStatus)
+                                  || !x.PaymentStatus.Contains("Đã thanh toán"));
+        }
+        else if (paymentFilter == "vnpay")
+        {
+            data = data.Where(x =>
+                !string.IsNullOrEmpty(x.PaymentStatus) &&
+                x.PaymentStatus.Contains("VNPAY"));
+        }
+    }
 }
 
-<div class="bg-gray-50 min-h-screen py-10">
-    <div class="container mx-auto max-w-5xl px-4">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+    <div class="container mx-auto max-w-6xl px-4 lg:px-8">
 
-        <div class="mb-6 flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Lịch sử đặt bàn</h1>
-                <p class="text-sm text-gray-500 mt-1">
-                    Xem lại các lần bạn đã đặt bàn trên SmartTable.
-                </p>
+        <div class="mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="p-2 bg-white rounded-xl shadow-sm">
+                            <i class="fas fa-history text-2xl text-blue-600"></i>
+                        </div>
+                        <h1 class="text-3xl font-bold text-gray-900">Lịch sử đặt bàn</h1>
+                    </div>
+                    <p class="text-gray-600">Theo dõi và quản lý tất cả đơn đặt bàn của bạn</p>
+                </div>
+                <a href="@Url.Action("Index","Home")"
+                   class="group inline-flex items-center gap-2 px-5 py-3 bg-white text-gray-700 font-semibold rounded-xl shadow-sm hover:shadow-md border border-gray-200 hover:border-blue-400 transition-all duration-300">
+                    <i class="fas fa-arrow-left text-blue-500 group-hover:-translate-x-0.5 transition-transform"></i>
+                    <span>Về trang chủ</span>
+                </a>
             </div>
-            <a href="@Url.Action("Index","Home")"
-               class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                <i class="fas fa-arrow-left"></i> Về trang chủ
-            </a>
         </div>
 
-        @if (Model == null || !Model.Any())
-        {
-            <div class="bg-white rounded-2xl shadow-sm border border-dashed border-gray-200 p-10 text-center">
-                <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
-                    <i class="fas fa-calendar-times text-2xl"></i>
+        <div class="mb-8">
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="fas fa-sliders-h text-blue-600"></i>
+                    <h3 class="text-lg font-semibold text-gray-800">Bộ lọc tìm kiếm</h3>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">
-                    Bạn chưa có lịch sử đặt bàn nào.
-                </h3>
-                <p class="text-gray-500 text-sm mb-4">
-                    Hãy khám phá nhà hàng và tạo một đặt bàn đầu tiên.
-                </p>
-                <a href="@Url.Action("Index","Home")"
-                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow hover:bg-blue-700 transition">
-                    <i class="fas fa-search"></i> Đặt bàn ngay
-                </a>
+
+                <form method="get" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-calendar-check mr-1 text-blue-500"></i>Trạng thái đặt bàn
+                            </label>
+                            <select name="status"
+                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <option value="all" @(string.IsNullOrEmpty(statusFilter) || statusFilter == "all" ? "selected" : "")>
+                                    Tất cả trạng thái
+                                </option>
+                                <option value="Đã thanh toán" @(statusFilter == "Đã thanh toán" ? "selected" : "")>
+                                    Đã thanh toán
+                                </option>
+                                <option value="Xác nhận" @(statusFilter == "Xác nhận" ? "selected" : "")>
+                                    Đã xác nhận
+                                </option>
+                                <option value="Hủy" @(statusFilter == "Hủy" ? "selected" : "")>
+                                    Đã hủy
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-credit-card mr-1 text-purple-500"></i>Trạng thái thanh toán
+                            </label>
+                            <select name="payment"
+                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <option value="all" @(string.IsNullOrEmpty(paymentFilter) || paymentFilter == "all" ? "selected" : "")>
+                                    Tất cả thanh toán
+                                </option>
+                                <option value="paid" @(paymentFilter == "paid" ? "selected" : "")>
+                                    Đã thanh toán
+                                </option>
+                                <option value="unpaid" @(paymentFilter == "unpaid" ? "selected" : "")>
+                                    Chưa thanh toán
+                                </option>
+                                <option value="vnpay" @(paymentFilter == "vnpay" ? "selected" : "")>
+                                    Thanh toán VNPAY
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
+                        <button type="submit"
+                                class="flex-1 inline-flex items-center justify-center gap-3 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300">
+                            <i class="fas fa-search text-white"></i>
+                            <span>Áp dụng bộ lọc</span>
+                        </button>
+                        <a href="@Url.Action("DanhSachBanDaDat","DatBan")"
+                           class="flex-1 inline-flex items-center justify-center gap-3 px-6 py-3.5 bg-white text-gray-700 font-semibold rounded-xl border border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300">
+                            <i class="fas fa-redo text-amber-500"></i>
+                            <span>Xóa bộ lọc</span>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @if (!data.Any())
+        {
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
+                <div class="max-w-md mx-auto">
+                    <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+                        <i class="fas fa-calendar-times text-3xl text-blue-500"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-3">Không có đặt bàn nào</h3>
+                    <p class="text-gray-600 mb-8">
+                        Chưa có đặt bàn nào phù hợp với tiêu chí lọc của bạn.
+                        Hãy thử điều chỉnh bộ lọc hoặc tạo đặt bàn mới.
+                    </p>
+                    <a href="@Url.Action("Index","Home")"
+                       class="inline-flex items-center gap-3 px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300">
+                        <i class="fas fa-plus-circle text-white"></i>
+                        <span>Đặt bàn mới</span>
+                    </a>
+                </div>
             </div>
         }
         else
         {
-            <div class="space-y-4">
-                @foreach (var item in Model)
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Tổng đặt bàn</p>
+                            <p class="text-2xl font-bold text-gray-800">@data.Count()</p>
+                        </div>
+                        <div class="p-3 bg-blue-50 rounded-xl">
+                            <i class="fas fa-list-alt text-xl text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Đã thanh toán</p>
+                            <p class="text-2xl font-bold text-emerald-600">
+                                @data.Count(x => !string.IsNullOrEmpty(x.PaymentStatus) && x.PaymentStatus.Contains("Đã thanh toán"))
+                            </p>
+                        </div>
+                        <div class="p-3 bg-emerald-50 rounded-xl">
+                            <i class="fas fa-check-circle text-xl text-emerald-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Chưa thanh toán</p>
+                            <p class="text-2xl font-bold text-amber-600">
+                                @data.Count(x => string.IsNullOrEmpty(x.PaymentStatus) || !x.PaymentStatus.Contains("Đã thanh toán"))
+                            </p>
+                        </div>
+                        <div class="p-3 bg-amber-50 rounded-xl">
+                            <i class="fas fa-clock text-xl text-amber-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6">
+                @foreach (var item in data)
                 {
                     var isPaid = !string.IsNullOrEmpty(item.PaymentStatus)
                                  && item.PaymentStatus.Contains("Đã thanh toán");
 
-                    string bookingBadgeClass = "bg-gray-100 text-gray-700";
-                    if (item.BookingStatus != null)
+                    var paymentMethodLabel = "Chưa thanh toán";
+                    if (!string.IsNullOrEmpty(item.PaymentStatus))
                     {
-                        if (item.BookingStatus.Contains("Đã thanh toán"))
+                        if (item.PaymentStatus.Contains("VNPAY-IPN"))
                         {
-                            bookingBadgeClass = "bg-green-100 text-green-700";
+                            paymentMethodLabel = "VNPAY (xác nhận tự động)";
                         }
-                        else if (item.BookingStatus.Contains("Hủy"))
+                        else if (item.PaymentStatus.Contains("VNPAY"))
                         {
-                            bookingBadgeClass = "bg-red-100 text-red-700";
+                            paymentMethodLabel = "VNPAY";
                         }
-                        else if (item.BookingStatus.Contains("Xác nhận"))
+                        else if (item.PaymentStatus.Contains("Chuyển khoản"))
                         {
-                            bookingBadgeClass = "bg-blue-100 text-blue-700";
+                            paymentMethodLabel = "Chuyển khoản";
+                        }
+                        else
+                        {
+                            paymentMethodLabel = "Thanh toán khác";
                         }
                     }
 
-                    string paymentBadgeClass = isPaid
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700";
+                    string bookingBadgeClass = "bg-gray-100 text-gray-800";
+                    string statusIcon = "fa-clock";
 
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col md:flex-row md:items-center gap-4">
-                        <div class="flex items-center gap-4 flex-1">
-                            <img src="@item.RestaurantImage"
-                                 alt="@item.RestaurantName"
-                                 class="w-20 h-20 rounded-xl object-cover shadow-sm border border-gray-100" />
+                    if (!string.IsNullOrEmpty(item.BookingStatus))
+                    {
+                        if (item.BookingStatus.Contains("Đã thanh toán"))
+                        {
+                            bookingBadgeClass = "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white";
+                            statusIcon = "fa-check-circle";
+                        }
+                        else if (item.BookingStatus.Contains("Hủy"))
+                        {
+                            bookingBadgeClass = "bg-gradient-to-r from-red-500 to-red-600 text-white";
+                            statusIcon = "fa-times-circle";
+                        }
+                        else if (item.BookingStatus.Contains("Xác nhận"))
+                        {
+                            bookingBadgeClass = "bg-gradient-to-r from-blue-500 to-blue-600 text-white";
+                            statusIcon = "fa-check-double";
+                        }
+                    }
 
-                            <div class="space-y-1">
-                                <h3 class="text-base md:text-lg font-bold text-gray-800">
-                                    @item.RestaurantName
-                                </h3>
-                                @if (!string.IsNullOrEmpty(item.RestaurantAddress))
-                                {
-                                    <p class="text-xs text-gray-500 flex items-center gap-1">
-                                        <i class="fas fa-map-marker-alt text-red-500"></i>
-                                        <span>@item.RestaurantAddress</span>
-                                    </p>
-                                }
-
-                                <div class="flex flex-wrap gap-2 mt-1 text-xs">
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-50 text-gray-700 border border-gray-100">
-                                        <i class="fas fa-clock text-gray-400"></i>
-                                        @item.BookingTime.ToString("HH:mm dd/MM/yyyy")
-                                    </span>
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-50 text-gray-700 border border-gray-100">
-                                        <i class="fas fa-user-friends text-gray-400"></i>
-                                        @item.NumberOfGuests người
-                                    </span>
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full @bookingBadgeClass">
-                                        <i class="fas fa-info-circle"></i>
-                                        @(item.BookingStatus ?? "Chờ xác nhận")
-                                    </span>
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full @paymentBadgeClass">
-                                        <i class="fas fa-wallet"></i>
-                                        @(string.IsNullOrEmpty(item.PaymentStatus) ? "Chưa thanh toán" : item.PaymentStatus)
-                                    </span>
+                    <div class="group bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-hidden">
+                        <div class="p-6 border-b border-gray-100">
+                            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="relative">
+                                        <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl opacity-20 blur"></div>
+                                        <div class="relative px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl flex items-center gap-2">
+                                            <i class="fas fa-hashtag text-yellow-300"></i>
+                                            @item.BookingId
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold @bookingBadgeClass">
+                                            <i class="fas @statusIcon"></i>
+                                            @(item.BookingStatus ?? "Chờ xác nhận")
+                                        </span>
+                                        <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold @(isPaid ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700")">
+                                            <i class="fas @(isPaid ? "fa-check-circle text-emerald-600" : "fa-clock text-amber-500")"></i>
+                                            @(isPaid ? "Đã thanh toán" : "Chưa thanh toán")
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-gray-500">Đặt lúc</p>
+                                    <p class="font-semibold text-gray-800">@item.BookingTime.ToString("HH:mm dd/MM/yyyy")</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="md:w-48 flex flex-col items-stretch gap-2">
-                            @if (!string.IsNullOrEmpty(item.SpecialRequest))
-                            {
-                                <p class="text-xs text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-lg p-2">
-                                    <span class="font-medium text-gray-700">Ghi chú:</span>
-                                    <span class="italic"> @item.SpecialRequest</span>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div class="lg:col-span-2">
+                                    <div class="flex flex-col sm:flex-row gap-5">
+                                        <div class="flex-shrink-0">
+                                            <div class="relative">
+                                                <img src="@item.RestaurantImage"
+                                                     alt="@item.RestaurantName"
+                                                     class="w-28 h-28 rounded-2xl object-cover shadow-md border border-gray-200" />
+                                                <div class="absolute -bottom-2 -right-2 bg-white rounded-full p-2 shadow-lg">
+                                                    <i class="fas fa-utensils text-blue-600 text-lg"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="text-xl font-bold text-gray-900 mb-2">@item.RestaurantName</h3>
+
+                                            @if (!string.IsNullOrEmpty(item.RestaurantAddress))
+                                            {
+                                                <div class="flex items-start gap-2 mb-4">
+                                                    <i class="fas fa-map-marker-alt text-red-500 mt-1"></i>
+                                                    <p class="text-gray-600">@item.RestaurantAddress</p>
+                                                </div>
+                                            }
+
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div class="bg-gray-50 rounded-xl p-4">
+                                                    <div class="flex items-center gap-3 mb-1">
+                                                        <div class="p-2 bg-blue-100 rounded-lg">
+                                                            <i class="fas fa-users text-blue-600"></i>
+                                                        </div>
+                                                        <div>
+                                                            <p class="text-sm text-gray-500">Số người</p>
+                                                            <p class="text-lg font-semibold text-gray-900">@item.NumberOfGuests người</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="bg-gray-50 rounded-xl p-4">
+                                                    <div class="flex items-center gap-3 mb-1">
+                                                        <div class="p-2 bg-purple-100 rounded-lg">
+                                                            <i class="fas fa-money-check-alt text-purple-600"></i>
+                                                        </div>
+                                                        <div>
+                                                            <p class="text-sm text-gray-500">Hình thức thanh toán</p>
+                                                            <p class="text-lg font-semibold text-gray-900">@paymentMethodLabel</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            @if (!string.IsNullOrEmpty(item.SpecialRequest))
+                                            {
+                                                <div class="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+                                                    <div class="flex items-start gap-3">
+                                                        <i class="fas fa-sticky-note text-blue-500 mt-1"></i>
+                                                        <div>
+                                                            <p class="text-sm font-medium text-gray-700 mb-1">Ghi chú đặc biệt</p>
+                                                            <p class="text-gray-600">@item.SpecialRequest</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <a href="@Url.Action("RestaurantDetails", "Home", new { id = item.RestaurantId })"
+                                       class="group block w-full">
+                                        <div class="flex items-center justify-center gap-3 px-4 py-3.5 bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 font-semibold rounded-xl border border-gray-200 hover:border-blue-400 hover:from-blue-50 hover:to-blue-50 hover:text-blue-600 transition-all duration-300">
+                                            <i class="fas fa-store-alt text-lg text-blue-500 group-hover:scale-110 transition-transform"></i>
+                                            <span>Chi tiết nhà hàng</span>
+                                            <i class="fas fa-arrow-right ml-auto opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-1 transition-all"></i>
+                                        </div>
+                                    </a>
+
+                                    @if (!isPaid && (item.BookingStatus ?? "").IndexOf("Hủy", StringComparison.OrdinalIgnoreCase) < 0)
+                                    {
+                                        <a href="@Url.Action("Checkout", "ThanhToan", new { bookingId = item.BookingId })"
+                                           class="group block w-full">
+                                            <div class="flex items-center justify-center gap-3 px-4 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300">
+                                                <i class="fas fa-credit-card text-lg text-white"></i>
+                                                <span>Thanh toán cọc</span>
+                                            </div>
+                                        </a>
+                                    }
+                                    else if (isPaid)
+                                    {
+                                        <button type="button"
+                                                class="group w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg hover:from-indigo-600 hover:to-indigo-700 transition-all duration-300"
+                                                onclick="openTicketModal(@item.BookingId)">
+                                            <i class="fas fa-file-invoice text-lg text-white"></i>
+                                            <span>Xem phiếu đặt bàn</span>
+                                        </button>
+                                    }
+
+                                    @if (!isPaid
+                                     && (item.BookingStatus ?? "").IndexOf("Hủy", StringComparison.OrdinalIgnoreCase) < 0
+                                     && item.BookingTime > DateTime.Now)
+                                    {
+                                        using (Html.BeginForm("HuyDatBan", "DatBan", FormMethod.Post, new { @class = "w-full" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            @Html.Hidden("bookingId", item.BookingId)
+
+                                            <button type="submit"
+                                                    onclick="return confirm('Bạn chắc chắn muốn hủy đặt bàn #@item.BookingId không?');"
+                                                    class="group w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg hover:from-red-600 hover:to-red-700 transition-all duration-300">
+                                                <i class="fas fa-times-circle text-lg text-white"></i>
+                                                <span>Hủy đặt bàn</span>
+                                            </button>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TEMPLATE PHIẾU ĐẶT BÀN (ẨN) -->
+                    <div id="ticket-content-@item.BookingId" class="hidden">
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <h2 class="text-2xl font-bold text-gray-900 text-center w-full">Phiếu đặt bàn</h2>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-800 mb-4">
+                                <p><strong>Công ty:</strong> SMART-TABLE</p>
+                                <p><strong>Thu ngân:</strong> Admin-Nhà-Hàng</p>
+
+                                <p><strong>Tên khách hàng:</strong> @(string.IsNullOrEmpty(item.CustomerName) ? "Khách hàng" : item.CustomerName)</p>
+                                <p><strong>Số điện thoại:</strong> @(string.IsNullOrEmpty(item.CustomerPhone) ? "-" : item.CustomerPhone)</p>
+
+                                <p><strong>Nhà hàng:</strong> @item.RestaurantName</p>
+                                <p><strong>Địa chỉ:</strong> @item.RestaurantAddress</p>
+
+                                <p><strong>Số lượng khách:</strong> @item.NumberOfGuests</p>
+                                <p><strong>Thời gian đặt bàn:</strong> @item.BookingTime.ToString("dd/MM/yyyy HH:mm")</p>
+
+                                <p class="md:col-span-2">
+                                    <strong>Yêu cầu đặc biệt:</strong>
+                                    @(string.IsNullOrEmpty(item.SpecialRequest) ? "Không có" : item.SpecialRequest)
                                 </p>
-                            }
+                            </div>
 
-                            @if (!isPaid)
-                            {
-                                <a href="@Url.Action("Checkout", "ThanhToan", new { bookingId = item.BookingId })"
-                                   class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white text-xs md:text-sm font-semibold rounded-lg shadow hover:bg-green-700 transition">
-                                    <i class="fas fa-credit-card"></i> Thanh toán cọc
-                                </a>
-                            }
-                            else
-                            {
-                                <span class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-50 text-green-700 text-xs md:text-sm font-semibold rounded-lg border border-green-100">
-                                    <i class="fas fa-check-circle"></i> Đã thanh toán
+                            <table class="w-full text-sm border border-gray-200 mt-2">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="py-2 px-3 text-left">Đơn hàng</th>
+                                        <th class="py-2 px-3 text-center">Số lượng khách</th>
+                                        <th class="py-2 px-3 text-right">Tiền đặt cọc</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-t">
+                                        <td class="py-2 px-3">
+                                            Đặt bàn tại nhà hàng (@item.RestaurantName)
+                                        </td>
+                                        <td class="py-2 px-3 text-center">
+                                            @item.NumberOfGuests người
+                                        </td>
+                                        <td class="py-2 px-3 text-right">
+                                            @((item.DepositAmount ?? 0m).ToString("#,##0")) đ
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div class="flex justify-end mt-3 text-sm">
+                                <strong>Tổng tiền:&nbsp;</strong>
+                                <span>@((item.DepositAmount ?? 0m).ToString("#,##0")) đ</span>
+                            </div>
+
+                            <p class="mt-2 text-sm">
+                                <strong>Trạng thái đặt bàn:</strong>
+                                <span class="font-semibold text-emerald-600">
+                                    @item.BookingStatus
                                 </span>
-                            }
+                            </p>
+                            <p class="text-sm">
+                                <strong>Trạng thái thanh toán:</strong>
+                                <span class="font-semibold text-emerald-600">
+                                    @item.PaymentStatus
+                                </span>
+                            </p>
 
-                            <a href="@Url.Action("Details", "PublicRestaurant", new { id = item.BookingId })"
-                               class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-blue-600 text-xs md:text-sm font-semibold rounded-lg border border-blue-100 hover:bg-blue-50 transition">
-                                <i class="fas fa-eye"></i> Xem nhà hàng
-                            </a>
+                            <div class="mt-4 text-xs text-gray-600 leading-relaxed">
+                                <p>Cảm ơn và hẹn gặp lại!</p>
+                                <p class="mt-1 font-semibold">
+                                    Nếu bạn muốn hủy đặt bàn, vui lòng liên hệ trực tiếp qua hotline:
+                                    0941326591 hoặc Facebook: Phạm Huỳnh Duy Phong
+                                </p>
+                            </div>
                         </div>
                     </div>
                 }
             </div>
         }
-
     </div>
 </div>
+
+<!-- Modal hiển thị phiếu đặt bàn -->
+<div id="ticket-modal"
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50 p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
+        <button type="button"
+                class="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-red-100 hover:text-red-600 transition"
+                onclick="closeTicketModal()">
+            <i class="fas fa-times"></i>
+        </button>
+        <div id="ticket-modal-body"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openTicketModal(id) {
+            const modal = document.getElementById('ticket-modal');
+            const body = document.getElementById('ticket-modal-body');
+            const template = document.getElementById('ticket-content-' + id);
+
+            if (!template) return;
+
+            body.innerHTML = template.innerHTML;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTicketModal() {
+            const modal = document.getElementById('ticket-modal');
+            const body = document.getElementById('ticket-modal-body');
+
+            body.innerHTML = '';
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        document.getElementById('ticket-modal').addEventListener('click', function (e) {
+            if (e.target.id === 'ticket-modal') {
+                closeTicketModal();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeTicketModal();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const filterForm = document.querySelector('form[method="get"]');
+            if (!filterForm) return;
+
+            const filterSelects = filterForm.querySelectorAll('select');
+            filterSelects.forEach(select => {
+                select.addEventListener('change', function () {
+                    filterForm.submit();
+                });
+            });
+        });
+    </script>
+}

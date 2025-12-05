@@ -3,7 +3,6 @@
     ViewBag.Title = "Chỉnh sửa thông tin nhà hàng";
     Layout = "~/Views/Shared/_BusinessLayout.cshtml";
 
-    // Danh sách tiện ích cho đối tác chỉnh
     List<string> availableAmenities = new List<string>
 {
         "Karaoke riêng", "Karaoke chung", "Tivi/Máy chiếu", "Loa mic",
@@ -16,8 +15,7 @@
 
     var latInit = Model.latitude.HasValue
         ? Model.latitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)
-        : "10.8231"; // Default HCM
-
+        : "10.8231"; 
     var lngInit = Model.longitude.HasValue
         ? Model.longitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)
         : "106.6297";
