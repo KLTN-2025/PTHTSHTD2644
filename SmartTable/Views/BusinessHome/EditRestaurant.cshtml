@@ -15,7 +15,7 @@
 
     var latInit = Model.latitude.HasValue
         ? Model.latitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)
-        : "10.8231"; 
+        : "10.8231";
     var lngInit = Model.longitude.HasValue
         ? Model.longitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)
         : "106.6297";
@@ -61,298 +61,420 @@
         @Html.AntiForgeryToken()
         @Html.HiddenFor(m => m.restaurant_id)
 
-        <div class="space-y-8 bg-white p-6 rounded-lg shadow-md border border-gray-100">
+<div class="space-y-8 bg-white p-6 rounded-lg shadow-md border border-gray-100">
+    <!-- 1. Thông tin cơ bản -->
+    <div class="grid md:grid-cols-2 gap-6 border-b pb-6">
+        <h3 class="md:col-span-2 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
+            1. Thông tin cơ bản
+        </h3>
 
-            <!-- 1. Thông tin cơ bản -->
-            <div class="grid md:grid-cols-2 gap-6 border-b pb-6">
-                <h3 class="md:col-span-2 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
-                    1. Thông tin cơ bản
-                </h3>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Tên Nhà hàng</label>
+            @Html.TextBoxFor(m => m.name, new { @class = "w-full p-2 border rounded-lg", required = "required" })
+        </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Tên Nhà hàng</label>
-                    @Html.TextBoxFor(m => m.name, new { @class = "w-full p-2 border rounded-lg", required = "required" })
-                    @Html.ValidationMessageFor(m => m.name, "", new { @class = "text-red-600 text-xs" })
-                </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Chủ sở hữu</label>
+            @Html.TextBox(
+                "OwnerEmailDisplay",
+                Model.Users != null ? (Model.Users.full_name + " - " + Model.Users.email) : "Chưa gán",
+                new { @class = "w-full p-2 border rounded-lg bg-gray-100", @readonly = "readonly" }
+            )
+        </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Website</label>
-                    @Html.TextBoxFor(m => m.Website, new { @class = "w-full p-2 border rounded-lg", placeholder = "https://..." })
-                </div>
+        <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700">Địa chỉ</label>
+            @Html.TextBoxFor(m => m.address, new { @class = "w-full p-2 border rounded-lg", required = "required" })
+        </div>
 
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700">Địa chỉ</label>
-                    @Html.TextBoxFor(m => m.address, new { @class = "w-full p-2 border rounded-lg", required = "required" })
-                    @Html.ValidationMessageFor(m => m.address, "", new { @class = "text-red-600 text-xs" })
-                </div>
+        <!-- ✅ THÊM THÀNH PHỐ & KHU VỰC -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Thành phố</label>
+            @Html.TextBoxFor(m => m.City, new { @class = "w-full p-2 border rounded-lg", placeholder = "VD: TP. Hồ Chí Minh, Hà Nội..." })
+        </div>
 
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700">Ảnh đại diện</label>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Khu vực / Quận</label>
+            @Html.TextBoxFor(m => m.Area, new { @class = "w-full p-2 border rounded-lg", placeholder = "VD: Quận 1, Quận 3, Phú Nhuận..." })
+        </div>
+        <!-- ✅ HẾT PHẦN THÊM -->
 
-                    @Html.TextBoxFor(m => m.Image, new
-                    {
-                        @class = "w-full p-2 border rounded-lg mb-2",
-                        placeholder = "Dán URL ảnh (nếu bạn có link sẵn)"
-                    })
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Website</label>
+            @Html.TextBoxFor(m => m.Website, new { @class = "w-full p-2 border rounded-lg", placeholder = "https://..." })
+        </div>
 
-                    <input type="file" name="mainImage" class="w-full p-2 border rounded-lg" />
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Ngày tạo</label>
+            <input type="text"
+                   class="w-full p-2 border rounded-lg bg-gray-100"
+                   value="@(Model.created_at.HasValue ? Model.created_at.Value.ToString("dd/MM/yyyy HH:mm") : "")"
+                   readonly />
+        </div>
 
-                    <small class="text-gray-500 block mt-1">Ảnh hiện tại:</small>
-                    @if (!string.IsNullOrEmpty(Model.Image))
-                    {
-                        <img src="@Model.Image" class="w-32 h-20 object-cover mt-2 rounded border" />
-                    }
-                    else
-                    {
-                        <span class="text-xs text-gray-400">Chưa có ảnh.</span>
-                    }
-                </div>
-            </div>
+        <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700">Ảnh đại diện</label>
+            <input type="file" name="uploadedImage" class="w-full p-2 border rounded-lg" />
+            @Html.HiddenFor(m => m.Image)
+            @if (!string.IsNullOrEmpty(Model.Image))
+            {
+                <img src="@Model.Image" class="w-32 h-20 object-cover mt-2 rounded border" />
+            }
+        </div>
+    </div>
 
-            <!-- 2. Thông tin liên hệ & Hợp tác -->
-            <div class="grid md:grid-cols-3 gap-6 border-b pb-6">
-                <h3 class="md:col-span-3 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
-                    2. Thông tin liên hệ & Hợp tác
-                </h3>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Tên người liên hệ</label>
-                    @Html.TextBoxFor(m => m.ContactName, new { @class = "w-full p-2 border rounded-lg", placeholder = "VD: Anh Phong" })
-                </div>
+    <!-- 2. Thông tin liên hệ & Hợp tác -->
+    <div class="grid md:grid-cols-3 gap-6 border-b pb-6">
+        <h3 class="md:col-span-3 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
+            2. Thông tin liên hệ & Hợp tác
+        </h3>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Số điện thoại liên hệ</label>
-                    @Html.TextBoxFor(m => m.ContactPhone, new { @class = "w-full p-2 border rounded-lg", placeholder = "VD: 0912..." })
-                </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Tên người liên hệ</label>
+            @Html.TextBoxFor(m => m.ContactName, new { @class = "w-full p-2 border rounded-lg", placeholder = "VD: Anh Phong" })
+        </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Vai trò người liên hệ</label>
-                    @Html.TextBoxFor(m => m.ContactRole, new { @class = "w-full p-2 border rounded-lg", placeholder = "Chủ quán, Quản lý..." })
-                </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Số điện thoại liên hệ</label>
+            @Html.TextBoxFor(m => m.ContactPhone, new { @class = "w-full p-2 border rounded-lg", placeholder = "VD: 0912..." })
+        </div>
 
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700">Mục tiêu hợp tác</label>
-                    @Html.TextAreaFor(m => m.PartnershipGoal, new { @class = "w-full p-2 border rounded-lg", rows = 3 })
-                </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Vai trò người liên hệ</label>
+            @Html.TextBoxFor(m => m.ContactRole, new { @class = "w-full p-2 border rounded-lg", placeholder = "Chủ quán, Quản lý..." })
+        </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Gói dịch vụ / thỏa thuận</label>
-                    @Html.TextBoxFor(m => m.ServicePackage, new { @class = "w-full p-2 border rounded-lg" })
-                </div>
-            </div>
+        <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700">Mục tiêu hợp tác</label>
+            @Html.TextAreaFor(m => m.PartnershipGoal, new { @class = "w-full p-2 border rounded-lg", rows = 3 })
+        </div>
 
-            <!-- 3. Dịch vụ & Ẩm thực -->
-            <div class="grid md:grid-cols-2 gap-6 border-b pb-6">
-                <h3 class="md:col-span-2 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
-                    3. Dịch vụ & Ẩm thực
-                </h3>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Gói dịch vụ / thỏa thuận</label>
+            @Html.TextBoxFor(m => m.ServicePackage, new { @class = "w-full p-2 border rounded-lg" })
+        </div>
+    </div>
 
-                <div>
-                    <label class="block text-sm">Phong cách ẩm thực</label>
-                    @Html.TextBoxFor(m => m.CuisineStyle, new { @class = "w-full p-2 border rounded-lg" })
-                </div>
+    <!-- 3. Dịch vụ & Ẩm thực -->
+    <div class="grid md:grid-cols-2 gap-6 border-b pb-6">
+        <h3 class="md:col-span-2 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
+            3. Dịch vụ & Ẩm thực
+        </h3>
 
-                <div>
-                    <label class="block text-sm">Loại hình (nhà hàng, buffet, quán nhậu...)</label>
-                    @Html.TextBoxFor(m => m.ServiceDescription, new { @class = "w-full p-2 border rounded-lg" })
-                </div>
+        <div>
+            <label class="block text-sm">Phong cách ẩm thực</label>
+            @Html.TextBoxFor(m => m.CuisineStyle, new { @class = "w-full p-2 border rounded-lg" })
+        </div>
 
-                <div>
-                    <label class="block text-sm">Kiểu phục vụ (gọi món, buffet, set menu,...)</label>
-                    @Html.TextBoxFor(m => m.ServiceTypes, new { @class = "w-full p-2 border rounded-lg" })
-                </div>
+        <div>
+            <label class="block text-sm">Loại hình (nhà hàng, buffet, quán nhậu...)</label>
+            @Html.TextBoxFor(m => m.ServiceDescription, new { @class = "w-full p-2 border rounded-lg" })
+        </div>
 
-                <div>
-                    <label class="block text-sm">Hóa đơn trung bình</label>
-                    @Html.TextBoxFor(m => m.AverageBill, new { @class = "w-full p-2 border rounded-lg" })
-                </div>
+        <div>
+            <label class="block text-sm">Kiểu phục vụ (gọi món, buffet, set menu,...)</label>
+            @Html.TextBoxFor(m => m.ServiceTypes, new { @class = "w-full p-2 border rounded-lg" })
+        </div>
 
-                <div class="md:col-span-2">
-                    <label class="block text-sm">Món đặc sắc</label>
-                    @Html.TextAreaFor(m => m.SignatureDishes, new { @class = "w-full p-2 border rounded-lg", rows = 3 })
-                </div>
-            </div>
+        <div>
+            <label class="block text-sm">Hóa đơn trung bình</label>
+            @Html.TextBoxFor(m => m.AverageBill, new { @class = "w-full p-2 border rounded-lg" })
+        </div>
 
-            <!-- 4. Vận hành & Giờ giấc -->
-            <div class="grid md:grid-cols-3 gap-6 border-b pb-6">
-                <h3 class="md:col-span-3 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
-                    4. Vận hành & Giờ giấc
-                </h3>
+        <div class="md:col-span-2">
+            <label class="block text-sm">Món đặc sắc</label>
+            @Html.TextAreaFor(m => m.SignatureDishes, new { @class = "w-full p-2 border rounded-lg", rows = 3 })
+        </div>
+    </div>
 
-                <div>
-                    <label class="block text-sm">Giờ mở cửa</label>
-                    @Html.TextBoxFor(m => m.opening_hours, new { @class = "w-full p-2 border rounded-lg", placeholder = "10:00 - 22:00" })
-                </div>
+    <!-- 4. Vận hành & Giờ giấc -->
+    <div class="grid md:grid-cols-3 gap-6 border-b pb-6">
+        <h3 class="md:col-span-3 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
+            4. Vận hành & Giờ giấc
+        </h3>
 
-                <div>
-                    <label class="block text-sm">Số bàn tối đa</label>
-                    @Html.TextBoxFor(m => m.max_tables, new { @class = "w-full p-2 border rounded-lg", type = "number", min = "1" })
-                </div>
+        <div>
+            <label class="block text-sm">Giờ mở cửa</label>
+            @Html.TextBoxFor(m => m.opening_hours, new { @class = "w-full p-2 border rounded-lg", placeholder = "10:00 - 22:00" })
+        </div>
 
-                <div>
-                    <label class="block text-sm">Số tầng / khu vực</label>
-                    @Html.TextBoxFor(m => m.FloorCount, new { @class = "w-full p-2 border rounded-lg" })
-                </div>
+        <div>
+            <label class="block text-sm">Số bàn tối đa</label>
+            @Html.TextBoxFor(m => m.max_tables, new { @class = "w-full p-2 border rounded-lg", type = "number", min = "1" })
+        </div>
 
-                <div>
-                    <label class="block text-sm">Khung giờ đông khách</label>
-                    @Html.TextBoxFor(m => m.BusyHours, new { @class = "w-full p-2 border rounded-lg" })
-                </div>
+        <div>
+            <label class="block text-sm">Số tầng / khu vực</label>
+            @Html.TextBoxFor(m => m.FloorCount, new { @class = "w-full p-2 border rounded-lg" })
+        </div>
 
-                <div>
-                    <label class="block text-sm">Khung giờ vắng</label>
-                    @Html.TextBoxFor(m => m.SlowHours, new { @class = "w-full p-2 border rounded-lg" })
-                </div>
+        <div>
+            <label class="block text-sm">Khung giờ đông khách</label>
+            @Html.TextBoxFor(m => m.BusyHours, new { @class = "w-full p-2 border rounded-lg" })
+        </div>
 
-                <div>
-                    <label class="block text-sm">Số phòng riêng</label>
-                    @Html.TextBoxFor(m => m.PrivateRoomCount, new { @class = "w-full p-2 border rounded-lg" })
-                </div>
+        <div>
+            <label class="block text-sm">Khung giờ vắng</label>
+            @Html.TextBoxFor(m => m.SlowHours, new { @class = "w-full p-2 border rounded-lg" })
+        </div>
 
-                <div>
-                    <label class="block text-sm">Kiểu chỗ ngồi</label>
-                    @Html.TextBoxFor(m => m.SeatingType, new { @class = "w-full p-2 border rounded-lg" })
-                </div>
+        <div>
+            <label class="block text-sm">Số phòng riêng</label>
+            @Html.TextBoxFor(m => m.PrivateRoomCount, new { @class = "w-full p-2 border rounded-lg" })
+        </div>
 
-                <div class="md:col-span-2">
-                    <label class="block text-sm">Địa điểm / landmark gần đó</label>
-                    @Html.TextBoxFor(m => m.NearbyLandmark, new { @class = "w-full p-2 border rounded-lg" })
-                </div>
-            </div>
+        <div>
+            <label class="block text-sm">Kiểu chỗ ngồi</label>
+            @Html.TextBoxFor(m => m.SeatingType, new { @class = "w-full p-2 border rounded-lg" })
+        </div>
 
-            <!-- 5. Vị trí bản đồ (nếu cho phép chỉnh) -->
-            <div class="border-b pb-6">
-                <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
-                    5. Vị trí trên bản đồ
-                </h3>
+        <div class="md:col-span-2">
+            <label class="block text-sm">Địa điểm / landmark gần đó</label>
+            @Html.TextBoxFor(m => m.NearbyLandmark, new { @class = "w-full p-2 border rounded-lg" })
+        </div>
+    </div>
 
-                <div class="grid md:grid-cols-2 gap-6 mb-4">
-                    <div>
-                        <label class="block text-sm font-bold text-blue-600">Latitude (Vĩ độ)</label>
-                        <input type="text" name="latitudeStr" id="latitudeStr"
-                               value="@latInit"
-                               class="w-full p-2 border border-blue-300 rounded-lg bg-blue-50 font-mono"
-                               readonly />
-                        <small class="text-gray-500">Tự động cập nhật khi kéo marker.</small>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-blue-600">Longitude (Kinh độ)</label>
-                        <input type="text" name="longitudeStr" id="longitudeStr"
-                               value="@lngInit"
-                               class="w-full p-2 border border-blue-300 rounded-lg bg-blue-50 font-mono"
-                               readonly />
-                        <small class="text-gray-500">Tự động cập nhật khi kéo marker.</small>
-                    </div>
-                </div>
+    <!-- 5. Vị trí trên bản đồ -->
+    <div class="border-b pb-6">
+        <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
+            5. Vị trí trên bản đồ
+        </h3>
 
-                <div id="edit-map"></div>
-
-                <p class="text-center text-sm text-gray-500 mt-2 italic">
-                    <i class="fas fa-hand-pointer"></i> Kéo thả biểu tượng màu xanh hoặc click lên bản đồ để chọn vị trí.
-                </p>
-            </div>
-
-            <!-- 6. Tiện ích & mô tả -->
-            <div class="pt-6 border-b pb-6">
-                <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
-                    6. Tiện ích & mô tả
-                </h3>
-
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                    @foreach (var amenity in availableAmenities)
-                    {
-                        bool isChecked = currentAmenities.Contains(amenity);
-                        <label class="flex items-center text-sm">
-                            @Html.CheckBox("AmenitiesCheckbox", isChecked, new { @value = amenity, @class = "mr-2 h-4 w-4" })
-                            @amenity
-                        </label>
-                    }
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm">Tiện ích khác</label>
-                    @Html.TextBoxFor(m => m.AmenitiesOther, new { @class = "w-full p-2 border rounded-lg" })
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm">Mô tả không gian</label>
-                    @Html.TextAreaFor(m => m.SpaceDescription, new { @class = "w-full p-2 border rounded-lg", rows = 3 })
-                </div>
-
-                <div>
-                    <label class="block text-sm">Mô tả chi tiết</label>
-                    @Html.TextAreaFor(m => m.description, new { @class = "w-full p-2 border rounded-lg", rows = 4 })
-                </div>
-            </div>
-
-            <!-- 7. Ảnh view (Gallery) -->
-            <div class="pt-6 border-b pb-6">
-                <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
-                    7. Ảnh view nhà hàng
-                </h3>
-
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Thêm ảnh view (có thể chọn nhiều)
+        <!-- Địa chỉ + nút lấy tọa độ -->
+        <div class="grid md:grid-cols-3 gap-6 mb-4">
+            <div class="md:col-span-2">
+                <label class="block text-sm font-bold text-gray-700">
+                    Địa chỉ (dùng để tìm tọa độ)
                 </label>
-                <input type="file" name="galleryImages" multiple
-                       class="w-full p-2 border rounded-lg" />
-                <p class="text-xs text-gray-500 mt-1">
-                    Ảnh mới sẽ được thêm vào thư viện. Nếu cần xóa ảnh cũ, vui lòng liên hệ quản trị viên.
-                </p>
+                <div class="mt-1 flex gap-2">
+                    <input type="text"
+                           id="addressInput"
+                           name="address"
+                           value="@Model.address"
+                           placeholder="Nhập địa chỉ chi tiết: số nhà, đường, phường, quận, thành phố..."
+                           class="flex-1 p-2 border border-gray-300 rounded-lg text-sm" />
 
-                @if (Model.RestaurantImages != null && Model.RestaurantImages.Any())
-                {
-                    <div class="grid md:grid-cols-4 gap-3 mt-4">
-                        @foreach (var img in Model.RestaurantImages)
-                        {
-                            <div class="border rounded-lg overflow-hidden bg-white shadow-sm">
-                                <img src="@img.image_url" class="w-full h-24 object-cover" />
-                            </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <p class="text-xs text-gray-400 mt-2">Chưa có ảnh view nào.</p>
-                }
-            </div>
-
-            <!-- Nút -->
-            <div class="pt-6 border-t mt-6 flex justify-between">
-                <a href="@Url.Action("Profile", "BusinessHome")"
-                   class="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition inline-flex items-center">
-                    <i class="fas fa-arrow-left mr-2"></i> Quay lại hồ sơ
-                </a>
-
-                <div class="space-x-3">
-                    <a href="@Url.Action("Profile", "BusinessHome")"
-                       class="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition">
-                        Hủy bỏ
-                    </a>
-                    <button type="submit"
-                            class="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition">
-                        <i class="fas fa-save mr-2"></i> Lưu thay đổi
+                    <button type="button"
+                            onclick="getLatLngFromAddress()"
+                            class="px-3 py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+                        Lấy tọa độ
                     </button>
                 </div>
+                <p class="text-xs text-gray-500 mt-1">
+                    Hệ thống sẽ dùng địa chỉ này để tìm tọa độ (lat/lng) và cập nhật marker trên bản đồ.
+                </p>
+            </div>
+
+            <!-- Lat / Lng -->
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-bold text-blue-600">Latitude (Vĩ độ)</label>
+                    <input type="text" name="latitudeStr" id="latitudeStr"
+                           value="@latInit"
+                           class="w-full p-2 border border-blue-300 rounded-lg bg-blue-50 font-mono text-sm"
+                           readonly />
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-blue-600">Longitude (Kinh độ)</label>
+                    <input type="text" name="longitudeStr" id="longitudeStr"
+                           value="@lngInit"
+                           class="w-full p-2 border border-blue-300 rounded-lg bg-blue-50 font-mono text-sm"
+                           readonly />
+                </div>
+                <p class="text-[11px] text-gray-500">
+                    Tọa độ sẽ tự cập nhật khi kéo marker hoặc khi bấm “Lấy tọa độ”.
+                </p>
             </div>
         </div>
+
+        <div id="edit-map" class="h-80 rounded-xl border border-gray-200 overflow-hidden"></div>
+
+        <p class="text-center text-sm text-gray-500 mt-2 italic">
+            <i class="fas fa-hand-pointer"></i>
+            Kéo thả biểu tượng trên bản đồ hoặc nhập địa chỉ rồi bấm “Lấy tọa độ” để chọn vị trí.
+        </p>
+    </div>
+
+
+    <!-- 6. Tiện ích & mô tả -->
+    <div class="pt-6 border-b pb-6">
+        <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
+            6. Tiện ích & mô tả
+        </h3>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+            @foreach (var amenity in availableAmenities)
+            {
+                bool isChecked = currentAmenities.Contains(amenity);
+                <label class="flex items-center text-sm">
+                    @Html.CheckBox("AmenitiesCheckbox", isChecked, new { @value = amenity, @class = "mr-2 h-4 w-4" })
+                    @amenity
+                </label>
+            }
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm">Tiện ích khác</label>
+            @Html.TextBoxFor(m => m.AmenitiesOther, new { @class = "w-full p-2 border rounded-lg" })
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm">Mô tả không gian</label>
+            @Html.TextAreaFor(m => m.SpaceDescription, new { @class = "w-full p-2 border rounded-lg", rows = 3 })
+        </div>
+
+        <div>
+            <label class="block text-sm">Mô tả chi tiết</label>
+            @Html.TextAreaFor(m => m.description, new { @class = "w-full p-2 border rounded-lg", rows = 4 })
+        </div>
+    </div>
+
+    <!-- 7. Ảnh view (Gallery) -->
+    <div class="pt-6 border-b pb-6">
+        <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
+            7. Ảnh view nhà hàng
+        </h3>
+
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+            Thêm ảnh view (có thể chọn nhiều)
+        </label>
+        <input type="file" name="viewImages" multiple
+               class="w-full p-2 border rounded-lg" />
+        <p class="text-xs text-gray-500 mt-1">
+            Ảnh mới sẽ được thêm vào thư viện. Nếu cần xóa ảnh cũ, vui lòng liên hệ quản trị viên.
+        </p>
+
+        @if (Model.RestaurantImages != null && Model.RestaurantImages.Any())
+        {
+            <div class="grid md:grid-cols-4 gap-3 mt-4">
+                @foreach (var img in Model.RestaurantImages)
+                {
+                    <div class="border rounded-lg overflow-hidden bg-white shadow-sm">
+                        <img src="@img.image_url" class="w-full h-24 object-cover" />
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-xs text-gray-400 mt-2">Chưa có ảnh view nào.</p>
+        }
+    </div>
+
+    <!-- Nút -->
+    <div class="pt-6 border-t mt-6 flex justify-between">
+        <a href="@Url.Action("Profile", "BusinessHome")"
+           class="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition inline-flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i> Quay lại hồ sơ
+        </a>
+
+        <div class="space-x-3">
+            <a href="@Url.Action("Profile", "BusinessHome")"
+               class="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition">
+                Hủy bỏ
+            </a>
+            <button type="submit"
+                    class="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition">
+                <i class="fas fa-save mr-2"></i> Lưu thay đổi
+            </button>
+        </div>
+    </div>
+</div>
     }
 </div>
-
-@section scripts {
+@section Scripts {
     @Scripts.Render("~/bundles/jqueryval")
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
+        // Biến toàn cục để dùng lại trong hàm lấy tọa độ
+        var editMap;
+        var editMarker;
+
+        // Cập nhật ô input lat / lng
+        function updateLatLngInputs(lat, lng) {
+            var latInput = document.getElementById('latitudeStr');
+            var lngInput = document.getElementById('longitudeStr');
+
+            if (latInput) latInput.value = parseFloat(lat).toFixed(7);
+            if (lngInput) lngInput.value = parseFloat(lng).toFixed(7);
+        }
+
+        // Lấy tọa độ từ địa chỉ (Nominatim)
+        async function getLatLngFromAddress() {
+            var addressInput = document.getElementById('addressInput');
+            if (!addressInput) {
+                alert('Không tìm thấy ô địa chỉ.');
+                return;
+            }
+
+            var address = addressInput.value.trim();
+            if (!address) {
+                alert('Vui lòng nhập địa chỉ trước.');
+                return;
+            }
+
+            var query = encodeURIComponent(address + ', Việt Nam');
+            var url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + query;
+
+            try {
+                const res = await fetch(url, {
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!res.ok) {
+                    alert('Không gọi được dịch vụ định vị. Vui lòng thử lại sau.');
+                    return;
+                }
+
+                const data = await res.json();
+                if (!data || data.length === 0) {
+                    alert('Không tìm thấy tọa độ phù hợp cho địa chỉ này.');
+                    return;
+                }
+
+                var first = data[0];
+                var lat = parseFloat(first.lat);
+                var lng = parseFloat(first.lon);
+
+                if (isNaN(lat) || isNaN(lng)) {
+                    alert('Tọa độ trả về không hợp lệ.');
+                    return;
+                }
+
+                // Cập nhật input
+                updateLatLngInputs(lat, lng);
+
+                // Cập nhật map + marker nếu đã khởi tạo
+                if (editMap && editMarker) {
+                    editMarker.setLatLng([lat, lng]);
+                    editMap.setView([lat, lng], 16);
+                }
+
+                alert('Đã lấy tọa độ: ' + lat.toFixed(7) + ', ' + lng.toFixed(7));
+            } catch (e) {
+                console.error(e);
+                alert('Có lỗi xảy ra khi lấy tọa độ.');
+            }
+        }
+
+        // Khởi tạo Leaflet map
         document.addEventListener('DOMContentLoaded', function () {
             var lat = @latInit;
             var lng = @lngInit;
 
-            var map = L.map('edit-map').setView([lat, lng], 15);
+            // Fallback nếu chưa có tọa độ
+            if (isNaN(lat) || isNaN(lng)) {
+                lat = 10.776889;   // HCM
+                lng = 106.700806;
+            }
+
+            editMap = L.map('edit-map').setView([lat, lng], 15);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap'
-            }).addTo(map);
+            }).addTo(editMap);
 
             var RestaurantIcon = L.icon({
                 iconUrl: '@Url.Content("~/Content/Images/restaurantIcon.png")',
@@ -361,25 +483,25 @@
                 popupAnchor: [0, -40]
             });
 
-            var marker = L.marker([lat, lng], {
+            editMarker = L.marker([lat, lng], {
                 draggable: true,
                 icon: RestaurantIcon
-            }).addTo(map);
+            }).addTo(editMap);
 
-            function updateLatLngInputs(position) {
-                document.getElementById('latitudeStr').value = position.lat.toFixed(7);
-                document.getElementById('longitudeStr').value = position.lng.toFixed(7);
-            }
+            // Sync ban đầu
+            updateLatLngInputs(lat, lng);
 
-            marker.on('dragend', function () {
-                var position = marker.getLatLng();
-                updateLatLngInputs(position);
-                map.panTo(position);
+            // Kéo marker
+            editMarker.on('dragend', function () {
+                var position = editMarker.getLatLng();
+                updateLatLngInputs(position.lat, position.lng);
+                editMap.panTo(position);
             });
 
-            map.on('click', function (e) {
-                marker.setLatLng(e.latlng);
-                updateLatLngInputs(e.latlng);
+            // Click lên map
+            editMap.on('click', function (e) {
+                editMarker.setLatLng(e.latlng);
+                updateLatLngInputs(e.latlng.lat, e.latlng.lng);
             });
         });
     </script>

@@ -1,12 +1,13 @@
 ﻿using SmartTable.Filters;
 using SmartTable.Models;
-using SmartTable.Models.ViewModels;   // <-- THÊM DÒNG NÀY
+using SmartTable.Models.ViewModels;   
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Mvc;
 
@@ -198,8 +199,8 @@ namespace SmartTable.Controllers
             string latitudeStr,
             string longitudeStr,
             string[] AmenitiesCheckbox,
-            HttpPostedFileBase uploadedImage,             
-            IEnumerable<HttpPostedFileBase> viewImages,    
+            HttpPostedFileBase uploadedImage,
+            IEnumerable<HttpPostedFileBase> viewImages,
             int[] DeleteImages)
         {
             if (!IsBusiness())
@@ -391,8 +392,8 @@ namespace SmartTable.Controllers
             }
 
             var bookingList = query
-                .OrderByDescending(b => b.booking_time)   
-                .ThenByDescending(b => b.booking_id)      
+                .OrderByDescending(b => b.booking_time)
+                .ThenByDescending(b => b.booking_id)
                 .ToList();
 
             var list = new List<BusinessBookingItemViewModel>();
@@ -477,6 +478,7 @@ namespace SmartTable.Controllers
             TempData["SuccessMessage"] = $"Đã hủy đặt bàn #{booking.booking_id}.";
             return RedirectToAction("Bookings");
         }
+
         // [POST] /BusinessHome/ConfirmPayment
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -510,7 +512,7 @@ namespace SmartTable.Controllers
                 lastPayment = new Payments
                 {
                     booking_id = booking.booking_id,
-                    amount = 0, 
+                    amount = 0,
                     payment_method = "Chuyển khoản / Doanh nghiệp xác nhận",
                     status = "Đã thanh toán (doanh nghiệp xác nhận)",
                     transaction_id = Guid.NewGuid().ToString()
@@ -530,14 +532,18 @@ namespace SmartTable.Controllers
             return RedirectToAction("Bookings");
         }
 
-        // ================== DISPOSE ==================
-        protected override void Dispose(bool disposing)
+        // ================== THỐNG KÊ ==================
+
+        private const decimal DEPOSIT_PER_GUEST = 50000m;
+
+        private decimal CalculateDeposit(Bookings b)
         {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
+            if (b == null) return 0m;
+
+            int guests = b.number_of_guests;   
+            if (guests <= 0) return 0m;
+
+            return guests * DEPOSIT_PER_GUEST;
         }
 
         [HttpGet]
@@ -552,59 +558,134 @@ namespace SmartTable.Controllers
 
             var bookings = db.Bookings
                              .Include(b => b.Restaurants)
-                             .Include(b => b.Payments)
+                             .Include(b => b.Payments) 
                              .Where(b => b.Restaurants != null &&
                                          b.Restaurants.user_id == userId.Value)
                              .ToList();
 
+            // Chuẩn hoá dữ liệu cho từng booking
+            var bookingStats = bookings.Select(b => new
+            {
+                Booking = b,
+                Deposit = CalculateDeposit(b),                         
+                PreOrder = ExtractPreOrderTotal(b.special_request)   
+            }).ToList();
+
             var vm = new StatisticsViewModel();
 
-            vm.TotalBookings = bookings.Count;
+            // 1. Tổng số lượt đặt
+            vm.TotalBookings = bookingStats.Count;
 
-            var paidPayments = bookings
-                .SelectMany(b => b.Payments)
-                .Where(p => !string.IsNullOrEmpty(p.status) &&
-                            (p.status.Contains("Đã thanh toán") ||
-                             p.status.Contains("VNPAY")));
+            // 2. Tổng tiền cọc
+            vm.TotalDeposit = bookingStats
+                .Select(x => (decimal?)x.Deposit)
+                .Sum() ?? 0m;
 
-            vm.TotalDeposit = paidPayments
-                .Select(p => (decimal?)p.amount)
-                .Sum() ?? 0;
+            // 3. Tổng tiền món đặt trước
+            vm.TotalPreOrderAmount = bookingStats
+                .Select(x => (decimal?)x.PreOrder)
+                .Sum() ?? 0m;
 
-            vm.RestaurantStats = bookings
-                .GroupBy(b => new { b.restaurant_id, b.Restaurants.name })
+            // 4. Thống kê theo nhà hàng
+            vm.RestaurantStats = bookingStats
+                .GroupBy(x => new { x.Booking.restaurant_id, x.Booking.Restaurants.name })
                 .Select(g => new RestaurantStatistics
                 {
                     RestaurantId = g.Key.restaurant_id ?? 0,
                     RestaurantName = g.Key.name,
                     BookingCount = g.Count(),
-                    DepositAmount = g.SelectMany(b => b.Payments)
-                                     .Where(p => !string.IsNullOrEmpty(p.status) &&
-                                                 (p.status.Contains("Đã thanh toán") ||
-                                                  p.status.Contains("VNPAY")))
-                                     .Select(p => (decimal?)p.amount)
-                                     .Sum() ?? 0
+                    DepositAmount = g.Select(x => (decimal?)x.Deposit).Sum() ?? 0m,
+                    PreOrderAmount = g.Select(x => (decimal?)x.PreOrder).Sum() ?? 0m
                 })
-                .OrderByDescending(r => r.BookingCount) 
+                .OrderByDescending(r => r.BookingCount)
                 .ToList();
 
-            vm.DailyStats = bookings
-            .GroupBy(b => b.booking_time.Date) 
-            .Select(g => new DailyStatistics
-            {
-                Date = g.Key,                     
-                BookingCount = g.Count(),
-                DepositAmount = g.SelectMany(b => b.Payments)
-                                 .Where(p => !string.IsNullOrEmpty(p.status) &&
-                                             (p.status.Contains("Đã thanh toán") ||
-                                              p.status.Contains("VNPAY")))
-                                 .Select(p => (decimal?)p.amount)
-                                 .Sum() ?? 0
-            })
-            .OrderByDescending(d => d.Date)
-            .ToList();
+            // 5. Thống kê theo ngày
+            vm.DailyStats = bookingStats
+                .GroupBy(x => x.Booking.booking_time.Date)
+                .Select(g => new DailyStatistics
+                {
+                    Date = g.Key,
+                    BookingCount = g.Count(),
+                    DepositAmount = g.Select(x => (decimal?)x.Deposit).Sum() ?? 0m,
+                    PreOrderAmount = g.Select(x => (decimal?)x.PreOrder).Sum() ?? 0m
+                })
+                .OrderByDescending(d => d.Date)
+                .ToList();
 
-            return View(vm);  
+            return View(vm);
+        }
+
+        // Parse tổng tiền món đặt trước từ 
+        private decimal ExtractPreOrderTotal(string specialRequest)
+        {
+            if (string.IsNullOrWhiteSpace(specialRequest))
+                return 0m;
+
+            try
+            {
+                var rawText = specialRequest.Trim();
+
+                var lines = rawText
+                    .Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
+                string[] keywords =
+                {
+            "tổng tiền món",
+            "tien mon",
+            "tong tien mon",
+            "món đặt trước",
+            "mon dat truoc",
+            "tổng món",
+            "tong mon"
+        };
+
+                string totalLine = null;
+
+                foreach (var line in lines)
+                {
+                    var lower = line.ToLowerInvariant();
+                    if (keywords.Any(k => lower.Contains(k)))
+                    {
+                        totalLine = line;
+                        break;
+                    }
+                }
+
+                string textForNumber = totalLine ?? rawText;
+
+                var matches = Regex.Matches(textForNumber, @"\d[\d\.]*");
+                if (matches.Count == 0)
+                    return 0m;
+
+                decimal maxValue = 0m;
+
+                foreach (Match m in matches)
+                {
+                    var s = m.Value.Replace(".", "").Replace(",", "");
+                    if (decimal.TryParse(s, out var val))
+                    {
+                        if (val > maxValue) maxValue = val;
+                    }
+                }
+
+                return maxValue;
+            }
+            catch
+            {
+                return 0m;
+            }
+        }
+
+
+        // ================== DISPOSE ==================
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }

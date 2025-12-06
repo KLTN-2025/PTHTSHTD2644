@@ -57,7 +57,7 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col justify-between">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Tổng tiền cọc đã nhận</p>
+                        <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Tổng tiền cọc</p>
                         <p class="mt-2 text-3xl font-bold text-emerald-600">
                             @Model.TotalDeposit.ToString("#,##0") đ
                         </p>
@@ -67,45 +67,65 @@
                     </div>
                 </div>
                 <p class="mt-2 text-xs text-gray-500">
-                    Tính cả cọc xác nhận thủ công và thanh toán qua VNPAY.
+                    Chỉ tính phần tiền cọc khách đã thanh toán.
                 </p>
             </div>
 
-            <!-- Nhà hàng nổi bật -->
+            <!-- Tổng tiền món đặt trước -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col justify-between">
-                @if (topRestaurant != null)
-                {
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Nhà hàng có nhiều lượt đặt nhất</p>
-                            <p class="mt-2 text-base font-semibold text-gray-900">
-                                @topRestaurant.RestaurantName
-                            </p>
-                        </div>
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">
-                            <i class="fas fa-trophy mr-1"></i> Top 1
-                        </span>
-                    </div>
-                    <div class="mt-3 flex items-center justify-between text-xs">
-                        <span class="text-gray-500">
-                            Lượt đặt: <span class="font-semibold text-gray-900">@topRestaurant.BookingCount</span>
-                        </span>
-                        <span class="text-gray-500">
-                            Tiền cọc: <span class="font-semibold text-gray-900">@topRestaurant.DepositAmount.ToString("#,##0") đ</span>
-                        </span>
-                    </div>
-                }
-                else
-                {
-                    <div class="h-full flex flex-col items-start justify-center">
-                        <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Nhà hàng có nhiều lượt đặt nhất</p>
-                        <p class="mt-2 text-sm text-gray-500">
-                            Chưa có dữ liệu để xếp hạng.
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Tổng tiền món đặt trước</p>
+                        <p class="mt-2 text-3xl font-bold text-orange-500">
+                            @Model.TotalPreOrderAmount.ToString("#,##0") đ
                         </p>
                     </div>
-                }
+                    <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
+                        <i class="fas fa-utensils text-orange-400"></i>
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">
+                    Tổng giá trị phần món khách đã đặt trước.
+                </p>
             </div>
         </div>
+
+
+        <!-- Nhà hàng nổi bật -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col justify-between">
+            @if (topRestaurant != null)
+            {
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Nhà hàng có nhiều lượt đặt nhất</p>
+                        <p class="mt-2 text-base font-semibold text-gray-900">
+                            @topRestaurant.RestaurantName
+                        </p>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">
+                        <i class="fas fa-trophy mr-1"></i> Top 1
+                    </span>
+                </div>
+                <div class="mt-3 flex items-center justify-between text-xs">
+                    <span class="text-gray-500">
+                        Lượt đặt: <span class="font-semibold text-gray-900">@topRestaurant.BookingCount</span>
+                    </span>
+                    <span class="text-gray-500">
+                        Tiền cọc: <span class="font-semibold text-gray-900">@topRestaurant.DepositAmount.ToString("#,##0") đ</span>
+                    </span>
+                </div>
+            }
+            else
+            {
+                <div class="h-full flex flex-col items-start justify-center">
+                    <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Nhà hàng có nhiều lượt đặt nhất</p>
+                    <p class="mt-2 text-sm text-gray-500">
+                        Chưa có dữ liệu để xếp hạng.
+                    </p>
+                </div>
+            }
+        </div>
+    </div>
 
         <!-- THỐNG KÊ THEO NHÀ HÀNG -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100">
@@ -123,7 +143,9 @@
                     <tr>
                         <th class="px-4 py-3 text-left">Nhà hàng</th>
                         <th class="px-4 py-3 text-center">Số lượt đặt</th>
-                        <th class="px-4 py-3 text-right">Tổng tiền cọc</th>
+                        <th class="px-4 py-3 text-right">Tiền cọc</th>
+                        <th class="px-4 py-3 text-right">Tiền món đặt trước</th>
+                        <th class="px-4 py-3 text-right">Tổng (cọc + món)</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -152,13 +174,19 @@
                                 <td class="px-4 py-3 text-right font-semibold text-gray-900">
                                     @r.DepositAmount.ToString("#,##0") đ
                                 </td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">
+                                    @r.PreOrderAmount.ToString("#,##0") đ
+                                </td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">
+                                    @( (r.DepositAmount + r.PreOrderAmount).ToString("#,##0") ) đ
+                                </td>
                             </tr>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="3" class="px-4 py-4 text-center text-gray-500 text-sm">
+                            <td colspan="5" class="px-4 py-4 text-center text-gray-500 text-sm">
                                 Chưa có dữ liệu đặt bàn cho bất kỳ nhà hàng nào.
                             </td>
                         </tr>
@@ -185,7 +213,9 @@
                         <tr>
                             <th class="px-4 py-3 text-left">Ngày</th>
                             <th class="px-4 py-3 text-center">Số lượt đặt</th>
-                            <th class="px-4 py-3 text-right">Tổng tiền cọc</th>
+                            <th class="px-4 py-3 text-right">Tiền cọc</th>
+                            <th class="px-4 py-3 text-right">Tiền món đặt trước</th>
+                            <th class="px-4 py-3 text-right">Tổng (cọc + món)</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -200,6 +230,12 @@
                                 </td>
                                 <td class="px-4 py-3 text-right font-semibold text-gray-900">
                                     @d.DepositAmount.ToString("#,##0") đ
+                                </td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">
+                                    @d.PreOrderAmount.ToString("#,##0") đ
+                                </td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">
+                                    @( (d.DepositAmount + d.PreOrderAmount).ToString("#,##0") ) đ
                                 </td>
                             </tr>
                         }

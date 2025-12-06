@@ -35,7 +35,11 @@
                     </td>
                     <td class="px-6 py-4 text-center">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                            @(item.role == "Admin" ? "bg-red-100 text-red-800" : (item.role == "business" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-800"))">
+                            @(item.role == "Admin"
+                                ? "bg-red-100 text-red-800"
+                                : (item.role == "business"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-gray-100 text-gray-800"))">
                             @item.role
                         </span>
                     </td>
@@ -43,16 +47,26 @@
                         @item.created_at.Value.ToString("dd/MM/yyyy")
                     </td>
                     <td class="px-6 py-4 text-center">
-                        @using (Html.BeginForm("Delete", "Users", new { area = "Admin", id = item.user_id }, FormMethod.Post, new { @class = "inline-block" }))
-                        {
-                            @Html.AntiForgeryToken()
-                            <button type="submit"
-                                    title="Xóa tài khoản vĩnh viễn"
-                                    class="px-3 py-1.5 bg-red-600 hover:bg-rose-700 text-white rounded-lg text-sm shadow-md transition"
-                                    onclick="return confirm('CẢNH BÁO: Xóa tài khoản @item.email sẽ xóa tất cả Booking và Review liên quan. Xác nhận xóa?');">
-                                <i class="fas fa-trash-alt mr-1"></i> Xóa
-                            </button>
-                        }
+                        <div class="inline-flex items-center gap-2">
+                            <!-- Nút đổi mật khẩu -->
+                            <a href="@Url.Action("ChangePassword", "Users", new { area = "Admin", id = item.user_id })"
+                               class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm shadow-md transition"
+                               title="Đổi mật khẩu cho tài khoản này">
+                                <i class="fas fa-key mr-1"></i> Đổi mật khẩu
+                            </a>
+
+                            <!-- Nút xóa tài khoản -->
+                            @using (Html.BeginForm("Delete", "Users", new { area = "Admin", id = item.user_id }, FormMethod.Post, new { @class = "inline-block" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <button type="submit"
+                                        title="Xóa tài khoản vĩnh viễn"
+                                        class="px-3 py-1.5 bg-red-600 hover:bg-rose-700 text-white rounded-lg text-sm shadow-md transition"
+                                        onclick="return confirm('CẢNH BÁO: Xóa tài khoản @item.email sẽ xóa tất cả Booking và Review liên quan. Xác nhận xóa?');">
+                                    <i class="fas fa-trash-alt mr-1"></i> Xóa
+                                </button>
+                            }
+                        </div>
                     </td>
                 </tr>
             }

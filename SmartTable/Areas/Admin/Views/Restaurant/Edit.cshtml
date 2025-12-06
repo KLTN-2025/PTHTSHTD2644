@@ -72,6 +72,17 @@
                     @Html.TextBoxFor(m => m.address, new { @class = "w-full p-2 border rounded-lg", required = "required" })
                 </div>
 
+                <!-- Thành phố & Khu vực -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Thành phố</label>
+                    @Html.TextBoxFor(m => m.City, new { @class = "w-full p-2 border rounded-lg", placeholder = "VD: TP. Hồ Chí Minh, Hà Nội..." })
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Khu vực / Quận</label>
+                    @Html.TextBoxFor(m => m.Area, new { @class = "w-full p-2 border rounded-lg", placeholder = "VD: Quận 1, Quận 7, Phú Nhuận..." })
+                </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Website</label>
                     @Html.TextBoxFor(m => m.Website, new { @class = "w-full p-2 border rounded-lg", placeholder = "https://..." })

@@ -46,19 +46,18 @@
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <div class="flex items-center gap-3 mb-2">
-                        <div class="p-2 bg-white rounded-xl shadow-sm">
-                            <i class="fas fa-history text-2xl text-blue-600"></i>
-                        </div>
+                        
                         <h1 class="text-3xl font-bold text-gray-900">Lịch sử đặt bàn</h1>
                     </div>
                     <p class="text-gray-600">Theo dõi và quản lý tất cả đơn đặt bàn của bạn</p>
                 </div>
-                <a href="@Url.Action("Index","Home")"
-                   class="group inline-flex items-center gap-2 px-5 py-3 bg-white text-gray-700 font-semibold rounded-xl shadow-sm hover:shadow-md border border-gray-200 hover:border-blue-400 transition-all duration-300">
-                    <i class="fas fa-arrow-left text-blue-500 group-hover:-translate-x-0.5 transition-transform"></i>
+                <<a href="@Url.Action("Index","Home")"
+                   class="inline-flex items-center gap-2 px-5 py-3 bg-white text-gray-700 font-semibold rounded-xl shadow-sm hover:shadow-md border border-gray-200 hover:border-blue-400 transition-all duration-300">
+                    <i class="fas fa-sign-out-alt text-lg"
+                       style="color:#111827 !important;"></i>
+
                     <span>Về trang chủ</span>
                 </a>
-            </div>
         </div>
 
         <div class="mb-8">
@@ -121,7 +120,11 @@
                         </button>
                         <a href="@Url.Action("DanhSachBanDaDat","DatBan")"
                            class="flex-1 inline-flex items-center justify-center gap-3 px-6 py-3.5 bg-white text-gray-700 font-semibold rounded-xl border border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300">
-                            <i class="fas fa-redo text-amber-500"></i>
+
+                            <!-- Icon Xóa bộ lọc: đậm, rõ -->
+                            <i class="fas fa-times-circle text-lg"
+                               style="color:#dc2626 !important;"></i>
+
                             <span>Xóa bộ lọc</span>
                         </a>
                     </div>
@@ -158,7 +161,7 @@
                             <p class="text-sm text-gray-500">Tổng đặt bàn</p>
                             <p class="text-2xl font-bold text-gray-800">@data.Count()</p>
                         </div>
-                        <div class="p-3 bg-blue-50 rounded-xl">
+                        <div class="p-3 bg-blue-500 rounded-xl">
                             <i class="fas fa-list-alt text-xl text-blue-600"></i>
                         </div>
                     </div>
@@ -171,8 +174,9 @@
                                 @data.Count(x => !string.IsNullOrEmpty(x.PaymentStatus) && x.PaymentStatus.Contains("Đã thanh toán"))
                             </p>
                         </div>
-                        <div class="p-3 bg-emerald-50 rounded-xl">
-                            <i class="fas fa-check-circle text-xl text-emerald-600"></i>
+                        <div class="p-3 bg-emerald-500 rounded-xl">
+                            <i class="fas fa-check-circle text-2xl"
+                               style="color:#ffffff !important;"></i>
                         </div>
                     </div>
                 </div>
@@ -184,7 +188,7 @@
                                 @data.Count(x => string.IsNullOrEmpty(x.PaymentStatus) || !x.PaymentStatus.Contains("Đã thanh toán"))
                             </p>
                         </div>
-                        <div class="p-3 bg-amber-50 rounded-xl">
+                        <div class="p-3 bg-amber-500 rounded-xl">
                             <i class="fas fa-clock text-xl text-amber-500"></i>
                         </div>
                     </div>
@@ -195,10 +199,11 @@
                 @foreach (var item in data)
                 {
                     var isPaid = !string.IsNullOrEmpty(item.PaymentStatus)
-                                 && item.PaymentStatus.Contains("Đã thanh toán");
+             && item.PaymentStatus.Contains("Đã thanh toán");
 
-                    var paymentMethodLabel = "Chưa thanh toán";
-                    if (!string.IsNullOrEmpty(item.PaymentStatus))
+                    var paymentMethodLabel = "";
+
+                    if (isPaid && !string.IsNullOrEmpty(item.PaymentStatus))
                     {
                         if (item.PaymentStatus.Contains("VNPAY-IPN"))
                         {
@@ -278,9 +283,6 @@
                                                 <img src="@item.RestaurantImage"
                                                      alt="@item.RestaurantName"
                                                      class="w-28 h-28 rounded-2xl object-cover shadow-md border border-gray-200" />
-                                                <div class="absolute -bottom-2 -right-2 bg-white rounded-full p-2 shadow-lg">
-                                                    <i class="fas fa-utensils text-blue-600 text-lg"></i>
-                                                </div>
                                             </div>
                                         </div>
                                         <div class="flex-1">
@@ -294,22 +296,24 @@
                                                 </div>
                                             }
 
-                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <div class="bg-gray-50 rounded-xl p-4">
-                                                    <div class="flex items-center gap-3 mb-1">
-                                                        <div class="p-2 bg-blue-100 rounded-lg">
-                                                            <i class="fas fa-users text-blue-600"></i>
-                                                        </div>
-                                                        <div>
-                                                            <p class="text-sm text-gray-500">Số người</p>
-                                                            <p class="text-lg font-semibold text-gray-900">@item.NumberOfGuests người</p>
-                                                        </div>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div class="bg-gray-50 rounded-xl p-4">
+                                                <div class="flex items-center gap-3 mb-1">
+                                                    <div class="p-2 bg-blue-500 rounded-lg">
+                                                        <i class="fas fa-users text-blue-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-sm text-gray-500">Số người</p>
+                                                        <p class="text-lg font-semibold text-gray-900">@item.NumberOfGuests người</p>
                                                     </div>
                                                 </div>
+                                            </div>
 
+                                            @if (isPaid && !string.IsNullOrEmpty(paymentMethodLabel))
+                                            {
                                                 <div class="bg-gray-50 rounded-xl p-4">
                                                     <div class="flex items-center gap-3 mb-1">
-                                                        <div class="p-2 bg-purple-100 rounded-lg">
+                                                        <div class="p-2 bg-amber-500 rounded-lg">
                                                             <i class="fas fa-money-check-alt text-purple-600"></i>
                                                         </div>
                                                         <div>
@@ -318,7 +322,10 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            }
+
+
+                                        </div>
 
                                             @if (!string.IsNullOrEmpty(item.SpecialRequest))
                                             {
@@ -339,10 +346,12 @@
                                 <div class="space-y-3">
                                     <a href="@Url.Action("RestaurantDetails", "Home", new { id = item.RestaurantId })"
                                        class="group block w-full">
-                                        <div class="flex items-center justify-center gap-3 px-4 py-3.5 bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 font-semibold rounded-xl border border-gray-200 hover:border-blue-400 hover:from-blue-50 hover:to-blue-50 hover:text-blue-600 transition-all duration-300">
-                                            <i class="fas fa-store-alt text-lg text-blue-500 group-hover:scale-110 transition-transform"></i>
+                                        <div class="flex items-center justify-center gap-3 px-4 py-3.5 bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 font-semibold rounded-xl border border-gray-200 hover:border-blue-400 hover:from-blue-50 hover:to-blue-50 hover:text-blue-600 transition-all duration-300 group">
+                                            <i class="fas fa-store-alt text-2xl font-bold transition-transform"
+                                               style="color:#1e40af !important;"></i>
                                             <span>Chi tiết nhà hàng</span>
-                                            <i class="fas fa-arrow-right ml-auto opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-1 transition-all"></i>
+                                            <i class="fas fa-arrow-right ml-auto opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-1 transition-all text-lg"
+                                               style="color:#1e3a8a !important;"></i>
                                         </div>
                                     </a>
 

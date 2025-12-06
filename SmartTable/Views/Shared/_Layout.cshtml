@@ -85,33 +85,49 @@
                     }
                     else
                     {
-                        var users = (SmartTable.Models.Users)Session["user"];
-                        <div class="relative">
-                            <button id="profileMenuToggleDesktop" class="flex items-center space-x-1.5 hover:text-amber-300 transition-colors duration-300 focus:outline-none">
-                                <i class="fas fa-user-circle text-2xl"></i>
-                                <span class="text-sm font-semibold whitespace-nowrap hidden sm:inline">@users.full_name</span>
-                                <i class="fas fa-chevron-down text-xs ml-1"></i>
-                            </button>
+                        
+                            var users = (SmartTable.Models.Users)Session["user"];
+                        
+                <div class="relative">
+                    <button id="profileMenuToggleDesktop"
+                            class="flex items-center space-x-1.5 hover:text-amber-300 transition-colors duration-300 focus:outline-none">
+                        <i class="fas fa-user-circle text-2xl"></i>
+                        <span class="text-sm font-semibold whitespace-nowrap hidden sm:inline">
+                            @users.full_name
+                        </span>
+                        <i class="fas fa-chevron-down text-xs ml-1"></i>
+                    </button>
 
-                            <ul id="dropdownMenuDesktop" class="hidden absolute bg-white border border-gray-200 rounded-lg shadow-xl mt-3 py-1 right-0 w-48 text-gray-800 z-20 text-sm">
-                                <li>
-                                    <a href="@Url.Action("AccountInfo", "Account")" class="flex items-center space-x-2 px-4 py-2 hover:bg-gray-100 transition">
-                                        <i class="fas fa-user-edit w-5 text-center text-blue-500"></i><span>Profile</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="@Url.Action("DanhSachBanDaDat", "DatBan")" class="flex items-center space-x-2 px-4 py-2 hover:bg-gray-100 transition">
-                                        <i class="fas fa-calendar-check w-5 text-center text-green-500"></i><span>Lịch sử đặt bàn</span>
-                                    </a>
-                                </li>
-                                <li class="border-t border-gray-100 my-1"></li>
-                                <li>
-                                    <a href="@Url.Action("Logout", "Account")" class="flex items-center space-x-2 px-4 py-2 hover:bg-red-50 transition text-red-600 font-medium">
-                                        <i class="fas fa-sign-out-alt w-5 text-center"></i><span>Đăng xuất</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
+                    <ul id="dropdownMenuDesktop"
+                        class="hidden absolute bg-white border border-gray-200 rounded-lg shadow-xl mt-3 py-1 right-0 w-48 text-gray-900 z-20 text-sm">
+                        <li>
+                            <a href="@Url.Action("AccountInfo", "Account")"
+                               class="flex items-center space-x-2 px-4 py-2 hover:bg-gray-100 transition">
+                                <i class="fas fa-user-edit text-lg mr-2"
+                                   style="color:#2563eb !important;"></i>
+                                <span>Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("DanhSachBanDaDat", "DatBan")"
+                               class="flex items-center space-x-2 px-4 py-2 hover:bg-gray-100 transition">
+                                <i class="fas fa-calendar-check text-lg mr-2"
+                                   style="color:#16a34a !important;"></i>
+                                <span>Lịch sử đặt bàn</span>
+                            </a>
+                        </li>
+                        <li class="border-t border-gray-100 my-1"></li>
+                        <li>
+                            <a href="@Url.Action("Logout", "Account")"
+                               class="flex items-center space-x-2 px-4 py-2 hover:bg-red-50 transition text-red-600 font-medium">
+                                <i class="fas fa-sign-out-alt text-lg mr-2"
+                                   style="color:#dc2626 !important;"></i>
+                                <span>Đăng xuất</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
                     }
                 </div>
             </div>

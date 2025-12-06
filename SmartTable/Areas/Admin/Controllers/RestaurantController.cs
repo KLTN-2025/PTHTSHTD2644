@@ -19,10 +19,15 @@ namespace SmartTable.Areas.Admin.Controllers
         private Entities db = new Entities();
 
         private const string BIND_PROPERTIES =
-            "restaurant_id,user_id,name,address,description,max_tables,opening_hours,is_approved,Image," +
-            "CuisineStyle,ServiceDescription,ServiceTypes,AverageBill,FloorCount,BusyHours,SlowHours," +
-            "SignatureDishes,PartnershipGoal,ServicePackage,ContactName,ContactPhone,ContactRole," +
-            "Website,SpaceDescription,Amenities,AmenitiesOther,SeatingType,PrivateRoomCount,NearbyLandmark";
+            "restaurant_id,user_id," +
+            "name,address,City,Area," +                
+            "latitude,longitude," +
+            "description,max_tables,opening_hours,is_approved,Image," +
+            "CuisineStyle,ServiceDescription,ServiceTypes,AverageBill," +
+            "FloorCount,BusyHours,SlowHours,SignatureDishes," +
+            "PartnershipGoal,ServicePackage,ContactName,ContactPhone,ContactRole," +
+            "Website,SpaceDescription,Amenities,AmenitiesOther," +
+            "SeatingType,PrivateRoomCount,NearbyLandmark";
 
         // ====== CẤU HÌNH UPLOAD ẢNH  ======
 

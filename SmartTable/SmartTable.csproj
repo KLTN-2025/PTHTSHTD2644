@@ -129,6 +129,7 @@
     <Content Include="Views\BusinessTables\Index.cshtml" />
     <Content Include="Views\BusinessTables\Create.cshtml" />
     <Content Include="Views\BusinessTables\Edit.cshtml" />
+    <Content Include="Areas\Admin\Views\Users\ChangePassword.cshtml" />
     <None Include="Views\Menu\Index.cshtml" />
     <Content Include="Content\Account\register.css" />
     <Compile Include="Areas\Admin\AdminAreaRegistration.cs" />
@@ -136,6 +137,7 @@
     <Compile Include="Areas\Admin\Controllers\RestaurantController.cs" />
     <Compile Include="Areas\Admin\Controllers\RoleController.cs" />
     <Compile Include="Areas\Admin\Controllers\UsersController.cs" />
+    <Compile Include="Areas\Admin\Models\ViewModels\AdminChangePasswordViewModel.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\BusinessTablesController.cs" />
     <Compile Include="Controllers\DatBanController.cs" />
@@ -357,7 +359,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Areas\Admin\Models\" />
     <Folder Include="Views\Chat\" />
     <Folder Include="Views\ThongBaoUser\" />
     <Folder Include="Views\ThongBao\" />
