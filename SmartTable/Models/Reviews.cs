@@ -14,14 +14,31 @@ namespace SmartTable.Models
     
     public partial class Reviews
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+        public Reviews()
+        {
+            this.ReviewReplies = new HashSet<ReviewReplies>();
+            this.ReviewReporting = new HashSet<ReviewReporting>();
+            this.Notifications = new HashSet<Notifications>();
+        }
+    
         public int review_id { get; set; }
         public Nullable<int> user_id { get; set; }
         public Nullable<int> restaurant_id { get; set; }
         public byte rating { get; set; }
         public string comment { get; set; }
         public Nullable<System.DateTime> created_at { get; set; }
+        public string status { get; set; }
+        public Nullable<System.DateTime> approved_at { get; set; }
+        public string approved_by { get; set; }
     
         public virtual Users Users { get; set; }
         public virtual Restaurants Restaurants { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<ReviewReplies> ReviewReplies { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<ReviewReporting> ReviewReporting { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Notifications> Notifications { get; set; }
     }
 }

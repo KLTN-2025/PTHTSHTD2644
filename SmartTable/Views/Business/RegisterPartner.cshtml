@@ -15,7 +15,6 @@
             font-family: 'Playfair Display', serif;
         }
 
-        /* Đã xóa các class lỗi (.input-icon-field, .label) và sẽ dùng trực tiếp trong HTML */
         .required:after {
             content: " *";
             color: #ef4444;
@@ -182,7 +181,7 @@
                         @Html.TextBoxFor(m => m.SlowHours, new { @class = "input-field", placeholder = "VD: Chiều T2–T4" })
                     </div>
                 </div>
-            </div> <!-- ✅ Đóng khối bg-white p-8... của phần Vận hành & Giờ giấc -->
+            </div> 
 
             <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 space-y-6">
                 <h2 class="text-xl font-semibold text-gray-800 border-b pb-4 mb-6">4. Mục tiêu & Bổ sung (Tùy chọn)</h2>

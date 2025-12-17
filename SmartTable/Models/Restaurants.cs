@@ -22,6 +22,8 @@ namespace SmartTable.Models
             this.Reviews = new HashSet<Reviews>();
             this.Tables = new HashSet<Tables>();
             this.RestaurantImages = new HashSet<RestaurantImages>();
+            this.ReviewReplies = new HashSet<ReviewReplies>();
+            this.Notifications = new HashSet<Notifications>();
         }
     
         public int restaurant_id { get; set; }
@@ -52,13 +54,15 @@ namespace SmartTable.Models
         public string Website { get; set; }
         public string SpaceDescription { get; set; }
         public string Amenities { get; set; }
-        public string AmenitiesOther { get; set; }
-
         public string SeatingType { get; set; }
         public string PrivateRoomCount { get; set; }
         public string NearbyLandmark { get; set; }
         public string City { get; set; }
         public string Area { get; set; }
+        public string AmenitiesOther { get; set; }
+        public int debt_months { get; set; }
+        public decimal debt_amount { get; set; }
+        public bool is_locked { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Bookings> Bookings { get; set; }
@@ -71,5 +75,9 @@ namespace SmartTable.Models
         public virtual ICollection<Tables> Tables { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<RestaurantImages> RestaurantImages { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<ReviewReplies> ReviewReplies { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Notifications> Notifications { get; set; }
     }
 }

@@ -1,0 +1,103 @@
+﻿@model System.Collections.Generic.List<SmartTable.Models.Notifications>
+@using System
+
+@{
+    ViewBag.Title = "Thông báo";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 py-8">
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                <i class="fas fa-bell text-red-600 mr-2"></i>
+                Thông báo
+            </h1>
+
+            <div class="flex items-center gap-2">
+                <a href="@Url.Action("Index","Home")"
+                   class="px-4 py-2 bg-white border border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-100 transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Quay về
+                </a>
+
+                @using (Html.BeginForm("MarkAllRead", "ThongBao", FormMethod.Post, new { @class = "inline" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit"
+                            class="px-4 py-2 bg-white border border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-100 transition">
+                        Đánh dấu tất cả đã đọc
+                    </button>
+                }
+            </div>
+        </div>
+
+        @if (Model == null || Model.Count == 0)
+        {
+            <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-50 flex items-center justify-center">
+                    <i class="fas fa-bell-slash text-2xl text-red-500"></i>
+                </div>
+                <div class="text-gray-700 font-semibold">Chưa có thông báo nào</div>
+                <div class="text-gray-500 text-sm mt-1">Khi bạn đặt bàn/đánh giá, hệ thống sẽ ghi lại tại đây.</div>
+            </div>
+        }
+        else
+        {
+            <div class="space-y-3">
+                @foreach (var n in Model)
+                {
+                    bool isUnread = !(n.is_read);
+                    string title = string.IsNullOrWhiteSpace(n.title) ? "Thông báo" : n.title;
+                    string msg = n.message ?? "";
+                    string timeText = n.created_at.ToString("dd/MM/yyyy HH:mm");
+                    string restaurantName = (n.Restaurants != null && !string.IsNullOrWhiteSpace(n.Restaurants.name))
+                                            ? n.Restaurants.name : null;
+
+                    <a href="@Url.Action("Open", "ThongBao", new { id = n.notification_id })"
+                       class="block bg-white rounded-2xl border p-5 hover:shadow-sm transition @(isUnread ? "border-red-200" : "border-gray-200")">
+
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 @(isUnread ? "bg-red-600" : "bg-gray-300")">
+                                <i class="fas fa-bell text-white"></i>
+                            </div>
+
+                            <div class="flex-1">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <div class="font-bold text-gray-900 break-words">
+                                            @title
+                                            @if (isUnread)
+                                            {
+                                                <span class="ml-2 text-[11px] font-bold bg-red-100 text-red-700 px-2 py-1 rounded-full">MỚI</span>
+                                            }
+                                        </div>
+
+                                        @if (!string.IsNullOrWhiteSpace(msg))
+                                        {
+                                            <div class="text-sm text-gray-600 mt-1 leading-relaxed break-words">@msg</div>
+                                        }
+
+                                        <div class="text-xs text-gray-400 mt-2">@timeText</div>
+
+                                        @if (!string.IsNullOrWhiteSpace(restaurantName))
+                                        {
+                                            <div class="text-xs text-gray-500 mt-2 flex items-center">
+                                                <i class="fas fa-store mr-2" style="color:#2563eb !important; font-size:14px;"></i>
+                                                <span class="break-words">@restaurantName</span>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <span class="px-3 py-2 rounded-xl font-semibold whitespace-nowrap @(isUnread ? "bg-red-50 text-red-700" : "bg-gray-50 text-gray-700")">
+                                        Xem
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</div>

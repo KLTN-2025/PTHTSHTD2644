@@ -1,0 +1,828 @@
+﻿@using System
+@using System.Linq
+@using System.Globalization
+@model SmartTable.Models.ViewModels.StatisticsViewModel
+
+@{
+    ViewBag.Title = "Thống kê đặt bàn";
+    Layout = "~/Views/Shared/_BusinessLayout.cshtml";
+
+    var hasRestaurantStats = Model.RestaurantStats != null && Model.RestaurantStats.Any();
+    var hasDailyStats = Model.DailyStats != null && Model.DailyStats.Any();
+    var hasHourlyStats = Model.HourlyStats != null && Model.HourlyStats.Any();
+    var hasWeeklyStats = Model.WeeklyStats != null && Model.WeeklyStats.Any();
+    var hasMonthlyStats = Model.MonthlyStats != null && Model.MonthlyStats.Any();
+    var hasYearlyStats = Model.YearlyStats != null && Model.YearlyStats.Any();
+    var hasTopMenu = Model.TopMenuItems != null && Model.TopMenuItems.Any();
+    var hasTopCustomers = Model.TopCustomers != null && Model.TopCustomers.Any();
+
+    var topRestaurant = hasRestaurantStats
+        ? Model.RestaurantStats.OrderByDescending(x => x.BookingCount).ThenByDescending(x => (x.DepositAmount + x.PreOrderAmount)).FirstOrDefault()
+        : null;
+
+    var fromVal = (Model.FromDate == default(DateTime)) ? "" : Model.FromDate.ToString("yyyy-MM-dd");
+    var toVal = (Model.ToDate == default(DateTime)) ? "" : Model.ToDate.ToString("yyyy-MM-dd");
+
+    var peakHour = Model.PeakHour;
+}
+
+
+<div class="bg-gray-50 min-h-screen py-8">
+    <div class="container mx-auto max-w-6xl px-4 space-y-6">
+
+        <a href="@Url.Action("Index","BusinessHome")"
+           class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 transition">
+            <i class="fas fa-arrow-left mr-1"></i> Quay lại Dashboard
+        </a>
+
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Thống kê đặt bàn</h1>
+                <p class="text-sm text-gray-500 mt-1">
+                    Tổng quan đặt bàn, tiền cọc, tiền món đặt trước, giờ cao điểm, và nhóm khách/món nổi bật.
+                </p>
+            </div>
+
+            <form method="get" action="@Url.Action("Index","BusinessStatistics")"
+                  class="flex flex-wrap items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500 font-semibold">Từ</span>
+                    <input type="date" name="from" value="@fromVal"
+                           class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500 font-semibold">Đến</span>
+                    <input type="date" name="to" value="@toVal"
+                           class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" />
+                </div>
+
+                @{
+                    var restaurants = ViewBag.Restaurants as IEnumerable<SelectListItem>;
+                    var selectedRestaurantId = (ViewBag.SelectedRestaurantId == null)
+                    ? (int?)null
+                    : (int?)Convert.ToInt32(ViewBag.SelectedRestaurantId);
+                }
+
+                @if (restaurants != null)
+                {
+                    <select name="restaurantId" class="...">
+                        <option value="">Tất cả nhà hàng</option>
+                        @foreach (var opt in restaurants)
+                        {
+                            <option value="@opt.Value" @(opt.Selected ? "selected=\"selected\"" : "")>@opt.Text</option>
+                        }
+                    </select>
+                }
+
+                <button type="submit"
+                        class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+                    Áp dụng
+                </button>
+
+                <a href="@Url.Action("Index","BusinessStatistics")"
+                   class="px-3 py-1.5 bg-white text-gray-700 rounded-lg text-sm border border-gray-300 hover:bg-gray-100">
+                    Xóa lọc
+                </a>
+            </form>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-gray-200">
+                <span class="w-2 h-2 rounded-full bg-blue-500"></span> Lượt đặt bàn
+            </span>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-gray-200">
+                <span class="w-2 h-2 rounded-full bg-green-500"></span> Tiền cọc
+            </span>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-gray-200">
+                <span class="w-2 h-2 rounded-full bg-orange-500"></span> Tiền món đặt trước
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Tổng lượt đặt bàn</p>
+                        <p class="mt-2 text-3xl font-bold text-gray-900">@Model.TotalBookings</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                        <i class="fas fa-chair text-blue-500"></i>
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">Tổng số lượt đặt trong khoảng thời gian bạn chọn.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Tổng tiền cọc</p>
+                        <p class="mt-2 text-3xl font-bold text-emerald-600">@Model.TotalDeposit.ToString("#,##0") đ</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center">
+                        <i class="fas fa-donate text-emerald-500"></i>
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">Chỉ cộng phần đã ghi nhận thanh toán.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-300 p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Tổng tiền món đặt trước</p>
+                        <p class="mt-2 text-3xl font-bold text-orange-500">@Model.TotalPreOrderAmount.ToString("#,##0") đ</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center">
+                        <i class="fas fa-utensils text-orange-600 text-xl"></i>
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">Tổng giá trị món đặt trước đã ghi nhận.</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-between">
+            <div class="text-sm text-gray-600">
+                <span class="font-semibold text-gray-900">Biểu đồ</span>
+                <span class="text-gray-500">— bấm để xem chi tiết</span>
+            </div>
+
+            <button type="button"
+                    id="btnToggleCharts"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">
+                <i id="icoCharts" class="fas fa-chart-line"></i>
+                <span id="txtCharts">Xem biểu đồ</span>
+            </button>
+        </div>
+
+        <div id="chartsWrapper" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                    <div class="flex items-center justify-between">
+                        <p class="font-semibold text-gray-900">Xu hướng theo ngày</p>
+                        <p class="text-xs text-gray-500">Bookings + Doanh thu</p>
+                    </div>
+                    <div id="chartDaily" class="mt-3"></div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                    <div class="flex items-center justify-between">
+                        <p class="font-semibold text-gray-900">Giờ cao điểm</p>
+                        <p class="text-xs text-gray-500">Theo giờ</p>
+                    </div>
+                    <div id="chartHourly" class="mt-3"></div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                    <div class="flex items-center justify-between">
+                        <p class="font-semibold text-gray-900">Tỷ trọng doanh thu theo nhà hàng</p>
+                        <p class="text-xs text-gray-500">Cọc + món</p>
+                    </div>
+                    <div id="chartRestaurantShare" class="mt-3"></div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                    <div class="flex items-center justify-between">
+                        <p class="font-semibold text-gray-900">Top món</p>
+                        <p class="text-xs text-gray-500">Doanh thu</p>
+                    </div>
+                    <div id="chartTopMenu" class="mt-3"></div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 lg:col-span-2">
+                    <div class="flex items-center justify-between">
+                        <p class="font-semibold text-gray-900">Theo tuần / tháng / năm</p>
+                        <p class="text-xs text-gray-500">Doanh thu</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-600 mb-2">Theo tuần</p>
+                            <div id="chartWeekly"></div>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-600 mb-2">Theo tháng</p>
+                            <div id="chartMonthly"></div>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-600 mb-2">Theo năm</p>
+                            <div id="chartYearly"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 lg:col-span-2">
+                    <div class="flex items-center justify-between">
+                        <p class="font-semibold text-gray-900">Top khách hàng</p>
+                        <p class="text-xs text-gray-500">Doanh thu + số lần</p>
+                    </div>
+                    <div id="chartTopCustomers" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Nhà hàng nhiều lượt đặt nhất</p>
+
+                @if (topRestaurant != null)
+                {
+                    <div class="mt-2 flex items-start justify-between">
+                        <div>
+                            <p class="text-base font-semibold text-gray-900">@topRestaurant.RestaurantName</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Lượt đặt: <span class="font-semibold text-gray-900">@topRestaurant.BookingCount</span>
+                                • Tổng: <span class="font-semibold text-gray-900">@((topRestaurant.DepositAmount + topRestaurant.PreOrderAmount).ToString("#,##0")) đ</span>
+                            </p>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-300 text-amber-700 text-xs font-semibold">
+                            <i class="fas fa-trophy mr-1"></i> Top 1
+                        </span>
+                    </div>
+                }
+                else
+                {
+                    <p class="mt-2 text-sm text-gray-500">Chưa có dữ liệu để xếp hạng.</p>
+                }
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Giờ cao điểm</p>
+
+                @if (peakHour != null && peakHour.BestHour.HasValue)
+                {
+                    <div class="mt-2 flex items-start justify-between">
+                        <div>
+                            <p class="text-base font-semibold text-gray-900">
+                                @peakHour.BestHour.Value:00 – @peakHour.BestHour.Value:59
+                            </p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Lượt đặt: <span class="font-semibold text-gray-900">@peakHour.BestHourBookings</span>
+                                • Doanh thu: <span class="font-semibold text-gray-900">@peakHour.BestHourRevenue.ToString("#,##0") đ</span>
+                            </p>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-500 text-blue-700 text-xs font-semibold">
+                            <i class="fas fa-bolt mr-1"></i> Cao điểm
+                        </span>
+                    </div>
+                }
+                else
+                {
+                    <p class="mt-2 text-sm text-gray-500">Chưa đủ dữ liệu để xác định giờ cao điểm.</p>
+                }
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100">
+                <p class="font-semibold text-gray-900">Thống kê theo nhà hàng</p>
+                <p class="text-xs text-gray-500 mt-0.5">Lượt đặt và doanh thu theo từng nhà hàng.</p>
+            </div>
+
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Nhà hàng</th>
+                        <th class="px-4 py-3 text-center">Số lượt đặt</th>
+                        <th class="px-4 py-3 text-right">Tiền cọc</th>
+                        <th class="px-4 py-3 text-right">Tiền món đặt trước</th>
+                        <th class="px-4 py-3 text-right">Tổng</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @if (hasRestaurantStats)
+                    {
+                        foreach (var r in Model.RestaurantStats)
+                        {
+                            var isTop = (topRestaurant != null && r.RestaurantId == topRestaurant.RestaurantId);
+
+                            <tr class="@(isTop ? "bg-amber-50/60" : "bg-white") hover:bg-gray-50 transition">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-2">
+                                        @if (isTop)
+                                        {
+                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold">1</span>
+                                        }
+                                        <span class="font-medium text-gray-900">@r.RestaurantName</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="inline-flex items-center justify-center px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">
+                                        @r.BookingCount
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">@r.DepositAmount.ToString("#,##0") đ</td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">@r.PreOrderAmount.ToString("#,##0") đ</td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">@((r.DepositAmount + r.PreOrderAmount).ToString("#,##0")) đ</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="px-4 py-4 text-center text-gray-500 text-sm">Chưa có dữ liệu.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100">
+                <p class="font-semibold text-gray-900">Thống kê theo ngày</p>
+                <p class="text-xs text-gray-500 mt-0.5">Theo dõi xu hướng theo từng ngày.</p>
+            </div>
+
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Ngày</th>
+                        <th class="px-4 py-3 text-center">Lượt đặt</th>
+                        <th class="px-4 py-3 text-right">Tiền cọc</th>
+                        <th class="px-4 py-3 text-right">Tiền món</th>
+                        <th class="px-4 py-3 text-right">Tổng</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @if (hasDailyStats)
+                    {
+                        foreach (var d in Model.DailyStats.OrderByDescending(x => x.Date))
+                        {
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-3 font-medium text-gray-900">@d.Date.ToString("dd/MM/yyyy")</td>
+                                <td class="px-4 py-3 text-center">@d.BookingCount</td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">@d.DepositAmount.ToString("#,##0") đ</td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">@d.PreOrderAmount.ToString("#,##0") đ</td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">@((d.DepositAmount + d.PreOrderAmount).ToString("#,##0")) đ</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="px-4 py-4 text-center text-gray-500 text-sm">Chưa có dữ liệu.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100">
+                <p class="font-semibold text-gray-900">Thống kê theo giờ (giờ cao điểm)</p>
+                <p class="text-xs text-gray-500 mt-0.5">Giúp bạn biết khung giờ đông khách để bố trí nhân sự/bàn.</p>
+            </div>
+
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Giờ</th>
+                        <th class="px-4 py-3 text-center">Lượt đặt</th>
+                        <th class="px-4 py-3 text-right">Tiền cọc</th>
+                        <th class="px-4 py-3 text-right">Tiền món</th>
+                        <th class="px-4 py-3 text-right">Tổng</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @if (hasHourlyStats)
+                    {
+                        foreach (var h in Model.HourlyStats.OrderByDescending(x => x.BookingCount).ThenByDescending(x => x.TotalAmount))
+                        {
+                            var isPeak = (peakHour != null && peakHour.BestHour.HasValue && h.Hour == peakHour.BestHour.Value);
+                            <tr class="@(isPeak ? "bg-blue-50/60" : "bg-white") hover:bg-gray-50 transition">
+                                <td class="px-4 py-3 font-medium text-gray-900">
+                                    @h.Hour:00 – @h.Hour:59
+                                    @if (isPeak)
+                                    {
+                                        <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-semibold">Peak</span>
+                                    }
+                                </td>
+                                <td class="px-4 py-3 text-center">@h.BookingCount</td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">@h.DepositAmount.ToString("#,##0") đ</td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">@h.PreOrderAmount.ToString("#,##0") đ</td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">@h.TotalAmount.ToString("#,##0") đ</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="px-4 py-4 text-center text-gray-500 text-sm">Chưa có dữ liệu.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-100">
+                    <p class="font-semibold text-gray-900">Theo tuần</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Tổng hợp theo tuần (thứ 2 → chủ nhật).</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                            <tr>
+                                <th class="px-4 py-3 text-left">Tuần</th>
+                                <th class="px-4 py-3 text-center">Lượt</th>
+                                <th class="px-4 py-3 text-right">Tổng</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @if (hasWeeklyStats)
+                            {
+                                foreach (var w in Model.WeeklyStats.OrderByDescending(x => x.WeekStart))
+                                {
+                                    <tr class="hover:bg-gray-50 transition">
+                                        <td class="px-4 py-3 font-medium text-gray-900">
+                                            @if (w.Year > 0 && w.Week > 0)
+                                            {
+                                                <span>Năm @w.Year - Tuần @w.Week</span>
+                                            }
+                                            <div class="text-[11px] text-gray-500 mt-0.5">
+                                                @w.WeekStart.ToString("dd/MM") – @w.WeekEnd.ToString("dd/MM")
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3 text-center">@w.BookingCount</td>
+                                        <td class="px-4 py-3 text-right font-semibold text-gray-900">@w.TotalAmount.ToString("#,##0") đ</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="3" class="px-4 py-4 text-center text-gray-500 text-sm">Chưa có dữ liệu.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-100">
+                    <p class="font-semibold text-gray-900">Theo tháng</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Tổng hợp theo tháng.</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                            <tr>
+                                <th class="px-4 py-3 text-left">Tháng</th>
+                                <th class="px-4 py-3 text-center">Lượt</th>
+                                <th class="px-4 py-3 text-right">Tổng</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @if (hasMonthlyStats)
+                            {
+                                foreach (var m in Model.MonthlyStats.OrderByDescending(x => x.Year).ThenByDescending(x => x.Month))
+                                {
+                                    <tr class="hover:bg-gray-50 transition">
+                                        <td class="px-4 py-3 font-medium text-gray-900">Tháng @m.Month/@m.Year</td>
+                                        <td class="px-4 py-3 text-center">@m.BookingCount</td>
+                                        <td class="px-4 py-3 text-right font-semibold text-gray-900">@((m.DepositAmount + m.PreOrderAmount).ToString("#,##0")) đ</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="3" class="px-4 py-4 text-center text-gray-500 text-sm">Chưa có dữ liệu.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-100">
+                    <p class="font-semibold text-gray-900">Theo năm</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Tổng hợp theo năm.</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                            <tr>
+                                <th class="px-4 py-3 text-left">Năm</th>
+                                <th class="px-4 py-3 text-center">Lượt</th>
+                                <th class="px-4 py-3 text-right">Tổng</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @if (hasYearlyStats)
+                            {
+                                foreach (var y in Model.YearlyStats.OrderByDescending(x => x.Year))
+                                {
+                                    <tr class="hover:bg-gray-50 transition">
+                                        <td class="px-4 py-3 font-medium text-gray-900">@y.Year</td>
+                                        <td class="px-4 py-3 text-center">@y.BookingCount</td>
+                                        <td class="px-4 py-3 text-right font-semibold text-gray-900">@((y.DepositAmount + y.PreOrderAmount).ToString("#,##0")) đ</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="3" class="px-4 py-4 text-center text-gray-500 text-sm">Chưa có dữ liệu.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+            @using SmartTable.Models.ViewModels
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-100">
+
+                    <p class="font-semibold text-gray-900">Top món đặt trước</p>
+                    <p class="text-xs text-gray-500 mt-0.5">
+                        Món bán tốt nhất dựa trên đơn đặt trước (chỉ tính booking đã nhận tiền).
+                    </p>
+
+                    @{
+                        var topMenus = Model.TopMenuItems ?? new List<MenuItemStatItem>();
+                        var topCount = topMenus.Count;
+
+                     
+                    }
+
+                   
+                </div>
+
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                        <tr>
+                            <th class="px-4 py-3 text-left">Món</th>
+                            <th class="px-4 py-3 text-center">SL</th>
+                            <th class="px-4 py-3 text-right">Doanh thu</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-gray-100">
+                        @if (topMenus.Any())
+                        {
+                            foreach (var mi in topMenus)
+                            {
+                                <tr class="hover:bg-gray-50 transition">
+                                    <td class="px-4 py-3 font-medium text-gray-900">@mi.MenuItemName</td>
+                                    <td class="px-4 py-3 text-center">@mi.Quantity</td>
+                                    <td class="px-4 py-3 text-right font-semibold text-gray-900">
+                                        @mi.Revenue.ToString("#,##0") đ
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3" class="px-4 py-6 text-center text-gray-500 text-sm">
+                                    Chưa có dữ liệu món đặt trước trong khoảng lọc (hoặc booking chưa nhận tiền).
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-100">
+                    <p class="font-semibold text-gray-900">Top khách hàng</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Nhóm khách mang lại doanh thu cao nhất.</p>
+                </div>
+
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                        <tr>
+                            <th class="px-4 py-3 text-left">Khách</th>
+                            <th class="px-4 py-3 text-center">Lượt</th>
+                            <th class="px-4 py-3 text-right">Tổng</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @if (hasTopCustomers)
+                        {
+                            foreach (var c in Model.TopCustomers)
+                            {
+                                <tr class="hover:bg-gray-50 transition">
+                                    <td class="px-4 py-3">
+                                        <div class="font-medium text-gray-900">@c.CustomerName</div>
+                                        @if (!string.IsNullOrWhiteSpace(c.Phone))
+                                        {
+                                            <div class="text-xs text-gray-500">@c.Phone</div>
+                                        }
+                                        @if (c.LastBookingTime.HasValue)
+                                        {
+                                            <div class="text-[11px] text-gray-500 mt-0.5">Gần nhất: @c.LastBookingTime.Value.ToString("dd/MM/yyyy HH:mm")</div>
+                                        }
+                                    </td>
+                                    <td class="px-4 py-3 text-center">@c.BookingCount</td>
+                                    <td class="px-4 py-3 text-right font-semibold text-gray-900">@c.TotalAmount.ToString("#,##0") đ</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3" class="px-4 py-4 text-center text-gray-500 text-sm">Chưa có dữ liệu khách hàng.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+
+
+
+        </div>
+
+    </div>
+    @{
+        var daily = (Model.DailyStats ?? new List<SmartTable.Models.ViewModels.DailyStatItem>())
+            .OrderBy(x => x.Date).ToList();
+
+        var dailyLabels = daily.Select(x => x.Date.ToString("dd/MM")).ToList();
+        var dailyBookings = daily.Select(x => x.BookingCount).ToList();
+        var dailyRevenue = daily.Select(x => (double)(x.DepositAmount + x.PreOrderAmount)).ToList();
+
+        var hourDict = (Model.HourlyStats ?? new List<SmartTable.Models.ViewModels.HourlyStatItem>())
+            .ToDictionary(x => x.Hour, x => x);
+
+        var hourlyLabels = Enumerable.Range(0, 24).Select(h => $"{h:00}:00").ToList();
+        var hourlyBookings = Enumerable.Range(0, 24).Select(h => hourDict.ContainsKey(h) ? hourDict[h].BookingCount : 0).ToList();
+        var hourlyRevenue = Enumerable.Range(0, 24).Select(h => (double)(hourDict.ContainsKey(h) ? hourDict[h].TotalAmount : 0m)).ToList();
+
+        var rs = (Model.RestaurantStats ?? new List<SmartTable.Models.ViewModels.RestaurantStatItem>()).ToList();
+        var restaurantLabels = rs.Select(x => x.RestaurantName).ToList();
+        var restaurantTotals = rs.Select(x => (double)(x.DepositAmount + x.PreOrderAmount)).ToList();
+
+        var tm = (Model.TopMenuItems ?? new List<SmartTable.Models.ViewModels.MenuItemStatItem>()).ToList();
+        var topMenuLabels = tm.Select(x => x.MenuItemName).ToList();
+        var topMenuRevenue = tm.Select(x => (double)x.Revenue).ToList();
+
+        var ws = (Model.WeeklyStats ?? new List<SmartTable.Models.ViewModels.WeeklyStatItem>())
+            .OrderBy(x => x.WeekStart).ToList();
+        var weeklyLabels = ws.Select(x => $"Tuần {x.Week}/{x.Year}").ToList();
+        var weeklyRevenue = ws.Select(x => (double)x.TotalAmount).ToList();
+
+        var ms = (Model.MonthlyStats ?? new List<SmartTable.Models.ViewModels.MonthlyStatItem>())
+            .OrderBy(x => x.Year).ThenBy(x => x.Month).ToList();
+        var monthlyLabels = ms.Select(x => $"{x.Month:00}/{x.Year}").ToList();
+        var monthlyRevenue = ms.Select(x => (double)(x.DepositAmount + x.PreOrderAmount)).ToList();
+
+        var ys = (Model.YearlyStats ?? new List<SmartTable.Models.ViewModels.YearlyStatItem>())
+            .OrderBy(x => x.Year).ToList();
+        var yearlyLabels = ys.Select(x => x.Year.ToString()).ToList();
+        var yearlyRevenue = ys.Select(x => (double)(x.DepositAmount + x.PreOrderAmount)).ToList();
+
+        var tc = (Model.TopCustomers ?? new List<SmartTable.Models.ViewModels.CustomerStatItem>()).ToList();
+        var customerLabels = tc.Select(x => x.CustomerName).ToList();
+        var customerTotals = tc.Select(x => (double)x.TotalAmount).ToList();
+    }
+
+    @section Scripts {
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+        <script>
+        
+        const dailyLabels = @Html.Raw(Json.Encode(dailyLabels));
+        const dailyBookings = @Html.Raw(Json.Encode(dailyBookings));
+        const dailyRevenue = @Html.Raw(Json.Encode(dailyRevenue));
+
+        const hourlyLabels = @Html.Raw(Json.Encode(hourlyLabels));
+        const hourlyBookings = @Html.Raw(Json.Encode(hourlyBookings));
+        const hourlyRevenue = @Html.Raw(Json.Encode(hourlyRevenue));
+
+        const restaurantLabels = @Html.Raw(Json.Encode(restaurantLabels));
+        const restaurantTotals = @Html.Raw(Json.Encode(restaurantTotals));
+
+        const topMenuLabels = @Html.Raw(Json.Encode(topMenuLabels));
+        const topMenuRevenue = @Html.Raw(Json.Encode(topMenuRevenue));
+
+        const weeklyLabels = @Html.Raw(Json.Encode(weeklyLabels));
+        const weeklyRevenue = @Html.Raw(Json.Encode(weeklyRevenue));
+
+        const monthlyLabels = @Html.Raw(Json.Encode(monthlyLabels));
+        const monthlyRevenue = @Html.Raw(Json.Encode(monthlyRevenue));
+
+        const yearlyLabels = @Html.Raw(Json.Encode(yearlyLabels));
+        const yearlyRevenue = @Html.Raw(Json.Encode(yearlyRevenue));
+
+        const customerLabels = @Html.Raw(Json.Encode(customerLabels));
+        const customerTotals = @Html.Raw(Json.Encode(customerTotals));
+
+        if (typeof ApexCharts === "undefined") {
+            console.error("ApexCharts chưa load. Check layout có RenderSection('Scripts', required:false) chưa.");
+        }
+
+        let chartsRendered = false;
+
+        function fmtVnd(v) {
+            return new Intl.NumberFormat("vi-VN").format(v) + " đ";
+        }
+
+        function renderAllChartsOnce() {
+            if (chartsRendered) return;
+            chartsRendered = true;
+
+            new ApexCharts(document.querySelector("#chartDaily"), {
+                chart: { height: 320, type: "line", toolbar: { show: false } },
+                series: [
+                    { name: "Lượt đặt", type: "column", data: dailyBookings },
+                    { name: "Doanh thu", type: "line", data: dailyRevenue }
+                ],
+                xaxis: { categories: dailyLabels },
+                yaxis: [
+                    { title: { text: "Lượt đặt" } },
+                    { opposite: true, title: { text: "Doanh thu" }, labels: { formatter: v => new Intl.NumberFormat("vi-VN").format(v) } }
+                ],
+                stroke: { width: [0, 3] },
+                dataLabels: { enabled: false },
+                tooltip: { y: { formatter: (v, ctx) => ctx.seriesIndex === 1 ? fmtVnd(v) : v } }
+            }).render();
+
+            new ApexCharts(document.querySelector("#chartHourly"), {
+                chart: { height: 320, type: "bar", toolbar: { show: false } },
+                series: [{ name: "Lượt đặt", data: hourlyBookings }],
+                xaxis: { categories: hourlyLabels },
+                dataLabels: { enabled: false }
+            }).render();
+
+            new ApexCharts(document.querySelector("#chartRestaurantShare"), {
+                chart: { height: 320, type: "donut" },
+                labels: restaurantLabels,
+                series: restaurantTotals,
+                tooltip: { y: { formatter: fmtVnd } },
+                legend: { position: "bottom" }
+            }).render();
+
+            new ApexCharts(document.querySelector("#chartTopMenu"), {
+                chart: { height: 320, type: "bar", toolbar: { show: false } },
+                series: [{ name: "Doanh thu", data: topMenuRevenue }],
+                xaxis: { categories: topMenuLabels, labels: { rotate: -20 } },
+                tooltip: { y: { formatter: fmtVnd } },
+                dataLabels: { enabled: false }
+            }).render();
+
+            new ApexCharts(document.querySelector("#chartWeekly"), {
+                chart: { height: 220, type: "line", toolbar: { show: false } },
+                series: [{ name: "Doanh thu", data: weeklyRevenue }],
+                xaxis: { categories: weeklyLabels },
+                tooltip: { y: { formatter: fmtVnd } },
+                dataLabels: { enabled: false }
+            }).render();
+
+            new ApexCharts(document.querySelector("#chartMonthly"), {
+                chart: { height: 220, type: "line", toolbar: { show: false } },
+                series: [{ name: "Doanh thu", data: monthlyRevenue }],
+                xaxis: { categories: monthlyLabels },
+                tooltip: { y: { formatter: fmtVnd } },
+                dataLabels: { enabled: false }
+            }).render();
+
+            new ApexCharts(document.querySelector("#chartYearly"), {
+                chart: { height: 220, type: "bar", toolbar: { show: false } },
+                series: [{ name: "Doanh thu", data: yearlyRevenue }],
+                xaxis: { categories: yearlyLabels },
+                tooltip: { y: { formatter: fmtVnd } },
+                dataLabels: { enabled: false }
+            }).render();
+
+            new ApexCharts(document.querySelector("#chartTopCustomers"), {
+                chart: { height: 320, type: "bar", toolbar: { show: false } },
+                series: [{ name: "Tổng", data: customerTotals }],
+                xaxis: { categories: customerLabels, labels: { rotate: -15 } },
+                tooltip: { y: { formatter: fmtVnd } },
+                dataLabels: { enabled: false }
+            }).render();
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const btn = document.getElementById("btnToggleCharts");
+            const wrap = document.getElementById("chartsWrapper");
+            const txt = document.getElementById("txtCharts");
+            const ico = document.getElementById("icoCharts");
+
+            if (!btn || !wrap) return;
+
+            btn.addEventListener("click", function () {
+                const isHidden = wrap.classList.contains("hidden");
+
+                if (isHidden) {
+                    wrap.classList.remove("hidden");
+                    if (txt) txt.textContent = "Ẩn biểu đồ";
+                    if (ico) { ico.classList.remove("fa-chart-line"); ico.classList.add("fa-eye-slash"); }
+
+                    requestAnimationFrame(() => requestAnimationFrame(renderAllChartsOnce));
+                    wrap.scrollIntoView({ behavior: "smooth", block: "start" });
+                } else {
+                    wrap.classList.add("hidden");
+                    if (txt) txt.textContent = "Xem biểu đồ";
+                    if (ico) { ico.classList.remove("fa-eye-slash"); ico.classList.add("fa-chart-line"); }
+                }
+            });
+        });
+        </script>
+    }
+
+</div>

@@ -1,134 +1,179 @@
 ﻿@model SmartTable.Models.ViewModels.PaymentViewModel
+@using System
 
 @{
     ViewBag.Title = "Hoàn tất đặt bàn";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    int bookingId = 0;
-    string restaurantName = "Nhà hàng";
-    DateTime bookingTime = DateTime.Now;
-    int numberOfGuests = 0;
-    decimal amount = 0m;
-    string paymentMethod = "Chuyển khoản";
-    string status = "Thành công";
+    int bookingId = Model?.BookingId ?? 0;
 
-    if (Model != null)
-    {
-        bookingId = Model.BookingId;
-        restaurantName = string.IsNullOrWhiteSpace(Model.RestaurantName)
-                            ? "Nhà hàng"
-                            : Model.RestaurantName;
+    string restaurantName = string.IsNullOrWhiteSpace(Model?.RestaurantName) ? "Đang cập nhật" : Model.RestaurantName;
+    string restaurantAddress = (Model?.RestaurantAddress ?? "").Trim();
 
-        bookingTime = Model.BookingTime;
-        numberOfGuests = Model.NumberOfGuests;
-        amount = Model.Amount;
-        paymentMethod = string.IsNullOrWhiteSpace(Model.PaymentMethod)
-                            ? "Chuyển khoản"
-                            : Model.PaymentMethod;
-        status = string.IsNullOrWhiteSpace(Model.Status)
-                            ? "Thành công"
-                            : Model.Status;
-    }
+    DateTime bookingTime = Model?.BookingTime ?? DateTime.MinValue;
+    int numberOfGuests = Model?.NumberOfGuests ?? 0;
 
-    // ===== FIX: đánh dấu trạng thái thành công / không =====
-    bool isSuccessStatus = false;
-    if (!string.IsNullOrEmpty(status))
-    {
-        var s = status.ToLowerInvariant();
-        // check tiếng Việt & tiếng Anh
-        isSuccessStatus = s.Contains("thành công") || s.Contains("success");
-    }
+    decimal deposit = Model?.DepositAmount ?? 0m;
+    decimal preOrder = Model?.PreOrderTotal ?? 0m;
+
+    decimal total = (Model != null && Model.Amount > 0m) ? Model.Amount : (deposit + preOrder);
+
+    string paymentMethod = string.IsNullOrWhiteSpace(Model?.PaymentMethod) ? "Đang cập nhật" : Model.PaymentMethod;
+    string status = string.IsNullOrWhiteSpace(Model?.Status) ? "Chờ xác nhận" : Model.Status.Trim();
+
+    var s = status.ToLowerInvariant();
+
+    bool isSuccess =
+        s.Contains("thành công") || s.Contains("success") ||
+        s.Contains("paid") || s.Contains("completed") ||
+        s.Contains("đã thanh toán") || s.Contains("đã cọc") ||
+        s.Contains("confirmed");
+
+    bool isFailed =
+        s.Contains("thất bại") || s.Contains("failed") ||
+        s.Contains("error") || s.Contains("lỗi") ||
+        s.Contains("hủy") || s.Contains("cancel");
+
+    bool isPending = !isSuccess && !isFailed &&
+        (s.Contains("chờ") || s.Contains("pending") ||
+         s.Contains("processing") || s.Contains("đang xử lý") ||
+         s.Contains("xác nhận"));
+
+    string bookingListUrl = Url.Action("DanhSachBanDaDat", "DatBan");
+
+    string iconWrapClass = isSuccess ? "bg-green-100 text-green-600"
+                        : isPending ? "bg-blue-100 text-blue-600"
+                        : "bg-red-100 text-red-600";
+
+    string iconClass = isSuccess ? "fas fa-check"
+                    : isPending ? "fas fa-hourglass-half"
+                    : "fas fa-times";
+
+    string titleText = isSuccess ? "Đặt bàn thành công!"
+                    : isPending ? "Đã gửi yêu cầu – Chờ xác nhận"
+                    : "Đặt bàn chưa hoàn tất";
+
+    string subText = isSuccess
+        ? $"Cảm ơn bạn đã đặt bàn tại {restaurantName}."
+        : isPending
+            ? $"SmartTable đã ghi nhận yêu cầu thanh toán. Nhà hàng sẽ xác nhận sớm nhất."
+            : $"Giao dịch/đặt bàn chưa hoàn tất. Bạn vào lịch sử đặt bàn để kiểm tra.";
 }
 
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="mb-4 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 font-semibold">
+        @TempData["ErrorMessage"]
+    </div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="mb-4 p-4 rounded-xl border border-green-200 bg-green-50 text-green-700 font-semibold">
+        @TempData["SuccessMessage"]
+    </div>
+}
 
 <div class="bg-gray-50 min-h-screen py-10">
     <div class="container mx-auto max-w-3xl px-4">
 
-        <!-- Bước tiến trình -->
+        <!-- Tiến trình: pending thì step 3 chưa xanh -->
         <div class="flex justify-center mb-8">
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2 text-gray-400">
                     <span class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center font-bold">1</span>
                     <span class="text-xs md:text-sm">Đặt bàn</span>
                 </div>
+
                 <div class="w-12 h-0.5 bg-gray-300"></div>
-                <div class="flex items-center gap-2 text-gray-400">
-                    <span class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center font-bold">2</span>
+
+                <div class="flex items-center gap-2 @(isSuccess || isPending ? "text-green-600 font-bold" : "text-gray-400")">
+                    <span class="w-8 h-8 rounded-full @(isSuccess || isPending ? "bg-green-600 text-white border-2 border-green-600" : "border-2 border-gray-300") flex items-center justify-center font-bold">2</span>
                     <span class="text-xs md:text-sm">Thanh toán cọc</span>
                 </div>
-                <div class="w-12 h-0.5 bg-green-500"></div>
-                <div class="flex items-center gap-2 text-green-600 font-bold">
-                    <span class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center">3</span>
+
+                <div class="w-12 h-0.5 @(isSuccess ? "bg-green-500" : "bg-gray-300")"></div>
+
+                <div class="flex items-center gap-2 @(isSuccess ? "text-green-600 font-bold" : "text-gray-400")">
+                    <span class="w-8 h-8 rounded-full @(isSuccess ? "bg-green-600 text-white" : "border-2 border-gray-300") flex items-center justify-center font-bold">3</span>
                     <span class="text-xs md:text-sm">Hoàn tất</span>
                 </div>
             </div>
         </div>
 
         <div class="bg-white rounded-2xl shadow-lg p-8 text-center border border-gray-100">
-            <div class="w-20 h-20 mx-auto mb-4 flex items-center justify-center rounded-full bg-green-100 text-green-600">
-                <i class="fas fa-check text-3xl"></i>
+            <div class="w-20 h-20 mx-auto mb-4 flex items-center justify-center rounded-full @iconWrapClass">
+                <i class="@iconClass text-3xl"></i>
             </div>
 
-            <h1 class="text-2xl md:text-3xl font-bold mb-2 text-gray-800">
-                Đặt bàn thành công!
-            </h1>
-
-            <p class="text-gray-600 mb-4 text-sm md:text-base">
-                Cảm ơn bạn đã đặt bàn tại
-                <span class="font-semibold">@restaurantName</span>.
-            </p>
+            <h1 class="text-2xl md:text-3xl font-bold mb-2 text-gray-800">@titleText</h1>
+            <p class="text-gray-600 mb-4 text-sm md:text-base">@subText</p>
 
             @if (bookingId > 0)
             {
                 <p class="text-xs text-gray-400 mb-2">
-                    Mã đặt bàn:
-                    <span class="font-mono font-semibold text-gray-700">#@bookingId</span>
+                    Mã đặt bàn: <span class="font-mono font-semibold text-gray-700">#@bookingId</span>
                 </p>
             }
 
-        <div class="bg-gray-50 rounded-xl p-4 md:p-5 text-sm text-left inline-block mx-auto mb-5 border border-gray-100">
-            <p class="mb-1">
-                <span class="font-semibold text-gray-700">Thời gian:</span>
-                <span class="text-gray-800">
-                    @bookingTime.ToString("HH:mm - dd/MM/yyyy")
-                </span>
-            </p>
-            <p class="mb-1">
-                <span class="font-semibold text-gray-700">Số khách:</span>
-                <span class="text-gray-800">
-                    @numberOfGuests người
-                </span>
-            </p>
-            <p class="mb-1">
-                <span class="font-semibold text-gray-700">Tiền cọc đã thanh toán:</span>
-                <span class="text-red-600 font-semibold">
-                    @amount.ToString("#,##0") đ
-                </span>
-            </p>
-            <p class="mb-1">
-                <span class="font-semibold text-gray-700">Hình thức thanh toán:</span>
-                <span class="text-gray-800">
-                    @paymentMethod
-                </span>
-            </p>
-            <p class="mb-1">
-                <span class="font-semibold text-gray-700">Trạng thái:</span>
-                <span class="@(isSuccessStatus
-                   ? "text-green-600 font-semibold"
-                   : "text-yellow-600 font-semibold")">
-                    @status
-                </span>
-            </p>
+            <!--  BOX THÔNG TIN ĐẦY ĐỦ -->
+            <div class="bg-gray-50 rounded-xl p-4 md:p-5 text-sm text-left mx-auto mb-5 border border-gray-100 w-full">
+                <div class="flex justify-between gap-4">
+                    <span class="font-semibold text-gray-700">Nhà hàng:</span>
+                    <span class="text-gray-800 text-right">@restaurantName</span>
+                </div>
 
-        </div>
+                @if (!string.IsNullOrEmpty(restaurantAddress))
+                {
+                    <div class="flex justify-between gap-4 mt-2">
+                        <span class="text-gray-600">Địa chỉ:</span>
+                        <span class="text-gray-800 text-right">@restaurantAddress</span>
+                    </div>
+                }
 
-            <p class="text-xs md:text-sm text-gray-500 mb-6">
-                Vui lòng giữ lại mã đặt bàn hoặc kiểm tra email/tin nhắn xác nhận từ SmartTable.
-                Đến nhà hàng, bạn chỉ cần cung cấp mã <span class="font-mono font-semibold">#@bookingId</span> để được hỗ trợ nhanh hơn.
-            </p>
+                <div class="flex justify-between gap-4 mt-2">
+                    <span class="font-semibold text-gray-700">Thời gian:</span>
+                    <span class="text-gray-800">
+                        @(bookingTime != DateTime.MinValue && bookingTime.Year >= 2000 ? bookingTime.ToString("HH:mm - dd/MM/yyyy") : "Đang cập nhật")
+                    </span>
+                </div>
+
+                <div class="flex justify-between gap-4 mt-2">
+                    <span class="font-semibold text-gray-700">Số khách:</span>
+                    <span class="text-gray-800">@((numberOfGuests > 0) ? (numberOfGuests + " người") : "Đang cập nhật")</span>
+                </div>
+
+                <div class="mt-3 pt-3 border-t border-gray-200">
+                    <div class="flex justify-between gap-4">
+                        <span class="text-gray-600">Tiền cọc:</span>
+                        <span class="font-semibold text-gray-900">@((deposit > 0m) ? deposit.ToString("#,##0") + " đ" : "Chưa ghi nhận")</span>
+                    </div>
+
+                    <div class="flex justify-between gap-4 mt-2">
+                        <span class="text-gray-600">Món đặt trước:</span>
+                        <span class="font-semibold text-gray-900">@((preOrder > 0m) ? preOrder.ToString("#,##0") + " đ" : "0 đ")</span>
+                    </div>
+
+                    <div class="flex justify-between gap-4 mt-2">
+                        <span class="font-semibold text-gray-700">@((isSuccess) ? "Tổng đã thanh toán:" : "Tổng đã gửi yêu cầu:")</span>
+                        <span class="font-bold text-red-600">@((total > 0m) ? total.ToString("#,##0") + " đ" : "Chưa ghi nhận")</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-between gap-4 mt-3">
+                    <span class="font-semibold text-gray-700">Hình thức:</span>
+                    <span class="text-gray-800">@paymentMethod</span>
+                </div>
+
+                <div class="flex justify-between gap-4 mt-2">
+                    <span class="font-semibold text-gray-700">Trạng thái:</span>
+                    <span class="@(isSuccess ? "text-green-600 font-semibold" : isPending ? "text-blue-600 font-semibold" : "text-red-600 font-semibold")">
+                        @status
+                    </span>
+                </div>
+            </div>
 
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                <a href="@Url.Action("DanhSachBanDaDat", "DATBAN")"
+                <a href="@bookingListUrl"
                    class="px-6 py-2.5 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm font-semibold hover:bg-gray-50 transition">
                     Xem lịch sử đặt bàn
                 </a>
@@ -141,3 +186,108 @@
         </div>
     </div>
 </div>
+
+<!--  MODAL: CHỈ HIỆN KHI CHỜ XÁC NHẬN -->
+<div id="sendingModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-[92%] text-center relative">
+
+        <button type="button"
+                onclick="closeSendingModal()"
+                class="absolute top-3 right-3 leading-none"
+                aria-label="Đóng">
+            <i class="fas fa-times" style="color:#b91c1c !important; font-size:22px;"></i>
+        </button>
+
+        <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
+            <i class="fas fa-hourglass-half text-4xl"></i>
+        </div>
+
+        <h3 class="text-2xl font-bold text-gray-800 mb-2">Đã gửi yêu cầu – Chờ xác nhận</h3>
+
+        <div class="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-4 text-left text-sm">
+            <div class="flex justify-between gap-4">
+                <span class="text-gray-500">Mã đặt bàn:</span>
+                <span class="font-mono font-semibold text-gray-800">@((bookingId > 0) ? "#" + bookingId : "Đang cập nhật")</span>
+            </div>
+
+            <div class="flex justify-between gap-4 mt-2">
+                <span class="text-gray-500">Nhà hàng:</span>
+                <span class="font-semibold text-gray-800 text-right">@restaurantName</span>
+            </div>
+
+            <div class="flex justify-between gap-4 mt-2">
+                <span class="text-gray-500">Thời gian:</span>
+                <span class="font-semibold text-gray-800">
+                    @(bookingTime != DateTime.MinValue && bookingTime.Year >= 2000 ? bookingTime.ToString("HH:mm - dd/MM/yyyy") : "Đang cập nhật")
+                </span>
+            </div>
+
+            <div class="flex justify-between gap-4 mt-2">
+                <span class="text-gray-500">Số khách:</span>
+                <span class="font-semibold text-gray-800">@((numberOfGuests > 0) ? numberOfGuests + " người" : "Đang cập nhật")</span>
+            </div>
+
+            <div class="flex justify-between gap-4 mt-2 border-t border-gray-200 pt-2">
+                <span class="text-gray-500">Tổng đã gửi yêu cầu:</span>
+                <span class="font-bold text-red-600">@((total > 0m) ? total.ToString("#,##0") + " đ" : "Chưa ghi nhận")</span>
+            </div>
+
+            <div class="flex justify-between gap-4 mt-2">
+                <span class="text-gray-500">Hình thức:</span>
+                <span class="font-semibold text-gray-800">@paymentMethod</span>
+            </div>
+
+            <div class="flex justify-between gap-4 mt-2">
+                <span class="text-gray-500">Trạng thái:</span>
+                <span class="font-bold text-blue-600">@status</span>
+            </div>
+        </div>
+
+        <p class="text-gray-500 mt-4 mb-6 text-sm leading-relaxed">
+            Bạn có thể về danh sách đặt bàn để theo dõi trạng thái <b>Chờ xác nhận</b>, hoặc ở lại trang này.
+        </p>
+
+        <div class="flex flex-col gap-3">
+            <button type="button"
+                    id="btnGoList"
+                    class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">
+                Về danh sách đặt bàn
+            </button>
+
+            <button type="button"
+                    onclick="closeSendingModal()"
+                    class="w-full bg-white text-gray-700 font-bold py-3 rounded-xl border border-gray-300 hover:bg-gray-50 transition">
+                Ở lại trang này
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function closeSendingModal() {
+            const modal = document.getElementById('sendingModal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        (function () {
+            var shouldShow = @((isPending && !isSuccess && !isFailed) ? "true" : "false");
+            if (!shouldShow) return;
+
+            var modal = document.getElementById('sendingModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            var btnGoList = document.getElementById('btnGoList');
+            if (btnGoList) {
+                btnGoList.addEventListener('click', function () {
+                    window.location.href = '@bookingListUrl';
+                });
+            }
+        })();
+    </script>
+}

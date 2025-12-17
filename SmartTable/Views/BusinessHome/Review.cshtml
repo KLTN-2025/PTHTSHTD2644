@@ -1,0 +1,131 @@
+﻿@model IEnumerable<SmartTable.Models.ViewModels.ReviewManageViewModel>
+@{
+    ViewBag.Title = "Quản lý đánh giá";
+    Layout = "~/Views/Shared/_BusinessLayout.cshtml";
+}
+
+<div class="bg-gray-50 min-h-screen py-8">
+    <div class="container mx-auto max-w-6xl px-4">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">
+            Quản lý đánh giá - @ViewBag.RestaurantName
+        </h1>
+
+        <form method="get" class="mb-6 flex gap-2">
+            <select name="statusFilter" class="px-3 py-2 border border-gray-300 rounded-lg">
+                <option value="">Tất cả trạng thái</option>
+                <option value="pending" @(ViewBag.StatusFilter == "pending" ? "selected" : "")>Chờ duyệt</option>
+                <option value="approved" @(ViewBag.StatusFilter == "approved" ? "selected" : "")>Đã duyệt</option>
+                <option value="rejected" @(ViewBag.StatusFilter == "rejected" ? "selected" : "")>Từ chối</option>
+            </select>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Lọc</button>
+        </form>
+
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Khách hàng</th>
+                        <th class="px-4 py-3 text-center">Đánh giá</th>
+                        <th class="px-4 py-3 text-left">Bình luận</th>
+                        <th class="px-4 py-3 text-left">Ngày</th>
+                        <th class="px-4 py-3 text-center">Trạng thái</th>
+                        <th class="px-4 py-3 text-center">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    @foreach (var review in Model)
+                    {
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium">@review.UserName</td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center gap-1 text-yellow-400">
+                                    @for (int i = 0; i < review.Rating; i++)
+                                    {
+                                        <i class="fas fa-star"></i>
+                                    }
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 truncate max-w-xs">@review.Comment</td>
+                            <td class="px-4 py-3 text-gray-500">@review.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex px-2 py-1 rounded-full text-xs font-bold
+                                    @(review.Status == "approved" ? "bg-green-100 text-green-700" :
+                                      review.Status == "rejected" ? "bg-red-100 text-red-700" :
+                                      "bg-yellow-100 text-yellow-700")">
+                                    @(review.Status == "approved" ? "Đã duyệt" :
+                                      review.Status == "rejected" ? "Từ chối" :
+                                      "Chờ duyệt")
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                @if (review.Status == "pending")
+                                {
+                                    <button onclick="approveReview(@review.ReviewId)"
+                                            class="text-xs px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600">
+                                        Duyệt
+                                    </button>
+                                    <button onclick="rejectReview(@review.ReviewId)"
+                                            class="text-xs px-2 py-1 ml-1 bg-red-500 text-white rounded hover:bg-red-600">
+                                        Từ chối
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-6 flex justify-center gap-2">
+            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+            {
+                <a href="@Url.Action("Index", new { page = i, statusFilter = ViewBag.StatusFilter })"
+                   class="px-3 py-2 border @(i == ViewBag.CurrentPage ? "bg-blue-600 text-white" : "border-gray-300 hover:bg-gray-50")">
+                    @i
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function approveReview(reviewId) {
+            if (confirm('Duyệt đánh giá này?')) {
+                fetch('@Url.Action("Approve", "BusinessReview")', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reviewId: reviewId })
+                })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        alert(d.message);
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + d.message);
+                    }
+                });
+            }
+        }
+
+        function rejectReview(reviewId) {
+            if (confirm('Từ chối đánh giá này?')) {
+                fetch('@Url.Action("Reject", "BusinessReview")', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reviewId: reviewId })
+                })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        alert(d.message);
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + d.message);
+                    }
+                });
+            }
+        }
+    </script>
+}

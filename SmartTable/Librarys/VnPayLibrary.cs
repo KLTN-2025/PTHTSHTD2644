@@ -17,7 +17,6 @@ namespace SmartTable.Models.Vnpay
         private readonly SortedList<string, string> _responseData =
             new SortedList<string, string>(new VnPayCompare());
 
-        // ============ REQUEST ============
 
         public void AddRequestData(string key, string value)
         {
@@ -35,7 +34,6 @@ namespace SmartTable.Models.Vnpay
             {
                 if (string.IsNullOrEmpty(kv.Value)) continue;
 
-                // encode key & value, nối bằng '&'
                 data.Append(WebUtility.UrlEncode(kv.Key));
                 data.Append("=");
                 data.Append(WebUtility.UrlEncode(kv.Value));
@@ -43,7 +41,7 @@ namespace SmartTable.Models.Vnpay
             }
 
             if (data.Length > 0)
-                data.Length -= 1; // bỏ '&' cuối
+                data.Length -= 1; 
 
             var rawData = data.ToString();
             var secureHash = HmacSha512(vnpHashSecret, rawData);
@@ -58,7 +56,6 @@ namespace SmartTable.Models.Vnpay
             return url;
         }
 
-        // ============ RESPONSE ============
 
         public void AddResponseData(string key, string value)
         {
@@ -95,7 +92,6 @@ namespace SmartTable.Models.Vnpay
 
             foreach (var kv in _responseData)
             {
-                // BẮT BUỘC loại bỏ 2 key hash
                 if (kv.Key == "vnp_SecureHash" || kv.Key == "vnp_SecureHashType")
                     continue;
                 if (string.IsNullOrEmpty(kv.Value))
@@ -108,7 +104,7 @@ namespace SmartTable.Models.Vnpay
             }
 
             if (data.Length > 0)
-                data.Length -= 1; // bỏ '&' cuối
+                data.Length -= 1; 
 
             return data.ToString();
         }
@@ -132,7 +128,6 @@ namespace SmartTable.Models.Vnpay
             }
         }
 
-        // IP client
         public string GetIpAddress(HttpRequestBase request)
         {
             try
@@ -165,7 +160,6 @@ namespace SmartTable.Models.Vnpay
             }
         }
 
-        // Dùng cho service tổng hợp
         public PaymentResponseModel GetFullResponseData(NameValueCollection collection, string hashSecret)
         {
             var vnPay = new VnPayLibrary();

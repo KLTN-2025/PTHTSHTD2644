@@ -6,7 +6,8 @@ using System.Configuration;
 using System.Net.Mail; 
 using SmartTable.Filters; 
 using BCrypt.Net; 
-using System.Text; 
+using System.Text;
+using SmartTable.Models.ViewModels;
 
 namespace SmartTable.Controllers
 {
@@ -58,40 +59,55 @@ namespace SmartTable.Controllers
             return View(model);
         }
 
-        // --- ĐĂNG NHẬP ---
+      
+
+        // GET: /Account/Login
         [HttpGet]
         public ActionResult Login()
         {
-            return View(new Users());
+            return View(new LoginViewModel());
         }
 
+        // POST: /Account/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Login(Users model)
+        public ActionResult Login(LoginViewModel model)
         {
+            if (!ModelState.IsValid)
+                return View(model);
+
             var user = db.Users.FirstOrDefault(u => u.email == model.email);
 
-            if (user != null && BCrypt.Net.BCrypt.Verify(model.password_hash, user.password_hash))
+            bool isValid = false;
+            if (user != null && !string.IsNullOrEmpty(user.password_hash))
+            {
+                try
+                {
+                    // Dùng model.password (không phải password_hash)
+                    isValid = BCrypt.Net.BCrypt.Verify(model.password, user.password_hash);
+                }
+                catch
+                {
+                    isValid = false;
+                }
+            }
+
+            if (user != null && isValid)
             {
                 Session["user"] = user;
                 Session["user_id"] = user.user_id;
                 Session["role"] = user.role;
 
                 if (user.role == "Admin")
-                {
                     return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
-                }
                 else if (user.role == "business")
-                {
-                    return RedirectToAction("Index", "BusinessHome"); 
-                }
+                    return RedirectToAction("Index", "BusinessHome");
                 else
-                {
                     return RedirectToAction("Index", "Home");
-                }
             }
+
             ModelState.AddModelError("", "Email hoặc mật khẩu không đúng.");
-            return View(model); 
+            return View(model);
         }
 
         // --- ĐĂNG XUẤT ---

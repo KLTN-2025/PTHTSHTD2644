@@ -20,6 +20,8 @@ namespace SmartTable.Models
         public string payment_method { get; set; }
         public string status { get; set; }
         public string transaction_id { get; set; }
+        public Nullable<System.DateTime> paid_at { get; set; }
+        public string payment_kind { get; set; }
     
         public virtual Bookings Bookings { get; set; }
     }

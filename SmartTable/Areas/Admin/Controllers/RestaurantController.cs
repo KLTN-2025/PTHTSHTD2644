@@ -29,7 +29,6 @@ namespace SmartTable.Areas.Admin.Controllers
             "Website,SpaceDescription,Amenities,AmenitiesOther," +
             "SeatingType,PrivateRoomCount,NearbyLandmark";
 
-        // ====== CẤU HÌNH UPLOAD ẢNH  ======
 
         private const int MaxImageSizeBytes = 5 * 1024 * 1024; // 5MB
 
@@ -102,14 +101,12 @@ namespace SmartTable.Areas.Admin.Controllers
 
         #region Index & Details
 
-        // Hiển thị danh sách nhà hàng
         public ActionResult Index()
         {
             var restaurants = db.Restaurants.Include(r => r.Users).ToList();
             return View(restaurants);
         }
 
-        // Hiển thị chi tiết một nhà hàng
         public ActionResult Details(int? id)
         {
             if (id == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
@@ -127,14 +124,12 @@ namespace SmartTable.Areas.Admin.Controllers
 
         #region Create
 
-        // GET: Hiển thị form tạo nhà hàng mới
         public ActionResult Create()
         {
             ViewBag.user_id = new SelectList(db.Users.Where(u => u.role == "business"), "user_id", "email");
             return View();
         }
 
-        // POST: Thêm nhà hàng mới
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = BIND_PROPERTIES)] Restaurants restaurant, string latitudeStr, string longitudeStr)
@@ -163,7 +158,6 @@ namespace SmartTable.Areas.Admin.Controllers
 
         #region Edit
 
-        // GET: Hiển thị form chỉnh sửa nhà hàng
         public ActionResult Edit(int? id)
         {
             if (id == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
@@ -174,19 +168,16 @@ namespace SmartTable.Areas.Admin.Controllers
 
             if (restaurant == null) return HttpNotFound();
 
-            // Danh sách tiện ích mặc định
             ViewBag.AvailableAmenities = new List<string>
             {
                 "Karaoke riêng", "Karaoke chung", "Tivi/Máy chiếu",
                 "Loa mic", "Khu vui chơi trẻ em", "Ghế trẻ em", "VAT"
             };
 
-            // DropDownList gán User
             ViewBag.user_id = new SelectList(db.Users.Where(u => u.role == "business"), "user_id", "email", restaurant.user_id);
             return View(restaurant);
         }
 
-        // POST: Chỉnh sửa nhà hàng
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(
@@ -201,7 +192,6 @@ namespace SmartTable.Areas.Admin.Controllers
         {
             double latValue, lngValue;
 
-            // 1. Chuyển đổi latitude/longitude từ string sang double và validate
             bool latValid = double.TryParse(latitudeStr, NumberStyles.Float, CultureInfo.InvariantCulture, out latValue);
             bool lngValid = double.TryParse(longitudeStr, NumberStyles.Float, CultureInfo.InvariantCulture, out lngValue);
 
@@ -214,7 +204,6 @@ namespace SmartTable.Areas.Admin.Controllers
             if (!lngValid && !string.IsNullOrEmpty(longitudeStr))
                 ModelState.AddModelError("longitudeStr", "Kinh độ phải là giá trị số (dùng dấu chấm).");
 
-            // 2. Xử lý tiện ích (Amenities)
             List<string> amenityList = new List<string>();
             if (AmenitiesCheckbox != null && AmenitiesCheckbox.Length > 0)
             {
@@ -229,7 +218,6 @@ namespace SmartTable.Areas.Admin.Controllers
 
             if (ModelState.IsValid)
             {
-                // 3. Lấy đối tượng gốc từ DB để EF track entity
                 var originalRestaurant = db.Restaurants
                     .Include(r => r.RestaurantImages)
                     .FirstOrDefault(r => r.restaurant_id == restaurant.restaurant_id);
@@ -237,10 +225,8 @@ namespace SmartTable.Areas.Admin.Controllers
                 if (originalRestaurant == null)
                     return HttpNotFound();
 
-                // 4. Cập nhật tất cả giá trị primitive từ form vào đối tượng gốc
                 db.Entry(originalRestaurant).CurrentValues.SetValues(restaurant);
 
-                // 5. Xử lý ảnh đại diện (dùng helper UploadFile)
                 if (uploadedImage != null && uploadedImage.ContentLength > 0)
                 {
                     string fileName = $"main_{originalRestaurant.restaurant_id}_{Guid.NewGuid()}.jpg";
@@ -257,10 +243,8 @@ namespace SmartTable.Areas.Admin.Controllers
                     }
                 }
 
-                // Không cho chỉnh created_at
                 db.Entry(originalRestaurant).Property(r => r.created_at).IsModified = false;
 
-                // 6. Xóa ảnh view cũ nếu có chọn
                 if (DeleteImages != null && DeleteImages.Length > 0)
                 {
                     foreach (var imageId in DeleteImages)
@@ -283,7 +267,6 @@ namespace SmartTable.Areas.Admin.Controllers
                     }
                 }
 
-                // 7. Upload ảnh view mới
                 if (viewImages != null)
                 {
                     foreach (var file in viewImages)
@@ -305,14 +288,12 @@ namespace SmartTable.Areas.Admin.Controllers
                     }
                 }
 
-                // 8. Lưu tất cả thay đổi
                 db.SaveChanges();
 
                 TempData["SuccessMessage"] = $"Đã cập nhật nhà hàng {originalRestaurant.name} thành công.";
                 return RedirectToAction("Index");
             }
 
-            // Nếu validation thất bại, tạo lại SelectList và danh sách tiện ích
             ViewBag.user_id = new SelectList(db.Users.Where(u => u.role == "business"), "user_id", "email", restaurant.user_id);
             ViewBag.AvailableAmenities = new List<string>
             {
@@ -327,7 +308,6 @@ namespace SmartTable.Areas.Admin.Controllers
 
         #region Delete
 
-        // POST: Xóa nhà hàng
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(int id)
@@ -338,7 +318,6 @@ namespace SmartTable.Areas.Admin.Controllers
 
             if (restaurant != null)
             {
-                // Xóa tất cả ảnh view liên quan
                 var images = restaurant.RestaurantImages.ToList();
                 foreach (var img in images)
                 {
@@ -374,10 +353,8 @@ namespace SmartTable.Areas.Admin.Controllers
             base.Dispose(disposing);
         }
 
-        // Chuyển độ sang radian
         private double ToRadians(double degree) => degree * Math.PI / 180;
 
-        // Tính khoảng cách 2 điểm địa lý theo km
         private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
         {
             double R = 6371; 
@@ -390,7 +367,6 @@ namespace SmartTable.Areas.Admin.Controllers
             return R * c;
         }
 
-        // API trả về danh sách nhà hàng gần một tọa độ
         [HttpGet]
         public JsonResult GetNearbyMapData(double lat, double lng, double radiusKm = 5)
         {

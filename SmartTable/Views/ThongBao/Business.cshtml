@@ -1,0 +1,85 @@
+﻿@model System.Collections.Generic.List<SmartTable.Models.Notifications>
+@using System
+
+@{
+    ViewBag.Title = "Thông báo doanh nghiệp";
+    Layout = "~/Views/Shared/_BusinessLayout.cshtml";
+}
+
+<div class="max-w-5xl mx-auto px-6 py-8">
+
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+            <i class="fas fa-bell mr-2" style="font-size:18px; color:#2563eb !important;"></i>
+            Thông báo doanh nghiệp
+        </h1>
+
+        <div class="flex items-center gap-2">
+            <a href="@Url.Action("Index","BusinessHome")"
+               class="px-4 py-2 bg-white border border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-100 transition">
+                <i class="fas fa-arrow-left mr-2"></i>Quay về
+            </a>
+
+            @using (Html.BeginForm("BusinessMarkAllRead", "ThongBao", FormMethod.Post, new { @class = "inline" }))
+            {
+                @Html.AntiForgeryToken()
+                <button type="submit"
+                        class="px-4 py-2 bg-white border border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-100 transition">
+                    Đánh dấu tất cả đã đọc
+                </button>
+            }
+        </div>
+    </div>
+
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="bg-white border border-gray-200 rounded-2xl p-10 text-center text-gray-600">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-50 flex items-center justify-center">
+                <i class="fas fa-bell-slash text-2xl text-blue-600"></i>
+            </div>
+            Chưa có thông báo nào.
+        </div>
+    }
+    else
+    {
+        <div class="space-y-3">
+            @foreach (var n in Model)
+            {
+                bool isUnread = !(n.is_read);
+                string title = string.IsNullOrWhiteSpace(n.title) ? "Thông báo" : n.title;
+                string msg = n.message ?? "";
+                string timeText = n.created_at.ToString("dd/MM/yyyy HH:mm");
+
+                <a href="@Url.Action("BusinessOpen", "ThongBao", new { id = n.notification_id })"
+                   class="block bg-white border rounded-2xl p-4 hover:shadow-sm transition @(isUnread ? "border-blue-200" : "border-gray-200")">
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center @(isUnread ? "bg-blue-50" : "bg-gray-100")">
+                            <i class="fas fa-bell @(isUnread ? "text-blue-700" : "text-gray-600")" style="font-size:18px;"></i>
+                        </div>
+
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <div class="font-bold text-gray-900 break-words">@title</div>
+                                    @if (!string.IsNullOrWhiteSpace(msg))
+                                    {
+                                        <div class="text-sm text-gray-700 mt-1 leading-relaxed break-words">@msg</div>
+                                    }
+                                </div>
+                                <div class="text-xs text-gray-500 whitespace-nowrap">@timeText</div>
+                            </div>
+
+                            @if (isUnread)
+                            {
+                                <div class="mt-2 inline-flex items-center text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
+                                    Mới
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</div>

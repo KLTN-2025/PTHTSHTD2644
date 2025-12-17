@@ -47,13 +47,11 @@
         var restaurantMarkers = []; 
         const DEFAULT_POS = [10.8231, 106.6297]; // TP.HCM
 
-        // Icon Nhà hàng
         const RestaurantIcon = L.icon({
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448373.png',
             iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
         });
 
-        // Icon Người dùng (Màu xanh)
         const UserIcon = L.icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -61,14 +59,14 @@
         });
 
         document.addEventListener('DOMContentLoaded', function () {
-            locateUser(); // Tự động tìm khi vào trang
+            locateUser(); 
         });
 
         function locateUser() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (pos) => initMap(pos.coords.latitude, pos.coords.longitude),
-                    () => initMap(DEFAULT_POS[0], DEFAULT_POS[1]), // Fallback nếu lỗi
+                    () => initMap(DEFAULT_POS[0], DEFAULT_POS[1]), 
                     { enableHighAccuracy: true, timeout: 10000 }
                 );
             } else {
@@ -101,7 +99,7 @@
             // Vẽ Marker
             userMarker = L.marker(userLocation, {
                 icon: UserIcon,
-                draggable: true // <--- QUAN TRỌNG: Cho phép kéo
+                draggable: true 
             }).addTo(map)
             .bindPopup("<b>Bạn đang ở đây</b><br>Kéo tôi để chỉnh vị trí!").openPopup();
 

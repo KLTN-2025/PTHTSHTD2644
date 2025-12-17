@@ -1,0 +1,402 @@
+﻿@model IEnumerable<SmartTable.Models.ViewModels.ReviewManageViewModel>
+@Html.AntiForgeryToken()
+
+@{
+    ViewBag.Title = "Quản lý đánh giá";
+    Layout = "~/Views/Shared/_BusinessLayout.cshtml";
+}
+
+<div class="bg-gray-50 min-h-screen py-8">
+    <div class="container mx-auto max-w-7xl px-4">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">
+                Quản lý đánh giá - @ViewBag.RestaurantName
+            </h1>
+            <a href="@Url.Action("Statistics", "BusinessReview")"
+               class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                <i class="fas fa-chart-pie mr-2"></i>Xem thống kê
+            </a>
+        </div>
+        <a href="/BusinessHome" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 transition">
+            <i class="fas fa-arrow-left mr-1"></i> Quay lại Dashboard
+        </a>
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <form method="get" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+                        <select name="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">Tất cả</option>
+                            <option value="approved" @(ViewBag.StatusFilter == "approved" ? "selected" : "")>Đã duyệt</option>
+                            <option value="pending" @(ViewBag.StatusFilter == "pending" ? "selected" : "")>Chờ duyệt</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Điểm</label>
+                        <select name="ratingFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">Tất cả sao</option>
+                            <option value="5" @(ViewBag.RatingFilter == "5" ? "selected" : "")>⭐⭐⭐⭐⭐ 5 sao</option>
+                            <option value="4" @(ViewBag.RatingFilter == "4" ? "selected" : "")>⭐⭐⭐⭐ 4 sao</option>
+                            <option value="3" @(ViewBag.RatingFilter == "3" ? "selected" : "")>⭐⭐⭐ 3 sao</option>
+                            <option value="2" @(ViewBag.RatingFilter == "2" ? "selected" : "")>⭐⭐ 2 sao</option>
+                            <option value="1" @(ViewBag.RatingFilter == "1" ? "selected" : "")>⭐ 1 sao</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Báo cáo</label>
+                        <select name="reportFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">Tất cả</option>
+                            <option value="reported" @(ViewBag.ReportFilter == "reported" ? "selected" : "")>⚠️ Bị báo cáo</option>
+                            <option value="not_reported" @(ViewBag.ReportFilter == "not_reported" ? "selected" : "")>✓ Bình thường</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Sắp xếp</label>
+                        <select name="sortBy" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="newest" @(ViewBag.SortBy == "newest" ? "selected" : "")>Mới nhất</option>
+                            <option value="oldest" @(ViewBag.SortBy == "oldest" ? "selected" : "")>Cũ nhất</option>
+                            <option value="rating_high" @(ViewBag.SortBy == "rating_high" ? "selected" : "")>Điểm cao nhất</option>
+                            <option value="rating_low" @(ViewBag.SortBy == "rating_low" ? "selected" : "")>Điểm thấp nhất</option>
+                            <option value="reported" @(ViewBag.SortBy == "reported" ? "selected" : "")>Bị báo cáo trước</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                            <i class="fas fa-search mr-1"></i>Lọc & Tìm
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tìm kiếm (Tên khách / nội dung)</label>
+                    <input type="text" name="searchKeyword" value="@ViewBag.SearchKeyword"
+                           placeholder="VD: Nguyễn Văn A, dịch vụ chậm..."
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+            </form>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-600">
+                <p class="text-gray-600 text-sm">Tổng đánh giá</p>
+                <p class="text-2xl font-bold text-blue-600">@ViewBag.TotalReviewCount</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-yellow-500">
+                <p class="text-gray-600 text-sm">Bị báo cáo (chưa xử lý)</p>
+                <p class="text-2xl font-bold text-yellow-600">@(Model.Sum(m => m.ReportCount))</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-600">
+                <p class="text-gray-600 text-sm">Có phản hồi</p>
+                <p class="text-2xl font-bold text-green-600">@(Model.Count(m => !string.IsNullOrEmpty(m.ReplyText)))</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-purple-600">
+                <p class="text-gray-600 text-sm">Chờ duyệt</p>
+                <p class="text-2xl font-bold text-purple-600">@(Model.Count(m => m.Status == "pending"))</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Khách hàng</th>
+                        <th class="px-4 py-3 text-center">Đánh giá</th>
+                        <th class="px-4 py-3 text-left">Bình luận</th>
+                        <th class="px-4 py-3 text-center">Báo cáo</th>
+                        <th class="px-4 py-3 text-center">Phản hồi</th>
+                        <th class="px-4 py-3 text-center">Trạng thái</th>
+                        <th class="px-4 py-3 text-left">Ngày</th>
+                        <th class="px-4 py-3 text-center">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    @foreach (var review in Model)
+                    {
+                        <tr class="hover:bg-gray-50 @(review.IsReported ? "bg-red-50" : "")">
+                            <td class="px-4 py-3 font-medium">
+                                <span>@review.UserName</span><br />
+                                <span class="text-xs text-gray-500">@review.UserPhone</span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span style="display:inline-flex; gap:2px;">
+                                    @for (int i = 0; i < review.Rating; i++)
+                                    {
+                                        <span style="font-size:12px; color:#facc15;">★</span>
+                                    }
+                                </span>
+
+
+                            </td>
+                            <td class="px-4 py-3">
+                                <p class="truncate max-w-xs text-gray-700">@review.Comment</p>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                @if (review.ReportCount > 0)
+                                {
+                                    <span class="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
+                                        <i class="fas fa-flag mr-1"></i>@review.ReportCount báo cáo
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-gray-400 text-xs">-</span>
+                                }
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                @if (!string.IsNullOrEmpty(review.ReplyText))
+                                {
+                                    <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
+                                        <i class="fas fa-reply mr-1"></i>Đã trả lời
+                                    </span>
+                                }
+                                else
+                                {
+                                    <button onclick="openReplyModal(@review.ReviewId, '@review.UserName')"
+                                            class="text-xs px-2 py-1 text-blue-600 hover:text-blue-800 hover:underline">
+                                        <i class="fas fa-comment-dots"></i> Trả lời
+                                    </button>
+                                }
+                            </td>
+
+                            <td class="px-4 py-3 text-center">
+                                @if (review.Status == "pending")
+                                {
+                                    <button onclick="approveReview(@review.ReviewId)"
+                                            class="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold hover:bg-purple-200">
+                                        <i class="fas fa-check-circle mr-1"></i> Duyệt
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
+                                        <i class="fas fa-check mr-1"></i> Đã duyệt
+                                    </span>
+                                }
+                            </td>
+                            <td class="px-4 py-3 text-gray-500 text-xs">@review.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td class="px-4 py-3 text-center space-x-1">
+                                <button onclick="deleteReview(@review.ReviewId)"
+                                        class="text-xs px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+
+                        if (!string.IsNullOrEmpty(review.ReplyText))
+                        {
+                            <tr class="bg-blue-50">
+                                <td colspan="8" class="px-4 py-3">
+                                    <div class="flex items-start gap-3 bg-white p-3 rounded-lg border-l-4 border-blue-500">
+                                        <div class="flex-shrink-0">
+                                            <i class="fas fa-user-tie text-blue-600 text-lg"></i>
+                                        </div>
+                                        <div class="flex-grow">
+                                            <p class="text-xs font-bold text-blue-600 mb-1">📢 Phản hồi từ Chủ nhà hàng</p>
+                                            <p class="text-sm text-gray-800">@review.ReplyText</p>
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                @(review.ReplyCreatedAt?.ToString("dd/MM/yyyy HH:mm"))
+                                            </p>                                            <button onclick="deleteReply(@review.ReviewId)"
+                                                                                                    class="text-xs text-red-600 hover:underline mt-2">
+                                                <i class="fas fa-trash-alt"></i> Xóa phản hồi
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-6 flex justify-center gap-1">
+            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+            {
+                <a href="@Url.Action("Index", new {
+                    page = i,
+                    statusFilter = ViewBag.StatusFilter,
+                    ratingFilter = ViewBag.RatingFilter,
+                    reportFilter = ViewBag.ReportFilter,
+                    searchKeyword = ViewBag.SearchKeyword,
+                    sortBy = ViewBag.SortBy
+                })"
+                   class="px-3 py-2 border rounded-lg text-sm @(i == ViewBag.CurrentPage ? "bg-blue-600 text-white border-blue-600" : "border-gray-300 hover:bg-gray-50")">
+                    @i
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+<div id="replyModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-lg max-w-md w-full">
+        <div class="bg-blue-600 text-white p-4 flex items-center justify-between">
+            <h3 class="font-bold">
+                <i class="fas fa-comment-dots mr-2"></i>Phản hồi đánh giá
+            </h3>
+            <button onclick="closeReplyModal()" class="text-xl hover:text-blue-200">×</button>
+        </div>
+        <div class="p-4">
+            <p class="text-sm text-gray-600 mb-3">Khách: <span id="replyCustomerName" class="font-bold"></span></p>
+            <textarea id="replyText" placeholder="Nhập phản hồi của bạn..."
+                      maxlength="500"
+                      class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                      rows="4"></textarea>
+            <p class="text-xs text-gray-500 mt-1">Tối đa 500 ký tự. <span id="charCount">0</span>/500</p>
+        </div>
+        <div class="bg-gray-50 p-4 flex gap-2">
+            <button onclick="closeReplyModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">Hủy</button>
+            <button onclick="submitReply()" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Gửi phản hồi</button>
+        </div>
+    </div>
+</div>@section Scripts {
+    <script>
+    // ===== CSRF token =====
+    function getToken() {
+        const el = document.querySelector('input[name="__RequestVerificationToken"]');
+        return el ? el.value : '';
+    }
+
+    // ===== Helpers =====
+    function isHtml(text) {
+        if (!text) return false;
+        const t = text.trim().toLowerCase();
+        return t.startsWith('<!doctype') || t.startsWith('<html') || t.startsWith('<');
+    }
+
+    function postForm(url, dataObj) {
+        const token = getToken();
+
+        // form-urlencoded: add token vào body
+        const payload = Object.assign({}, dataObj, {
+            __RequestVerificationToken: token
+        });
+
+        return fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: new URLSearchParams(payload).toString()
+        }).then(async (r) => {
+            const text = await r.text();
+
+            // Nếu server trả HTML (login/error page) => báo rõ để khỏi "Unexpected token <"
+            if (isHtml(text)) {
+                // ưu tiên message gọn
+                throw new Error('Phiên đăng nhập đã hết hạn hoặc server trả HTML. Hãy tải lại trang và đăng nhập lại.');
+            }
+
+            // Parse JSON
+            let json;
+            try {
+                json = text ? JSON.parse(text) : null;
+            } catch (e) {
+                throw new Error('Phản hồi không hợp lệ từ server: ' + (text || ('HTTP ' + r.status)));
+            }
+
+            // HTTP lỗi
+            if (!r.ok || !json) {
+                throw new Error((json && json.message) ? json.message : ('HTTP ' + r.status));
+            }
+
+            // JSON báo fail
+            if (json.success === false) {
+                throw new Error(json.message || 'Thao tác thất bại.');
+            }
+
+            return json;
+        });
+    }
+
+    // ===== Actions =====
+    function approveReview(reviewId) {
+        if (!confirm('Bạn chắc chắn muốn duyệt (công khai) đánh giá này?')) return;
+
+        postForm('@Url.Action("ApproveReview", "BusinessReview")', { reviewId: reviewId })
+            .then(d => { alert(d.message || 'Đã duyệt.'); location.reload(); })
+            .catch(err => alert('Lỗi: ' + err.message));
+    }
+
+    function deleteReview(reviewId) {
+        if (!confirm('Bạn chắc chắn muốn xóa đánh giá này? Hành động này không thể hoàn tác.')) return;
+
+        postForm('@Url.Action("DeleteReview", "BusinessReview")', { reviewId: reviewId })
+            .then(d => { alert(d.message || 'Đã xóa.'); location.reload(); })
+            .catch(err => alert('Lỗi: ' + err.message));
+    }
+
+    function deleteReply(reviewId) {
+        if (!confirm('Bạn chắc chắn muốn xóa phản hồi này?')) return;
+
+        postForm('@Url.Action("DeleteReply", "BusinessReview")', { reviewId: reviewId })
+            .then(d => { alert(d.message || 'Đã xóa phản hồi.'); location.reload(); })
+            .catch(err => alert('Lỗi: ' + err.message));
+    }
+
+    // ===== Reply modal =====
+    let currentReplyReviewId = null;
+
+    function openReplyModal(reviewId, customerName) {
+        currentReplyReviewId = reviewId;
+
+        const nameEl = document.getElementById('replyCustomerName');
+        const textEl = document.getElementById('replyText');
+        const countEl = document.getElementById('charCount');
+        const modalEl = document.getElementById('replyModal');
+
+        if (nameEl) nameEl.textContent = customerName || '';
+        if (textEl) textEl.value = '';
+        if (countEl) countEl.textContent = '0';
+        if (modalEl) modalEl.classList.remove('hidden');
+    }
+
+    function closeReplyModal() {
+        const modalEl = document.getElementById('replyModal');
+        if (modalEl) modalEl.classList.add('hidden');
+        currentReplyReviewId = null;
+    }
+
+    function submitReply() {
+        const textEl = document.getElementById('replyText');
+        const replyText = textEl ? textEl.value.trim() : '';
+
+        if (!currentReplyReviewId) return alert('Thiếu mã đánh giá.');
+        if (!replyText) return alert('Vui lòng nhập phản hồi.');
+
+        postForm('@Url.Action("ReplyToReview", "BusinessReview")', {
+            reviewId: currentReplyReviewId,
+            replyText: replyText
+        })
+        .then(d => { alert(d.message || 'Đã lưu phản hồi.'); closeReplyModal(); location.reload(); })
+        .catch(err => alert('Lỗi: ' + err.message));
+    }
+
+    // ===== Bind input counter safely =====
+    document.addEventListener('DOMContentLoaded', function () {
+        const textEl = document.getElementById('replyText');
+        const countEl = document.getElementById('charCount');
+
+        if (textEl && countEl) {
+            textEl.addEventListener('input', function () {
+                countEl.textContent = String(this.value.length || 0);
+            });
+        }
+    });
+
+    // ===== Expose functions to onclick in HTML =====
+    window.approveReview = approveReview;
+    window.deleteReview = deleteReview;
+    window.deleteReply = deleteReply;
+    window.openReplyModal = openReplyModal;
+    window.closeReplyModal = closeReplyModal;
+    window.submitReply = submitReply;
+    </script>
+}

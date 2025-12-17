@@ -1,0 +1,167 @@
+﻿@using System
+@using System.Linq
+@using System.Globalization
+@model IEnumerable<SmartTable.Models.ViewModels.TrustedRestaurantItemViewModel>
+
+@{
+    ViewBag.Title = "Nhà hàng uy tín";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var minReviews = ViewBag.MinReviews != null ? (int)ViewBag.MinReviews : 10;
+    var minRating = ViewBag.MinRating != null ? (decimal)ViewBag.MinRating : 3.6m;
+}
+
+<div class="relative bg-gradient-to-b from-white via-blue-50/60 to-white py-12 md:py-16 -mt-6">
+    <div class="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+
+    <div class="container mx-auto max-w-5xl px-4 relative z-10 text-center">
+        <h1 class="text-3xl md:text-5xl leading-tight font-extrabold text-gray-900 font-display">
+            Nhà hàng uy tín
+            <br />
+            <span class="text-blue-600">Chọn đúng chỗ, ăn ngon khỏi lo</span>
+        </h1>
+
+        <div class="text-gray-600 mt-3">
+            Tiêu chí hiện tại: tối thiểu <span class="font-semibold">@minReviews</span> đánh giá và điểm trung bình từ
+            <span class="font-semibold">@minRating</span> trở lên.
+        </div>
+
+        <div class="mt-6">
+            <a href="@Url.Action("Index","Home")"
+               class="inline-flex items-center px-6 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold hover:bg-gray-50 transition">
+                Về trang chủ
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container mx-auto max-w-7xl px-4 py-12">
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <span class="w-1 h-6 bg-blue-600 rounded-full"></span>
+            Danh sách nhà hàng uy tín
+        </h2>
+        <p class="text-gray-500 text-sm mt-1 ml-3">
+            @(Model != null ? Model.Count() : 0) nhà hàng phù hợp
+        </p>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="bg-gray-50 py-20 rounded-3xl border border-gray-200 flex flex-col items-center">
+            <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow text-gray-300 mb-5">
+                <i class="fas fa-search text-3xl"></i>
+            </div>
+            <p class="text-gray-600 font-medium text-lg">Chưa có nhà hàng đạt chuẩn uy tín</p>
+            <p class="text-gray-500 text-sm mt-2">Hệ thống sẽ cập nhật khi có đủ dữ liệu đánh giá hợp lệ.</p>
+            <a href="@Url.Action("Index","Home")"
+               class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold">
+                Về trang chủ
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+            @foreach (var item in Model)
+            {
+                var reviewCount = item.ReviewCount;
+                var avgRating = (double)item.AvgRating;
+                var avgRatingStr = avgRating > 0
+                    ? avgRating.ToString("0.0", CultureInfo.InvariantCulture)
+                    : "0.0";
+
+                var detailUrl = Url.Action("RestaurantDetails", "DetailNhaHang", new { id = item.RestaurantId });
+
+                <div class="group bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all overflow-hidden flex flex-col">
+                    <div class="relative h-52 overflow-hidden">
+                        <img src="@(string.IsNullOrWhiteSpace(item.Image) ? "https://via.placeholder.com/500" : item.Image)"
+                             alt="@item.Name"
+                             class="w-full h-full object-cover group-hover:scale-105 duration-700 ease-out" />
+
+                        @if (reviewCount > 0)
+                        {
+                            <div class="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5">
+                                <i class="fas fa-star review-star-color"></i>
+                                <span class="font-bold text-amber-500 text-sm">@avgRatingStr</span>
+                                <span class="text-xs text-gray-500">(@reviewCount)</span>
+                            </div>
+                        }
+
+                        <div class="absolute top-3 left-3 bg-amber-500 text-white px-3 py-1.5 rounded-full shadow-md text-xs font-bold">
+                            ★ Uy tín
+                        </div>
+                    </div>
+
+                    <style>
+                        .review-star-color {
+                            color: #f59e0b !important;
+                        }
+                    </style>
+
+                    <div class="p-4 flex flex-col gap-2 flex-1">
+                        <div>
+                            <h3 class="text-base md:text-lg font-bold text-gray-900 group-hover:text-blue-600 line-clamp-1">
+                                @item.Name
+                            </h3>
+                            <p class="mt-1 text-xs md:text-sm text-gray-500 line-clamp-1">
+                                @item.Address
+                            </p>
+
+                            @if (!string.IsNullOrWhiteSpace(item.Area) || !string.IsNullOrWhiteSpace(item.City))
+                            {
+                                <p class="mt-0.5 text-xs text-gray-500 line-clamp-1">
+                                    <span class="font-semibold text-gray-600">Khu vực:</span>
+                                    @(string.IsNullOrWhiteSpace(item.Area) ? "" : item.Area)
+                                    @((!string.IsNullOrWhiteSpace(item.Area) && !string.IsNullOrWhiteSpace(item.City)) ? ", " : "")
+                                    @(string.IsNullOrWhiteSpace(item.City) ? "" : item.City)
+                                </p>
+                            }
+                        </div>
+
+                        <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
+                            <div style="display:flex; gap:2px;">
+                                @{
+                                    int ratingValue = (int)Math.Round(avgRating);
+                                    for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= ratingValue)
+                                        {
+                                            <i class="fas fa-star" style="font-size:12px; color:#facc15 !important; fill:#facc15 !important;"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-star" style="font-size:12px; color:#d1d5db !important; fill:#d1d5db !important;"></i>
+                                        }
+                                    }
+                                }
+                            </div>
+
+                            @if (reviewCount == 0)
+                            {
+                                <span style="font-size:12px; color:#9ca3af;">Chưa có đánh giá</span>
+                            }
+                            else
+                            {
+                                <span style="font-size:12px; color:#4b5563;">@reviewCount đánh giá</span>
+                            }
+                        </div>
+
+                        <div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-50 text-[11px] md:text-xs text-amber-700 font-medium">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
+                                Uy tín
+                            </span>
+
+                            <a href="@detailUrl"
+                               class="text-sm md:text-base font-semibold text-blue-600 inline-flex items-center gap-1 hover:gap-2 transition-all">
+                                Xem chi tiết
+                                <span>→</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

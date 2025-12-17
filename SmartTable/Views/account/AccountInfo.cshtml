@@ -1,24 +1,28 @@
 ﻿@model SmartTable.Models.Users
 @{
-    // Bạn có thể đặt chú thích ở đây nếu muốn
     ViewBag.Title = "Thông Tin Tài Khoản";
-    Layout = "~/Views/Shared/_Layout.cshtml"; // Sử dụng layout chung
+    Layout = "~/Views/Shared/_Layout.cshtml"; 
 }
 
-@* Phần CSS tùy chỉnh có thể giữ lại hoặc chuyển vào file CSS chung nếu muốn *@
 @section styles {
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         .heading {
             font-family: 'Playfair Display', serif;
         }
-        /* Các style khác nếu cần */
     </style>
 }
 
 <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden p-8">
     <h1 class="heading text-3xl font-bold mb-8 text-center text-gray-800 border-b pb-4">
-        <i class="fas fa-user-circle mr-2 text-blue-600"></i>Thông tin tài khoản
+        <i class="fas fa-user-circle"
+                   style="
+               margin-right:8px;
+               font-size:16px;
+               color:#2563eb !important;
+           ">
+        </i>
+        </i>Thông tin tài khoản
     </h1>
 
     @if (ViewBag.SuccessMessage != null)

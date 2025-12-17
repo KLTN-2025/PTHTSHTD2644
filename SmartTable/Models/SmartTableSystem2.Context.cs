@@ -36,5 +36,9 @@ namespace SmartTable.Models
         public virtual DbSet<PartnerLeads> PartnerLeads { get; set; }
         public virtual DbSet<Restaurants> Restaurants { get; set; }
         public virtual DbSet<RestaurantImages> RestaurantImages { get; set; }
+        public virtual DbSet<ReviewReplies> ReviewReplies { get; set; }
+        public virtual DbSet<ReviewReporting> ReviewReporting { get; set; }
+        public virtual DbSet<sysdiagrams> sysdiagrams { get; set; }
+        public virtual DbSet<Notifications> Notifications { get; set; }
     }
 }

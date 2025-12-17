@@ -1,8 +1,8 @@
-﻿@model SmartTable.Models.Users
+﻿@model SmartTable.Models.ViewModels.LoginViewModel
 @{
     ViewBag.Title = "Đăng nhập - SmartTable";
 }
-@* Thêm link đến file CSS tùy chỉnh *@
+
 <link href="~/Content/Account/login.css" rel="stylesheet" />
 
 <div class="min-h-screen flex items-center justify-center animated-bg px-4 py-10">
@@ -21,25 +21,39 @@
             </div>
         }
 
-        @* ValidationSummary sẽ được style bằng CSS mới *@
-        @Html.ValidationSummary(true) @* Bỏ class *@
+        @Html.ValidationSummary(true)
 
         @using (Html.BeginForm("Login", "Account", FormMethod.Post))
         {
             @Html.AntiForgeryToken()
 
-            <div class="input-box">
-                <i class="fas fa-envelope"></i>
-                @Html.TextBoxFor(m => m.email, new { placeholder = "Địa chỉ Email", type = "email", required = "required" })
-            </div>
-            @Html.ValidationMessageFor(m => m.email) @* Bỏ class *@
+    <div class="input-box">
+        <i class="fas fa-envelope"
+           style="color:#2563eb !important;"></i>
+        @Html.TextBoxFor(m => m.email, new
+        {
+            placeholder = "Địa chỉ Email",
+            type = "email",
+            required = "required"
+        })
+    </div>
+            @Html.ValidationMessageFor(m => m.email)
 
-            <div class="input-box">
-                <i class="fas fa-lock"></i>
-                @Html.PasswordFor(m => m.password_hash, new { placeholder = "Mật khẩu", id = "password", required = "required" })
-                <i id="togglePassword" class="far fa-eye"></i> @* Giữ lại ID và class icon ban đầu *@
-            </div>
-            @Html.ValidationMessageFor(m => m.password_hash) @* Bỏ class *@
+    <div class="input-box">
+        <i class="fas fa-lock"
+           style="color:#4b5563 !important;"></i>
+        @Html.PasswordFor(m => m.password, new
+        {
+            placeholder = "Mật khẩu",
+            id = "password",
+            required = "required"
+        })
+            <i id="togglePassword"
+               class="far fa-eye"
+               style="color:#4b5563 !important;">
+            </i>
+    </div>
+            @Html.ValidationMessageFor(m => m.password)
 
             <div class="flex justify-end mb-4">
                 <a href="@Url.Action("ForgotPassword", "Account")" class="text-sm text-blue-600 hover:underline">
@@ -60,8 +74,7 @@
 
             <p class="text-center text-sm text-gray-600 mt-5">
                 Chưa có tài khoản?
-                <a href="@Url.Action("Register", "Account")"
-                   class="text-orange-500 font-semibold hover:underline">
+                <a href="@Url.Action("Register", "Account")" style="color: #6c5ce7" class="font-semibold hover:underline">
                     Đăng ký ngay
                 </a>
             </p>
@@ -72,13 +85,13 @@
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")
     <script>
-        // Toggle hiện / ẩn mật khẩu
         const togglePassword = document.getElementById('togglePassword');
         const passwordInput = document.getElementById('password');
-        togglePassword ?.addEventListener('click', () => {
+
+        togglePassword?.addEventListener('click', () => {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
-            // Toggle class icon
+
             togglePassword.classList.toggle('fa-eye');
             togglePassword.classList.toggle('fa-eye-slash');
         });

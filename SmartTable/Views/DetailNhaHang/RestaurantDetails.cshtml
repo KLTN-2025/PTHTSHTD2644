@@ -1,7 +1,7 @@
 ﻿@using System.Globalization
 @using System.Linq
+@using SmartTable.Models
 @model SmartTable.Models.ViewModels.SmartTableDetailViewModel
-
 @{
     ViewBag.Title = Model.Restaurant.name;
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -32,13 +32,15 @@
         </div>
     }
 
+    var approvedReviews = (Model.Reviews ?? new List<Reviews>())
+        .Where(x => x.status == "approved" || x.status == null)
+        .ToList();
 
-
-
-    var reviewCount = Model.Reviews?.Count ?? 0;
-    double avgRating = reviewCount > 0 ? Model.Reviews.Average(r => (double)r.rating) : 0;
+    var reviewCount = approvedReviews.Count;
+    double avgRating = reviewCount > 0 ? approvedReviews.Average(r => (double)r.rating) : 0;
     string avgRatingStr = avgRating > 0 ? avgRating.ToString("0.0", CultureInfo.InvariantCulture) : "0.0";
 }
+
 <style>
     .restaurant-page i,
     .restaurant-page svg {
@@ -51,24 +53,17 @@
         border-bottom-color: #dc2626;
     }
 
-    #map-container {
-        width: 100% !important;
-        height: 380px !important;
-        display: block;
+    .rating-star {
+        transition: all 0.2s ease;
     }
 
-        #map-container.leaflet-container {
-            width: 100% !important;
-            height: 100% !important;
+    .star-btn {
+        transition: all 0.2s ease;
+    }
+
+        .star-btn:hover {
+            transform: scale(1.1);
         }
-
-    .rating-star.text-gray-300 {
-        color: #d1d5db;
-    }
-
-    .rating-star.text-yellow-400 {
-        color: #facc15;
-    }
 
     .menu-filter {
         padding: 0.5rem 1rem;
@@ -99,7 +94,6 @@
 <div class="restaurant-page min-h-screen bg-gradient-to-b from-gray-50 to-white">
     <!-- HERO -->
     <div class="relative bg-gradient-to-br from-gray-900 to-gray-800 text-white overflow-hidden">
-
         <div class="absolute inset-0 group cursor-pointer" onclick="openHeroImage()">
             <div class="absolute inset-0"
                  style="background-image: url('@(Model.Restaurant.Image ?? "https://via.placeholder.com/1920x600")'); background-size: cover; background-position: center;">
@@ -162,6 +156,7 @@
     <div class="container mx-auto px-4 lg:px-8 py-8">
         <div class="flex flex-col lg:flex-row gap-8">
             <div class="lg:w-2/3 space-y-8">
+                <!-- HÌNH ẢNH CHÍNH -->
                 <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
                     <div class="relative">
                         <img src="@(Model.Restaurant.Image ?? "https://via.placeholder.com/1200x600")"
@@ -191,6 +186,7 @@
                     </div>
                 </div>
 
+                <!-- NAVIGATION -->
                 <div class="sticky top-20 z-30 bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
                     <div class="flex overflow-x-auto scrollbar-hide">
                         <a href="#gioi-thieu" class="nav-pill flex-1 min-w-0 px-6 py-4 text-center font-semibold text-gray-700 border-b-2 border-transparent hover:text-red-600 hover:border-red-500 transition-all duration-200 flex items-center justify-center gap-2">
@@ -213,6 +209,7 @@
                 </div>
 
                 <div class="space-y-10">
+                    <!-- GIỚI THIỆU -->
                     <section id="gioi-thieu" class="scroll-mt-24">
                         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
                             <div class="flex items-center gap-3 mb-6">
@@ -247,7 +244,7 @@
                         </div>
                     </section>
 
-                    <!-- THỰC ĐƠN + DANH MỤC -->
+                    <!-- THỰC ĐƠN -->
                     <section id="thuc-don" class="scroll-mt-24">
                         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
                             <div class="flex items-center gap-3 mb-4">
@@ -395,7 +392,6 @@
                         </div>
                     </section>
 
-
                     <!-- ĐÁNH GIÁ -->
                     <section id="danh-gia" class="scroll-mt-24">
                         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
@@ -414,11 +410,11 @@
                                 </div>
                             </div>
 
-                            @if (Model.Reviews == null || !Model.Reviews.Any())
+                            @if (Model.Reviews == null || !Model.Reviews.Any(r => r.status == "approved" || r.status == null))
                             {
                                 <div class="text-center py-12">
                                     <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-yellow-100 flex items-center justify-center">
-                                        <i class="fas fa-star text-3xl text-yellow-400"></i>
+                                        <i class="fas fa-star text-3xl text-yellow-500"></i>
                                     </div>
                                     <h3 class="text-lg font-semibold text-gray-700 mb-2">Chưa có đánh giá nào</h3>
                                     <p class="text-gray-500">Hãy là người đầu tiên chia sẻ trải nghiệm của bạn.</p>
@@ -426,40 +422,81 @@
                             }
                             else
                             {
-                                <div class="grid md:grid-cols-2 gap-6 mb-8">
-                                    @foreach (var r in Model.Reviews.OrderByDescending(x => x.created_at).Take(4))
+                                <div class="space-y-6 mb-8">
+                                    @foreach (var r in approvedReviews.OrderByDescending(x => x.created_at).Take(10))
                                     {
-                                        <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-100 p-6">
-                                            <div class="flex items-center justify-between mb-4">
+                                        <div class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow duration-300">
+                                            <div class="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-4">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center font-semibold text-red-600">
-                                                        @(r.Users?.full_name?.Substring(0, 1) ?? "K")
+                                                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center font-semibold text-red-600 text-lg">
+                                                        @if (!string.IsNullOrEmpty(r.Users?.full_name))
+                                                        {
+                                                            @r.Users.full_name.Substring(0, 1).ToUpper()
+                                                        }
+                                                        else
+                                                        {
+                                                            @:K
+                                                        }
                                                     </div>
                                                     <div>
                                                         <p class="font-semibold text-gray-900">@(r.Users?.full_name ?? "Khách ẩn danh")</p>
-                                                        <p class="text-xs text-gray-500">@r.created_at?.ToString("dd/MM/yyyy")</p><p class="text-xs text-gray-500">
-                                                            @(r.created_at.HasValue
-                                                            ? r.created_at.Value.ToString("dd/MM/yyyy")
-                                                            : "")
+                                                        <p class="text-sm text-gray-500">
+                                                            @if (r.created_at.HasValue)
+                                                            {
+                                                                @r.created_at.Value.ToString("dd/MM/yyyy HH:mm")
+                                                            }
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div class="flex gap-1">
-                                                    @for (int i = 1; i <= 5; i++)
-                                                    {
-                                                        <i class="fas fa-star @(i <= r.rating ? "text-yellow-400" : "text-gray-300")"></i>
-                                                    }
+
+                                                <div class="flex items-center gap-2">
+                                                    <div class="flex gap-1">
+                                                        @{
+                                                            int ratingValue = (r.rating >= 1 && r.rating <= 5) ? (int)r.rating : 0;
+                                                        }
+                                                        @for (int i = 1; i <= 5; i++)
+                                                        {
+                                                            <i class="fas fa-star text-lg @(i <= ratingValue ? "text-yellow-500" : "text-gray-300")"></i>
+                                                        }
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <p class="text-gray-700 line-clamp-3 mb-2">@r.comment</p>
+                                            <p class="text-gray-700 mb-4">@(r.comment ?? "")</p>
+
+                                            @if (r.ReviewReplies != null && r.ReviewReplies.Any())
+                                            {
+                                                var reply = r.ReviewReplies.FirstOrDefault();
+                                                if (reply != null)
+                                                {
+                                                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mt-4">
+                                                        <p class="text-xs font-bold text-blue-600 mb-2">
+                                                            <i class="fas fa-reply mr-2"></i>Phản hồi từ nhà hàng
+                                                        </p>
+                                                        <p class="text-sm text-gray-800">@reply.reply_text</p>
+                                                        <p class="text-xs text-gray-500 mt-2">
+                                                            @if (reply.created_at != null)
+                                                            {
+                                                                @reply.created_at.ToString("dd/MM/yyyy HH:mm")
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                }
+                                            }
+
+                                            <div class="flex justify-end mt-4">
+                                                <button type="button" onclick="openReportModal('@r.review_id')"
+                                                        class="text-xs text-red-500 hover:text-red-700 font-medium transition-colors">
+                                                    <i class="fas fa-flag mr-1"></i>Báo cáo
+                                                </button>
+                                            </div>
                                         </div>
                                     }
                                 </div>
                             }
 
                             <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-6">
-                                <h3 class="text-lg font-bold text-gray-900 mb-4">Chia sẻ trải nghiệm của bạn</h3>
+                                <h3 class="text-xl font-bold text-gray-900 mb-6">Chia sẻ trải nghiệm của bạn</h3>
 
                                 @using (Html.BeginForm("PostReview", "DetailNhaHang", FormMethod.Post, new { @class = "space-y-4" }))
                                 {
@@ -467,22 +504,31 @@
                                     @Html.Hidden("restaurant_id", Model.Restaurant.restaurant_id)
 
                                     <div>
-                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Đánh giá của bạn</label>
-                                        <div class="flex gap-1 mb-2" id="rating-stars">
+                                        <label class="block text-sm font-semibold text-gray-700 mb-3">Đánh giá của bạn <span class="text-red-500">*</span></label>
+                                        <div class="flex gap-2" id="rating-stars-container">
+                                            @{
+                                                int newReviewInitialRating = 5;
+                                            }
                                             @for (int i = 1; i <= 5; i++)
                                             {
-                                                <i class="fas fa-star text-2xl cursor-pointer rating-star text-gray-300" data-value="@i"></i>
+                                                <button type="button"
+                                                        class="star-btn w-14 h-14 rounded-full border-2 transition-all @(i <= newReviewInitialRating ? "bg-yellow-500 border-yellow-500" : "bg-gray-100 border-gray-300")"
+                                                        data-rating-value="@i"
+                                                        onclick="setRating(@i); return false;">
+                                                    <i class="fas fa-star text-2xl @(i <= newReviewInitialRating ? "text-white" : "text-gray-300")"></i>
+                                                </button>
                                             }
                                         </div>
-                                        <input type="hidden" name="rating" id="rating-value" value="5" />
+                                        <input type="hidden" name="rating" id="rating-value" value="@newReviewInitialRating" />
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">Nhận xét</label>
                                         <textarea name="comment"
                                                   rows="4"
-                                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-                                                  placeholder="Chia sẻ chi tiết trải nghiệm của bạn tại nhà hàng..."></textarea>
+                                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all outline-none"
+                                                  placeholder="Chia sẻ chi tiết trải nghiệm của bạn tại nhà hàng..."
+                                                  required></textarea>
                                     </div>
 
                                     <div class="flex justify-end">
@@ -498,9 +544,10 @@
                 </div>
             </div>
 
-            <!-- BOOKING -->
+            <!-- BOOKING SIDEBAR -->
             <div class="lg:w-1/3">
                 <div class="sticky top-24 space-y-6">
+                    <!-- ĐẶT BÀN -->
                     <div class="bg-gradient-to-br from-cyan-900 to-blue-500 rounded-2xl shadow-2xl overflow-hidden">
                         <div class="p-6 text-white">
                             <div class="flex items-center gap-3 mb-4">
@@ -521,13 +568,8 @@
                                     <label class="block text-white font-semibold mb-2 text-sm">
                                         <i class="fas fa-users mr-2"></i>Số khách
                                     </label>
-                                    <div class="relative">
-                                        <input type="number" name="NumberOfPeople" min="1" max="20" value="2"
-                                               class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent">
-                                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/70">
-                                            <i class="fas fa-user-friends"></i>
-                                        </div>
-                                    </div>
+                                    <input type="number" name="NumberOfPeople" min="1" max="20" value="2"
+                                           class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent">
                                 </div>
 
                                 <div>
@@ -545,172 +587,251 @@
                                     <label class="block text-white font-semibold mb-2 text-sm">
                                         <i class="fas fa-clock mr-2"></i>Giờ đến
                                     </label>
-                                    <input type="time"
-                                           name="ReservationTime"
-                                           value="19:00"
-                                           class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent" />
+                                    <input type="time" name="ReservationTime" value="19:00"
+                                           class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent">
                                 </div>
+
                                 <button type="submit"
-                                        class="w-full mt-2 px-6 py-4
-                                               bg-red-500 text-white font-bold text-lg
-                                               rounded-xl
-                                               shadow-xl
-                                               hover:bg-red-500
-                                               hover:shadow-2xl
-                                               transform hover:-translate-y-0.5
-                                               active:scale-95 active:shadow-inner
-                                               transition-all duration-200">
-                                    <i class="fas fa-check-circle mr-2"></i> ĐẶT BÀN NGAY
+                                        class="w-full px-6 py-4 bg-red-500 text-white font-bold text-lg rounded-xl shadow-xl hover:bg-red-600 hover:shadow-2xl transform hover:-translate-y-0.5 active:scale-95 active:shadow-inner transition-all duration-200">
+                                    <i class="fas fa-check-circle mr-2"></i>ĐẶT BÀN NGAY
                                 </button>
                             }
                         </div>
                     </div>
 
+                    @{
+                        var hotline = (Model?.Restaurant?.ContactPhone ?? "").Trim();
+                        var website = (Model?.Restaurant?.Website ?? "").Trim();
+
+                        // Restaurants không có Email -> để rỗng (hoặc lấy từ Users nếu có)
+                        var email = "";
+                        // Nếu Users có email thì mở dòng này:
+                        // var email = (Model?.Restaurant?.Users?.email ?? "").Trim();
+                    }
+
+                    <!-- THÔNG TIN LIÊN HỆ -->
                     <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
                         <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <i class="fas fa-headset text-red-500"></i><span>Thông tin liên hệ</span>
                         </h3>
+
                         <div class="space-y-3">
+
                             <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
-                                <div class="w-10 h-10 rounded-lg bg-red-400 flex items-center justify-center">
-                                    <i class="fas fa-phone text-red-600"></i>
-                                </div>
+                                <i class="fas fa-phone text-lg"
+                                   style="fill:#dc2626 !important; color:#dc2626 !important;"></i>
                                 <div>
-                                    <p class="text-sm text-gray-300">Hotline</p>
-                                    <p class="font-semibold text-gray-900">0941326591</p>
+                                    <p class="text-xs text-gray-600">Hotline</p>
+                                    <p class="font-semibold text-gray-900">
+                                        @(string.IsNullOrWhiteSpace(hotline) ? "Đang cập nhật" : hotline)
+                                    </p>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
-                                <div class="w-10 h-10 rounded-lg bg-blue-300 flex items-center justify-center">
-                                    <i class="fas fa-envelope text-blue-600"></i>
-                                </div>
+
+                            @*<div class="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                                <i class="fas fa-envelope text-blue-600 text-lg"></i>
                                 <div>
-                                    <p class="text-sm text-gray-500">Email</p>
-                                    <p class="font-semibold text-gray-900">Phamhuynhduyphong0308@gmail.com</p>
+                                    <p class="text-xs text-gray-600">Email</p>
+                                    <p class="font-semibold text-gray-900">
+                                        @(string.IsNullOrWhiteSpace(email) ? "Đang cập nhật" : email)
+                                    </p>
                                 </div>
-                            </div>
-                            <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
-                                <div class="w-10 h-10 rounded-lg bg-green-400 flex items-center justify-center">
-                                    <i class="fas fa-globe text-green-600"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-500">Website</p>
-                                    <p class="font-semibold text-gray-900">www.SmartTable.com</p>
-                                </div>
+                            </div>*@
+
+                        <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                            <i class="fas fa-globe"
+                               style="color:#16a34a !important; fill:#16a34a !important;"></i>
+                            <div>
+                                <p class="text-xs text-gray-600">Website</p>
+
+                                @if (string.IsNullOrWhiteSpace(website))
+                                {
+                                    <p class="font-semibold text-gray-900">Đang cập nhật</p>
+                                }
+                                else
+                                {
+                                    var href = website.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                                        ? website
+                                        : "https://" + website;
+
+                                    <a class="font-semibold text-gray-900 hover:underline"
+                                       href="@href" target="_blank" rel="noopener">
+                                        @website
+                                    </a>
+                                }
                             </div>
                         </div>
+
+                        </div>
                     </div>
-
-
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- IMAGE MODAL -->
 <div id="image-modal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden items-center justify-center">
     <button onclick="closeModal()" class="absolute top-6 right-6 text-white text-3xl hover:text-red-400">
         <i class="fas fa-times"></i>
     </button>
     <img id="modal-image" class="max-w-4xl max-h-[90vh] rounded-lg" />
 </div>
+
+<!-- REPORT MODAL -->
+<div id="report-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-gray-900">Báo cáo đánh giá</h3>
+            <button type="button" onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <form id="report-form" onsubmit="submitReport(event)">
+            <input type="hidden" id="report-review-id" value="" />
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Lý do báo cáo</label>
+                <select id="report-reason" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" required>
+                    <option value="">Chọn lý do...</option>
+                    <option value="spam">Spam hoặc quảng cáo</option>
+                    <option value="inappropriate">Nội dung không phù hợp</option>
+                    <option value="false_info">Thông tin sai sự thật</option>
+                    <option value="other">Lý do khác</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Mô tả chi tiết</label>
+                <textarea id="report-description" rows="3"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                          placeholder="Vui lòng mô tả chi tiết..."></textarea>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeReportModal()"
+                        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                    Hủy
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    Gửi báo cáo
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+    function setRating(value) {
+        document.getElementById('rating-value').value = value;
+
+        const buttons = document.querySelectorAll('#rating-stars-container .star-btn');
+        buttons.forEach((btn, idx) => {
+            const icon = btn.querySelector('i');
+
+            if (idx + 1 <= value) {
+                btn.classList.remove('bg-gray-100', 'border-gray-300');
+                btn.classList.add('bg-yellow-500', 'border-yellow-500');
+                icon.classList.remove('text-gray-300');
+                icon.classList.add('text-white');
+            } else {
+                btn.classList.remove('bg-yellow-500', 'border-yellow-500');
+                btn.classList.add('bg-gray-100', 'border-gray-300');
+                icon.classList.remove('text-white');
+                icon.classList.add('text-gray-300');
+            }
+        });
+    }
+
+    function openReportModal(reviewId) {
+        document.getElementById('report-review-id').value = reviewId;
+        document.getElementById('report-modal').classList.remove('hidden');
+    }
+
+    function closeReportModal() {
+        document.getElementById('report-modal').classList.add('hidden');
+        document.getElementById('report-form').reset();
+    }
+
+    function submitReport(event) {
+        event.preventDefault();
+        const reviewId = document.getElementById('report-review-id').value;
+        const reason = document.getElementById('report-reason').value;
+        const description = document.getElementById('report-description').value;
+
+        if (!reason) {
+            alert('Vui lòng chọn lý do báo cáo');
+            return;
+        }
+
+        fetch('@Url.Action("ReportReview", "DetailNhaHang")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify({
+                reviewId: parseInt(reviewId),
+                reportType: reason,
+                reportReason: description
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message || (data.success ? 'Báo cáo đã được gửi' : 'Có lỗi xảy ra'));
+            if (data.success) closeReportModal();
+        })
+        .catch(error => alert('Lỗi: ' + error.message));
+    }
 
     function changeMainImage(src) {
-        var main = document.getElementById('main-image');
-        if (main) {
-            main.src = src;
-        }
+        document.getElementById('main-image').src = src;
     }
 
     function openModal(src) {
-        var modalImg = document.getElementById('modal-image');
-        var modal = document.getElementById('image-modal');
-        if (modalImg && modal) {
-            modalImg.src = src;
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
+        const modal = document.getElementById('image-modal');
+        const img = document.getElementById('modal-image');
+        img.src = src;
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
     }
 
-
     function closeModal() {
-        var modal = document.getElementById('image-modal');
-        if (modal) {
-            modal.classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
+        const modal = document.getElementById('image-modal');
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
     }
 
     function openHeroImage() {
-        var main = document.getElementById('main-image');
-        if (main && main.src) {
-            openModal(main.src);
-        } else {
-            var heroUrl = '@(Model.Restaurant.Image ?? "https://via.placeholder.com/1200x600")';
-            openModal(heroUrl);
-        }
+        const main = document.getElementById('main-image');
+        openModal(main.src);
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        var main = document.getElementById('main-image');
-        if (main) {
-            main.addEventListener('click', function () {
-                openModal(this.src);
-            });
-        }
+        setRating(5);
 
-        const stars = document.querySelectorAll('.rating-star');
-        const ratingInput = document.getElementById('rating-value');
-
-        function paintStars(value) {
-            stars.forEach(s => {
-                const v = parseInt(s.getAttribute('data-value'));
-                if (v <= value) {
-                    s.classList.remove('text-gray-300');
-                    s.classList.add('text-yellow-400');
-                } else {
-                    s.classList.remove('text-yellow-400');
-                    s.classList.add('text-gray-300');
-                }
-            });
-        }
-
-        if (stars.length && ratingInput) {
-            const defaultValue = parseInt(ratingInput.value || '5');
-            paintStars(defaultValue);
-
-            stars.forEach(star => {
-                star.addEventListener('click', function () {
-                    const value = parseInt(this.getAttribute('data-value'));
-                    ratingInput.value = value;
-                    paintStars(value);
-                });
-            });
-        }
+        document.getElementById('main-image').addEventListener('click', function () {
+            openModal(this.src);
+        });
 
         document.querySelectorAll('.restaurant-page a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 const targetId = this.getAttribute('href');
-                if (!targetId || targetId === '#') return;
                 const target = document.querySelector(targetId);
-                if (!target) return;
-
-                e.preventDefault();
-                const offset = 80;
-                const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
-                window.scrollTo({ top: top, behavior: 'smooth' });
+                if (target) {
+                    e.preventDefault();
+                    const offset = 80;
+                    const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                    window.scrollTo({ top: top, behavior: 'smooth' });
+                }
             });
         });
 
         const sections = document.querySelectorAll('.restaurant-page section[id]');
         const navLinks = document.querySelectorAll('.restaurant-page .nav-pill');
 
-        function updateActiveNav() {
+        window.addEventListener('scroll', () => {
             let current = '';
             sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                if (window.scrollY >= (sectionTop - 150)) {
+                if (window.scrollY >= section.offsetTop - 150) {
                     current = section.getAttribute('id');
                 }
             });
@@ -721,10 +842,7 @@
                     link.classList.add('active');
                 }
             });
-        }
-
-        window.addEventListener('scroll', updateActiveNav);
-        updateActiveNav();
+        });
 
         const filterButtons = document.querySelectorAll('.menu-filter');
         const menuCards = document.querySelectorAll('.menu-item-card');
@@ -744,6 +862,10 @@
                     }
                 });
             });
+        });
+
+        document.getElementById('report-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeReportModal();
         });
     });
 </script>

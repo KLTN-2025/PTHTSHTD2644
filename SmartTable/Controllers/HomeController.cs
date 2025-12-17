@@ -6,6 +6,8 @@ using SmartTable.Models;
 using SmartTable.Models.ViewModels;
 using System.Data.Entity;
 using System.Device.Location;
+using System.Globalization;
+using System.Text;
 
 namespace SmartTable.Controllers
 {
@@ -19,22 +21,37 @@ namespace SmartTable.Controllers
             base.Dispose(disposing);
         }
 
-        // ================== HELPER DÙNG CHUNG ==================
-
-        
-        private List<string> GetAvailableCities()
+        private static string NormalizePlaceName(string s)
         {
-            return db.Restaurants
-                     .Where(r => r.is_approved == true
-                                 && r.City != null
-                                 && r.City != "")
-                     .Select(r => r.City)
-                     .Distinct()
-                     .OrderBy(c => c)
-                     .ToList();
+            if (string.IsNullOrWhiteSpace(s)) return "";
+
+            s = s.Trim();
+            while (s.Contains("  ")) s = s.Replace("  ", " ");
+            s = s.TrimEnd('.', ',', ';', ':', '-');
+
+            var formD = s.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder();
+
+            for (int i = 0; i < formD.Length; i++)
+            {
+                var uc = CharUnicodeInfo.GetUnicodeCategory(formD[i]);
+                if (uc != UnicodeCategory.NonSpacingMark) sb.Append(formD[i]);
+            }
+
+            var noDiacritics = sb.ToString().Normalize(NormalizationForm.FormC);
+            noDiacritics = noDiacritics.Replace("đ", "d").Replace("Đ", "D");
+            return noDiacritics.ToLowerInvariant();
         }
 
-      
+        private static string ToTitleCaseVi(string s)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return "";
+            s = s.Trim();
+            while (s.Contains("  ")) s = s.Replace("  ", " ");
+            s = s.TrimEnd('.', ',', ';', ':', '-');
+            return CultureInfo.GetCultureInfo("vi-VN").TextInfo.ToTitleCase(s.ToLower());
+        }
+
         private string ExtractAreaFromAddress(string address)
         {
             if (string.IsNullOrWhiteSpace(address))
@@ -46,40 +63,85 @@ namespace SmartTable.Controllers
                 .Where(p => !string.IsNullOrEmpty(p))
                 .ToArray();
 
-            if (parts.Length > 1)
-            {
+            if (parts.Length >= 3)
                 return parts[parts.Length - 2];
-            }
+
+            if (parts.Length == 2)
+                return parts[0];
 
             return null;
         }
 
-    
+        private List<string> GetAvailableCities()
+        {
+            var cities = db.Restaurants
+                .Where(r => r.is_approved == true && r.City != null && r.City != "")
+                .Select(r => r.City)
+                .ToList();
+
+            var result = cities
+                .Select(c => new { Raw = c, Key = NormalizePlaceName(c) })
+                .Where(x => x.Key != "")
+                .GroupBy(x => x.Key)
+                .Select(g => ToTitleCaseVi(g.First().Raw))
+                .OrderBy(x => x)
+                .ToList();
+
+            return result;
+        }
+
+        private List<string> GetCityVariants(string selectedCity)
+        {
+            var key = NormalizePlaceName(selectedCity);
+            if (string.IsNullOrWhiteSpace(key)) return new List<string>();
+
+            var allCities = db.Restaurants
+                .Where(r => r.is_approved == true && r.City != null && r.City != "")
+                .Select(r => r.City)
+                .ToList();
+
+            var variants = allCities
+                .Where(c => NormalizePlaceName(c) == key)
+                .Distinct()
+                .ToList();
+
+            return variants;
+        }
+
         private List<string> GetAreasByCityInternal(string city)
         {
-            if (string.IsNullOrEmpty(city))
+            if (string.IsNullOrWhiteSpace(city))
                 return new List<string>();
 
-            // Lấy address của các nhà hàng trong city đó
-            var addresses = db.Restaurants
-                              .Where(r => r.is_approved == true
-                                          && r.City == city
-                                          && r.address != null
-                                          && r.address != "")
-                              .Select(r => r.address)
-                              .ToList(); 
+            var cityKey = NormalizePlaceName(city);
+            if (string.IsNullOrWhiteSpace(cityKey))
+                return new List<string>();
 
-            var areas = addresses
-                .Select(ExtractAreaFromAddress)
+            var candidates = db.Restaurants
+                .Where(r => r.is_approved == true && r.City != null && r.City != "")
+                .Select(r => new { r.City, r.Area, r.address })
+                .ToList();
+
+            var rows = candidates
+                .Where(r => NormalizePlaceName(r.City) == cityKey)
+                .ToList();
+
+            var areas = rows
+                .Select(x =>
+                {
+                    if (!string.IsNullOrWhiteSpace(x.Area))
+                        return x.Area.Trim();
+
+                    return ExtractAreaFromAddress(x.address);
+                })
                 .Where(a => !string.IsNullOrWhiteSpace(a))
+                .Select(a => a.Trim())
                 .Distinct()
                 .OrderBy(a => a)
                 .ToList();
 
             return areas;
         }
-
-        // ================== TRANG CHÍNH ==================
 
         [HttpGet]
         public ActionResult Index()
@@ -89,15 +151,13 @@ namespace SmartTable.Controllers
             ViewBag.AvailableCities = GetAvailableCities();
 
             vm.Results = db.Restaurants
-                           .Where(r => r.is_approved == true)
-                           .OrderByDescending(r => r.created_at)
-                           .Take(9)
-                           .ToList();
+                .Where(r => r.is_approved == true)
+                .OrderByDescending(r => r.created_at)
+                .Take(9)
+                .ToList();
 
-            return View(vm); 
+            return View(vm);
         }
-
-        // ================== TRANG KẾT QUẢ LỌC ==================
 
         [HttpGet]
         public ActionResult Search(RestaurantFilterViewModel filter)
@@ -107,7 +167,7 @@ namespace SmartTable.Controllers
 
             ViewBag.AvailableCities = GetAvailableCities();
 
-            if (!string.IsNullOrEmpty(filter.City))
+            if (!string.IsNullOrWhiteSpace(filter.City))
             {
                 ViewBag.AvailableAreas = GetAreasByCityInternal(filter.City);
             }
@@ -118,51 +178,51 @@ namespace SmartTable.Controllers
 
             var query = db.Restaurants.Where(r => r.is_approved == true);
 
-            if (!string.IsNullOrEmpty(filter.City))
+            if (!string.IsNullOrWhiteSpace(filter.City))
             {
-                var city = filter.City.Trim();
-                query = query.Where(r => r.City == city);
+                var variants = GetCityVariants(filter.City);
+                if (variants != null && variants.Count > 0)
+                {
+                    query = query.Where(r => r.City != null && variants.Contains(r.City));
+                }
             }
 
-            if (!string.IsNullOrEmpty(filter.Area))
+            if (!string.IsNullOrWhiteSpace(filter.Area))
             {
                 var area = filter.Area.Trim();
-                query = query.Where(r => r.address != null && r.address.Contains(area));
+                query = query.Where(r =>
+                    (r.Area != null && r.Area == area) ||
+                    (r.address != null && r.address.Contains(area)));
             }
 
-            if (!string.IsNullOrEmpty(filter.RestaurantType))
+            if (!string.IsNullOrWhiteSpace(filter.RestaurantType))
             {
                 var type = filter.RestaurantType.Trim();
-
                 query = query.Where(r =>
                     (r.CuisineStyle != null && r.CuisineStyle.Contains(type)) ||
                     (r.ServiceTypes != null && r.ServiceTypes.Contains(type)) ||
                     (r.ServiceDescription != null && r.ServiceDescription.Contains(type)));
             }
 
-            if (!string.IsNullOrEmpty(filter.AveragePrice))
+            if (!string.IsNullOrWhiteSpace(filter.AveragePrice))
             {
                 var price = filter.AveragePrice.Trim();
                 query = query.Where(r => r.AverageBill == price);
             }
 
-            if (!string.IsNullOrEmpty(filter.MainDish))
+            if (!string.IsNullOrWhiteSpace(filter.MainDish))
             {
                 var dish = filter.MainDish.Trim();
-                query = query.Where(r =>
-                    r.SignatureDishes != null &&
-                    r.SignatureDishes.Contains(dish));
+                query = query.Where(r => r.SignatureDishes != null && r.SignatureDishes.Contains(dish));
             }
 
-            if (!string.IsNullOrEmpty(filter.SuitableFor))
+            if (!string.IsNullOrWhiteSpace(filter.SuitableFor))
             {
                 var suit = filter.SuitableFor.Trim();
-                query = query.Where(r =>
-                    r.SpaceDescription != null &&
-                    r.SpaceDescription.Contains(suit));
+                query = query.Where(r => r.SpaceDescription != null && r.SpaceDescription.Contains(suit));
             }
 
-            if (!string.IsNullOrEmpty(filter.CuisineTag))
+            if (!string.IsNullOrWhiteSpace(filter.CuisineTag))
             {
                 var tag = filter.CuisineTag.Trim();
                 query = query.Where(r =>
@@ -171,7 +231,7 @@ namespace SmartTable.Controllers
                     (r.SignatureDishes != null && r.SignatureDishes.Contains(tag)));
             }
 
-            if (!string.IsNullOrEmpty(filter.SearchKeyword))
+            if (!string.IsNullOrWhiteSpace(filter.SearchKeyword))
             {
                 var kw = filter.SearchKeyword.Trim();
                 query = query.Where(r =>
@@ -188,15 +248,12 @@ namespace SmartTable.Controllers
             return View("Search", filter);
         }
 
-
         [HttpGet]
         public JsonResult GetAreasByCity(string city)
         {
             var areas = GetAreasByCityInternal(city);
             return Json(areas, JsonRequestBehavior.AllowGet);
         }
-
-        // ================== DETAILS  ==================
 
         public ActionResult RestaurantDetails(int? id)
         {
@@ -211,18 +268,16 @@ namespace SmartTable.Controllers
             {
                 Restaurant = restaurant,
                 MenuItems = db.MenuItems
-                              .Where(m => m.restaurant_id == id.Value)
-                              .ToList(),
+                    .Where(m => m.restaurant_id == id.Value)
+                    .ToList(),
                 Reviews = db.Reviews
-                            .Where(r => r.restaurant_id == id.Value)
-                            .Include(r => r.Users)
-                            .ToList()
+                    .Where(r => r.restaurant_id == id.Value)
+                    .Include(r => r.Users)
+                    .ToList()
             };
 
             return View("~/Views/DetailNhaHang/RestaurantDetails.cshtml", vm);
         }
-
-        // ================== NEARBY ==================
 
         [HttpGet]
         public JsonResult GetNearbyRestaurants(double lat, double lng)
@@ -231,7 +286,7 @@ namespace SmartTable.Controllers
 
             var restaurants = db.Restaurants
                 .Where(r => r.is_approved == true)
-                .ToList() 
+                .ToList()
                 .Select(r => new
                 {
                     Id = r.restaurant_id,
@@ -239,7 +294,7 @@ namespace SmartTable.Controllers
                     Address = r.address,
                     Distance = GetDistance(userCoord, r.latitude, r.longitude)
                 })
-                .Where(r => r.Distance != null && r.Distance < 20) // < 20km
+                .Where(r => r.Distance != null && r.Distance < 20)
                 .OrderBy(r => r.Distance)
                 .Take(10)
                 .ToList();
@@ -254,15 +309,13 @@ namespace SmartTable.Controllers
             try
             {
                 var restaurantCoord = new GeoCoordinate(restaurantLat.Value, restaurantLng.Value);
-                return userCoord.GetDistanceTo(restaurantCoord) / 1000.0; // km
+                return userCoord.GetDistanceTo(restaurantCoord) / 1000.0;
             }
             catch
             {
                 return null;
             }
         }
-
-        // ================== HEADER SEARCH BAR ==================
 
         [ChildActionOnly]
         public ActionResult HeaderSearchBar()

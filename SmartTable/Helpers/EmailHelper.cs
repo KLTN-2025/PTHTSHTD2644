@@ -13,11 +13,9 @@ namespace SmartTable.Helpers
             var fromPassword = ConfigurationManager.AppSettings["FromEmailPassword"];
             var displayName = ConfigurationManager.AppSettings["FromEmailDisplayName"];
 
-            // SỬA LỖI Ở ĐÂY:
-            // Đảm bảo mật khẩu App mới (viết liền) được dùng
             if (string.IsNullOrEmpty(fromPassword))
             {
-                fromPassword = "wxzchziuhthubgha"; // <-- MẬT KHẨU MỚI
+                fromPassword = "wxzchziuhthubgha"; 
             }
             if (string.IsNullOrEmpty(fromEmail))
             {
@@ -55,7 +53,7 @@ namespace SmartTable.Helpers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("LỖI GỬI EMAIL HELPER: " + ex.Message);
-                throw; // Ném lỗi ra để Controller (ApprovePartner) bắt được
+                throw; 
             }
         }
     }

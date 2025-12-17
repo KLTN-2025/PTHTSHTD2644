@@ -17,13 +17,15 @@
           <Property Name="status" Type="nvarchar" MaxLength="50" />
           <Property Name="special_request" Type="nvarchar(max)" />
           <Property Name="cancel_reason" Type="nvarchar" MaxLength="500" />
+          <Property Name="table_id" Type="int" />
+          <Property Name="created_at" Type="datetime" Nullable="false" />
         </EntityType>
         <EntityType Name="LoyaltyPoints">
           <Key>
             <PropertyRef Name="user_id" />
           </Key>
           <Property Name="user_id" Type="int" Nullable="false" />
-          <Property Name="points" Type="int" />
+          <Property Name="points" Type="int" Nullable="false" />
         </EntityType>
         <EntityType Name="MenuItems">
           <Key>
@@ -37,6 +39,22 @@
           <Property Name="category" Type="nvarchar" MaxLength="50" />
           <Property Name="is_available" Type="bit" />
           <Property Name="Image" Type="nvarchar" MaxLength="255" />
+        </EntityType>
+        <EntityType Name="Notifications">
+          <Key>
+            <PropertyRef Name="notification_id" />
+          </Key>
+          <Property Name="notification_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="user_id" Type="int" Nullable="false" />
+          <Property Name="restaurant_id" Type="int" />
+          <Property Name="booking_id" Type="int" />
+          <Property Name="review_id" Type="int" />
+          <Property Name="type" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="title" Type="nvarchar" MaxLength="200" Nullable="false" />
+          <Property Name="message" Type="nvarchar" MaxLength="1000" Nullable="false" />
+          <Property Name="link" Type="nvarchar" MaxLength="400" />
+          <Property Name="is_read" Type="bit" Nullable="false" />
+          <Property Name="created_at" Type="datetime" Nullable="false" />
         </EntityType>
         <EntityType Name="Orders">
           <Key>
@@ -102,6 +120,8 @@
           <Property Name="payment_method" Type="nvarchar" MaxLength="50" />
           <Property Name="status" Type="nvarchar" MaxLength="50" />
           <Property Name="transaction_id" Type="nvarchar" MaxLength="100" />
+          <Property Name="paid_at" Type="datetime" />
+          <Property Name="payment_kind" Type="nvarchar" MaxLength="30" />
         </EntityType>
         <EntityType Name="RestaurantImages">
           <Key>
@@ -149,6 +169,35 @@
           <Property Name="NearbyLandmark" Type="nvarchar" MaxLength="500" />
           <Property Name="City" Type="nvarchar" MaxLength="100" />
           <Property Name="Area" Type="nvarchar" MaxLength="255" />
+          <Property Name="AmenitiesOther" Type="nvarchar" MaxLength="255" />
+          <Property Name="debt_months" Type="int" Nullable="false" />
+          <Property Name="debt_amount" Type="decimal" Precision="18" Scale="0" Nullable="false" />
+          <Property Name="is_locked" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="ReviewReplies">
+          <Key>
+            <PropertyRef Name="reply_id" />
+          </Key>
+          <Property Name="reply_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="review_id" Type="int" Nullable="false" />
+          <Property Name="restaurant_id" Type="int" Nullable="false" />
+          <Property Name="reply_text" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="created_at" Type="datetime" Nullable="false" />
+          <Property Name="updated_at" Type="datetime" />
+        </EntityType>
+        <EntityType Name="ReviewReporting">
+          <Key>
+            <PropertyRef Name="report_id" />
+          </Key>
+          <Property Name="report_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="review_id" Type="int" Nullable="false" />
+          <Property Name="reported_by_user_id" Type="int" Nullable="false" />
+          <Property Name="report_type" Type="nvarchar" MaxLength="50" />
+          <Property Name="report_reason" Type="nvarchar" MaxLength="500" />
+          <Property Name="status" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="created_at" Type="datetime" Nullable="false" />
+          <Property Name="resolved_at" Type="datetime" />
+          <Property Name="resolved_by" Type="nvarchar" MaxLength="255" />
         </EntityType>
         <EntityType Name="Reviews">
           <Key>
@@ -160,6 +209,19 @@
           <Property Name="rating" Type="tinyint" Nullable="false" />
           <Property Name="comment" Type="nvarchar(max)" />
           <Property Name="created_at" Type="datetime" />
+          <Property Name="status" Type="nvarchar" MaxLength="20" />
+          <Property Name="approved_at" Type="datetime" />
+          <Property Name="approved_by" Type="nvarchar" MaxLength="255" />
+        </EntityType>
+        <EntityType Name="sysdiagrams">
+          <Key>
+            <PropertyRef Name="diagram_id" />
+          </Key>
+          <Property Name="name" Type="nvarchar" MaxLength="128" Nullable="false" />
+          <Property Name="principal_id" Type="int" Nullable="false" />
+          <Property Name="diagram_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="version" Type="int" />
+          <Property Name="definition" Type="varbinary(max)" />
         </EntityType>
         <EntityType Name="Tables">
           <Key>
@@ -196,6 +258,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_Bookings_Tables">
+          <End Role="Tables" Type="Self.Tables" Multiplicity="0..1" />
+          <End Role="Bookings" Type="Self.Bookings" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Tables">
+              <PropertyRef Name="table_id" />
+            </Principal>
+            <Dependent Role="Bookings">
+              <PropertyRef Name="table_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_Bookings_User">
           <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
           <End Role="Bookings" Type="Self.Bookings" Multiplicity="*" />
@@ -229,6 +303,54 @@
             </Principal>
             <Dependent Role="MenuItems">
               <PropertyRef Name="restaurant_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Notifications_Bookings">
+          <End Role="Bookings" Type="Self.Bookings" Multiplicity="0..1" />
+          <End Role="Notifications" Type="Self.Notifications" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Bookings">
+              <PropertyRef Name="booking_id" />
+            </Principal>
+            <Dependent Role="Notifications">
+              <PropertyRef Name="booking_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Notifications_Restaurants">
+          <End Role="Restaurants" Type="Self.Restaurants" Multiplicity="0..1" />
+          <End Role="Notifications" Type="Self.Notifications" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Restaurants">
+              <PropertyRef Name="restaurant_id" />
+            </Principal>
+            <Dependent Role="Notifications">
+              <PropertyRef Name="restaurant_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Notifications_Reviews">
+          <End Role="Reviews" Type="Self.Reviews" Multiplicity="0..1" />
+          <End Role="Notifications" Type="Self.Notifications" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Reviews">
+              <PropertyRef Name="review_id" />
+            </Principal>
+            <Dependent Role="Notifications">
+              <PropertyRef Name="review_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Notifications_Users">
+          <End Role="Users" Type="Self.Users" Multiplicity="1" />
+          <End Role="Notifications" Type="Self.Notifications" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Users">
+              <PropertyRef Name="user_id" />
+            </Principal>
+            <Dependent Role="Notifications">
+              <PropertyRef Name="user_id" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -294,6 +416,60 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_ReviewReplies_Restaurants">
+          <End Role="Restaurants" Type="Self.Restaurants" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="ReviewReplies" Type="Self.ReviewReplies" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Restaurants">
+              <PropertyRef Name="restaurant_id" />
+            </Principal>
+            <Dependent Role="ReviewReplies">
+              <PropertyRef Name="restaurant_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ReviewReplies_Reviews">
+          <End Role="Reviews" Type="Self.Reviews" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="ReviewReplies" Type="Self.ReviewReplies" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Reviews">
+              <PropertyRef Name="review_id" />
+            </Principal>
+            <Dependent Role="ReviewReplies">
+              <PropertyRef Name="review_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ReviewReporting_Reviews">
+          <End Role="Reviews" Type="Self.Reviews" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="ReviewReporting" Type="Self.ReviewReporting" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Reviews">
+              <PropertyRef Name="review_id" />
+            </Principal>
+            <Dependent Role="ReviewReporting">
+              <PropertyRef Name="review_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ReviewReporting_Users">
+          <End Role="Users" Type="Self.Users" Multiplicity="1" />
+          <End Role="ReviewReporting" Type="Self.ReviewReporting" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Users">
+              <PropertyRef Name="user_id" />
+            </Principal>
+            <Dependent Role="ReviewReporting">
+              <PropertyRef Name="reported_by_user_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_Reviews_Restaurants">
           <End Role="Restaurants" Type="Self.Restaurants" Multiplicity="0..1" />
           <End Role="Reviews" Type="Self.Reviews" Multiplicity="*" />
@@ -334,16 +510,24 @@
           <EntitySet Name="Bookings" EntityType="Self.Bookings" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="LoyaltyPoints" EntityType="Self.LoyaltyPoints" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="MenuItems" EntityType="Self.MenuItems" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Notifications" EntityType="Self.Notifications" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Orders" EntityType="Self.Orders" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="PartnerLeads" EntityType="Self.PartnerLeads" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Payments" EntityType="Self.Payments" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="RestaurantImages" EntityType="Self.RestaurantImages" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Restaurants" EntityType="Self.Restaurants" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ReviewReplies" EntityType="Self.ReviewReplies" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ReviewReporting" EntityType="Self.ReviewReporting" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Reviews" EntityType="Self.Reviews" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="sysdiagrams" EntityType="Self.sysdiagrams" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Tables" EntityType="Self.Tables" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" store:Type="Tables" />
           <AssociationSet Name="FK_Bookings_Restaurants" Association="Self.FK_Bookings_Restaurants">
             <End Role="Restaurants" EntitySet="Restaurants" />
+            <End Role="Bookings" EntitySet="Bookings" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Bookings_Tables" Association="Self.FK_Bookings_Tables">
+            <End Role="Tables" EntitySet="Tables" />
             <End Role="Bookings" EntitySet="Bookings" />
           </AssociationSet>
           <AssociationSet Name="FK_Bookings_User" Association="Self.FK_Bookings_User">
@@ -357,6 +541,22 @@
           <AssociationSet Name="FK_MenuItems_Restaurants" Association="Self.FK_MenuItems_Restaurants">
             <End Role="Restaurants" EntitySet="Restaurants" />
             <End Role="MenuItems" EntitySet="MenuItems" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Notifications_Bookings" Association="Self.FK_Notifications_Bookings">
+            <End Role="Bookings" EntitySet="Bookings" />
+            <End Role="Notifications" EntitySet="Notifications" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Notifications_Restaurants" Association="Self.FK_Notifications_Restaurants">
+            <End Role="Restaurants" EntitySet="Restaurants" />
+            <End Role="Notifications" EntitySet="Notifications" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Notifications_Reviews" Association="Self.FK_Notifications_Reviews">
+            <End Role="Reviews" EntitySet="Reviews" />
+            <End Role="Notifications" EntitySet="Notifications" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Notifications_Users" Association="Self.FK_Notifications_Users">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="Notifications" EntitySet="Notifications" />
           </AssociationSet>
           <AssociationSet Name="FK_Orders_Bookings" Association="Self.FK_Orders_Bookings">
             <End Role="Bookings" EntitySet="Bookings" />
@@ -377,6 +577,22 @@
           <AssociationSet Name="FK_Restaurants_User" Association="Self.FK_Restaurants_User">
             <End Role="Users" EntitySet="Users" />
             <End Role="Restaurants" EntitySet="Restaurants" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ReviewReplies_Restaurants" Association="Self.FK_ReviewReplies_Restaurants">
+            <End Role="Restaurants" EntitySet="Restaurants" />
+            <End Role="ReviewReplies" EntitySet="ReviewReplies" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ReviewReplies_Reviews" Association="Self.FK_ReviewReplies_Reviews">
+            <End Role="Reviews" EntitySet="Reviews" />
+            <End Role="ReviewReplies" EntitySet="ReviewReplies" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ReviewReporting_Reviews" Association="Self.FK_ReviewReporting_Reviews">
+            <End Role="Reviews" EntitySet="Reviews" />
+            <End Role="ReviewReporting" EntitySet="ReviewReporting" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ReviewReporting_Users" Association="Self.FK_ReviewReporting_Users">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="ReviewReporting" EntitySet="ReviewReporting" />
           </AssociationSet>
           <AssociationSet Name="FK_Reviews_Restaurants" Association="Self.FK_Reviews_Restaurants">
             <End Role="Restaurants" EntitySet="Restaurants" />
@@ -411,13 +627,17 @@
           <NavigationProperty Name="Payments" Relationship="Self.FK_Payments_Bookings" FromRole="Bookings" ToRole="Payments" />
           <NavigationProperty Name="Restaurants" Relationship="SmartTableSystemModel.FK_Bookings_Restaurants" FromRole="Bookings" ToRole="Restaurants" />
           <Property Name="cancel_reason" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="table_id" Type="Int32" />
+          <NavigationProperty Name="Tables" Relationship="SmartTableSystemModel.FK_Bookings_Tables" FromRole="Bookings" ToRole="Tables" />
+          <Property Name="created_at" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="Notifications" Relationship="SmartTableSystemModel.FK_Notifications_Bookings" FromRole="Bookings" ToRole="Notifications" />
         </EntityType>
         <EntityType Name="LoyaltyPoints">
           <Key>
             <PropertyRef Name="user_id" />
           </Key>
           <Property Name="user_id" Type="Int32" Nullable="false" />
-          <Property Name="points" Type="Int32" />
+          <Property Name="points" Type="Int32" Nullable="false" />
           <NavigationProperty Name="Users" Relationship="Self.FK_LoyaltyPoints_User" FromRole="LoyaltyPoints" ToRole="Users" />
         </EntityType>
         <EntityType Name="MenuItems">
@@ -458,6 +678,8 @@
           <Property Name="status" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="transaction_id" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="Bookings" Relationship="Self.FK_Payments_Bookings" FromRole="Payments" ToRole="Bookings" />
+          <Property Name="paid_at" Type="DateTime" Precision="3" />
+          <Property Name="payment_kind" Type="String" MaxLength="30" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="Reviews">
           <Key>
@@ -471,6 +693,12 @@
           <Property Name="created_at" Type="DateTime" Precision="3" />
           <NavigationProperty Name="Users" Relationship="Self.FK_Reviews_User" FromRole="Reviews" ToRole="Users" />
           <NavigationProperty Name="Restaurants" Relationship="SmartTableSystemModel.FK_Reviews_Restaurants" FromRole="Reviews" ToRole="Restaurants" />
+          <Property Name="status" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="approved_at" Type="DateTime" Precision="3" />
+          <Property Name="approved_by" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="ReviewReplies" Relationship="SmartTableSystemModel.FK_ReviewReplies_Reviews" FromRole="Reviews" ToRole="ReviewReplies" />
+          <NavigationProperty Name="ReviewReporting" Relationship="SmartTableSystemModel.FK_ReviewReporting_Reviews" FromRole="Reviews" ToRole="ReviewReporting" />
+          <NavigationProperty Name="Notifications" Relationship="SmartTableSystemModel.FK_Notifications_Reviews" FromRole="Reviews" ToRole="Notifications" />
         </EntityType>
         <EntityType Name="Tables">
           <Key>
@@ -483,6 +711,7 @@
           <Property Name="type" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="is_available" Type="Boolean" />
           <NavigationProperty Name="Restaurants" Relationship="SmartTableSystemModel.FK_Tables_Restaurants" FromRole="Tables" ToRole="Restaurants" />
+          <NavigationProperty Name="Bookings" Relationship="SmartTableSystemModel.FK_Bookings_Tables" FromRole="Tables" ToRole="Bookings" />
         </EntityType>
         <EntityType Name="Users">
           <Key>
@@ -499,6 +728,8 @@
           <NavigationProperty Name="LoyaltyPoints" Relationship="Self.FK_LoyaltyPoints_User" FromRole="Users" ToRole="LoyaltyPoints" />
           <NavigationProperty Name="Reviews" Relationship="Self.FK_Reviews_User" FromRole="Users" ToRole="Reviews" />
           <NavigationProperty Name="Restaurants" Relationship="SmartTableSystemModel.FK_Restaurants_User" FromRole="Users" ToRole="Restaurants" />
+          <NavigationProperty Name="ReviewReporting" Relationship="SmartTableSystemModel.FK_ReviewReporting_Users" FromRole="Users" ToRole="ReviewReporting" />
+          <NavigationProperty Name="Notifications" Relationship="SmartTableSystemModel.FK_Notifications_Users" FromRole="Users" ToRole="Notifications" />
         </EntityType>
         <Association Name="FK_Bookings_User">
           <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
@@ -632,6 +863,46 @@
             <End Role="Restaurants" EntitySet="Restaurants" />
             <End Role="RestaurantImages" EntitySet="RestaurantImages" />
           </AssociationSet>
+          <EntitySet Name="ReviewReplies" EntityType="SmartTableSystemModel.ReviewReplies" />
+          <EntitySet Name="ReviewReporting" EntityType="SmartTableSystemModel.ReviewReporting" />
+          <AssociationSet Name="FK_ReviewReplies_Restaurants" Association="SmartTableSystemModel.FK_ReviewReplies_Restaurants">
+            <End Role="Restaurants" EntitySet="Restaurants" />
+            <End Role="ReviewReplies" EntitySet="ReviewReplies" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ReviewReplies_Reviews" Association="SmartTableSystemModel.FK_ReviewReplies_Reviews">
+            <End Role="Reviews" EntitySet="Reviews" />
+            <End Role="ReviewReplies" EntitySet="ReviewReplies" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ReviewReporting_Reviews" Association="SmartTableSystemModel.FK_ReviewReporting_Reviews">
+            <End Role="Reviews" EntitySet="Reviews" />
+            <End Role="ReviewReporting" EntitySet="ReviewReporting" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ReviewReporting_Users" Association="SmartTableSystemModel.FK_ReviewReporting_Users">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="ReviewReporting" EntitySet="ReviewReporting" />
+          </AssociationSet>
+          <EntitySet Name="sysdiagrams" EntityType="SmartTableSystemModel.sysdiagrams" />
+          <AssociationSet Name="FK_Bookings_Tables" Association="SmartTableSystemModel.FK_Bookings_Tables">
+            <End Role="Tables" EntitySet="Tables" />
+            <End Role="Bookings" EntitySet="Bookings" />
+          </AssociationSet>
+          <EntitySet Name="Notifications" EntityType="SmartTableSystemModel.Notifications" />
+          <AssociationSet Name="FK_Notifications_Bookings" Association="SmartTableSystemModel.FK_Notifications_Bookings">
+            <End Role="Bookings" EntitySet="Bookings" />
+            <End Role="Notifications" EntitySet="Notifications" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Notifications_Restaurants" Association="SmartTableSystemModel.FK_Notifications_Restaurants">
+            <End Role="Restaurants" EntitySet="Restaurants" />
+            <End Role="Notifications" EntitySet="Notifications" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Notifications_Reviews" Association="SmartTableSystemModel.FK_Notifications_Reviews">
+            <End Role="Reviews" EntitySet="Reviews" />
+            <End Role="Notifications" EntitySet="Notifications" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Notifications_Users" Association="SmartTableSystemModel.FK_Notifications_Users">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="Notifications" EntitySet="Notifications" />
+          </AssociationSet>
         </EntityContainer>
         <EntityType Name="PartnerLeads">
           <Key>
@@ -720,6 +991,12 @@
           <NavigationProperty Name="RestaurantImages" Relationship="SmartTableSystemModel.FK_RestaurantImages_Restaurants" FromRole="Restaurants" ToRole="RestaurantImages" />
           <Property Name="City" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
           <Property Name="Area" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="ReviewReplies" Relationship="SmartTableSystemModel.FK_ReviewReplies_Restaurants" FromRole="Restaurants" ToRole="ReviewReplies" />
+          <Property Name="AmenitiesOther" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="debt_months" Type="Int32" Nullable="false" />
+          <Property Name="debt_amount" Type="Decimal" Nullable="false" Precision="18" Scale="0" />
+          <Property Name="is_locked" Type="Boolean" Nullable="false" />
+          <NavigationProperty Name="Notifications" Relationship="SmartTableSystemModel.FK_Notifications_Restaurants" FromRole="Restaurants" ToRole="Notifications" />
         </EntityType>
         <Association Name="FK_Bookings_Restaurants">
           <End Type="SmartTableSystemModel.Restaurants" Role="Restaurants" Multiplicity="0..1" />
@@ -805,6 +1082,179 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <EntityType Name="ReviewReplies">
+          <Key>
+            <PropertyRef Name="reply_id" />
+          </Key>
+          <Property Name="reply_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="review_id" Type="Int32" Nullable="false" />
+          <Property Name="restaurant_id" Type="Int32" Nullable="false" />
+          <Property Name="reply_text" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="created_at" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="updated_at" Type="DateTime" Precision="3" />
+          <NavigationProperty Name="Restaurants" Relationship="SmartTableSystemModel.FK_ReviewReplies_Restaurants" FromRole="ReviewReplies" ToRole="Restaurants" />
+          <NavigationProperty Name="Reviews" Relationship="SmartTableSystemModel.FK_ReviewReplies_Reviews" FromRole="ReviewReplies" ToRole="Reviews" />
+        </EntityType>
+        <EntityType Name="ReviewReporting">
+          <Key>
+            <PropertyRef Name="report_id" />
+          </Key>
+          <Property Name="report_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="review_id" Type="Int32" Nullable="false" />
+          <Property Name="reported_by_user_id" Type="Int32" Nullable="false" />
+          <Property Name="report_type" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="report_reason" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="status" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="created_at" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="resolved_at" Type="DateTime" Precision="3" />
+          <Property Name="resolved_by" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Reviews" Relationship="SmartTableSystemModel.FK_ReviewReporting_Reviews" FromRole="ReviewReporting" ToRole="Reviews" />
+          <NavigationProperty Name="Users" Relationship="SmartTableSystemModel.FK_ReviewReporting_Users" FromRole="ReviewReporting" ToRole="Users" />
+        </EntityType>
+        <Association Name="FK_ReviewReplies_Restaurants">
+          <End Type="SmartTableSystemModel.Restaurants" Role="Restaurants" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="SmartTableSystemModel.ReviewReplies" Role="ReviewReplies" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Restaurants">
+              <PropertyRef Name="restaurant_id" />
+            </Principal>
+            <Dependent Role="ReviewReplies">
+              <PropertyRef Name="restaurant_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ReviewReplies_Reviews">
+          <End Type="SmartTableSystemModel.Reviews" Role="Reviews" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="SmartTableSystemModel.ReviewReplies" Role="ReviewReplies" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Reviews">
+              <PropertyRef Name="review_id" />
+            </Principal>
+            <Dependent Role="ReviewReplies">
+              <PropertyRef Name="review_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ReviewReporting_Reviews">
+          <End Type="SmartTableSystemModel.Reviews" Role="Reviews" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="SmartTableSystemModel.ReviewReporting" Role="ReviewReporting" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Reviews">
+              <PropertyRef Name="review_id" />
+            </Principal>
+            <Dependent Role="ReviewReporting">
+              <PropertyRef Name="review_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ReviewReporting_Users">
+          <End Type="SmartTableSystemModel.Users" Role="Users" Multiplicity="1" />
+          <End Type="SmartTableSystemModel.ReviewReporting" Role="ReviewReporting" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Users">
+              <PropertyRef Name="user_id" />
+            </Principal>
+            <Dependent Role="ReviewReporting">
+              <PropertyRef Name="reported_by_user_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="sysdiagrams">
+          <Key>
+            <PropertyRef Name="diagram_id" />
+          </Key>
+          <Property Name="name" Type="String" Nullable="false" MaxLength="128" FixedLength="false" Unicode="true" />
+          <Property Name="principal_id" Type="Int32" Nullable="false" />
+          <Property Name="diagram_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="version" Type="Int32" />
+          <Property Name="definition" Type="Binary" MaxLength="Max" FixedLength="false" />
+        </EntityType>
+        <Association Name="FK_Bookings_Tables">
+          <End Type="SmartTableSystemModel.Tables" Role="Tables" Multiplicity="0..1" />
+          <End Type="SmartTableSystemModel.Bookings" Role="Bookings" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Tables">
+              <PropertyRef Name="table_id" />
+            </Principal>
+            <Dependent Role="Bookings">
+              <PropertyRef Name="table_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Notifications">
+          <Key>
+            <PropertyRef Name="notification_id" />
+          </Key>
+          <Property Name="notification_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="user_id" Type="Int32" Nullable="false" />
+          <Property Name="restaurant_id" Type="Int32" />
+          <Property Name="booking_id" Type="Int32" />
+          <Property Name="review_id" Type="Int32" />
+          <Property Name="type" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="title" Type="String" Nullable="false" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="message" Type="String" Nullable="false" MaxLength="1000" FixedLength="false" Unicode="true" />
+          <Property Name="link" Type="String" MaxLength="400" FixedLength="false" Unicode="true" />
+          <Property Name="is_read" Type="Boolean" Nullable="false" />
+          <Property Name="created_at" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="Bookings" Relationship="SmartTableSystemModel.FK_Notifications_Bookings" FromRole="Notifications" ToRole="Bookings" />
+          <NavigationProperty Name="Restaurants" Relationship="SmartTableSystemModel.FK_Notifications_Restaurants" FromRole="Notifications" ToRole="Restaurants" />
+          <NavigationProperty Name="Reviews" Relationship="SmartTableSystemModel.FK_Notifications_Reviews" FromRole="Notifications" ToRole="Reviews" />
+          <NavigationProperty Name="Users" Relationship="SmartTableSystemModel.FK_Notifications_Users" FromRole="Notifications" ToRole="Users" />
+        </EntityType>
+        <Association Name="FK_Notifications_Bookings">
+          <End Type="SmartTableSystemModel.Bookings" Role="Bookings" Multiplicity="0..1" />
+          <End Type="SmartTableSystemModel.Notifications" Role="Notifications" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Bookings">
+              <PropertyRef Name="booking_id" />
+            </Principal>
+            <Dependent Role="Notifications">
+              <PropertyRef Name="booking_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Notifications_Restaurants">
+          <End Type="SmartTableSystemModel.Restaurants" Role="Restaurants" Multiplicity="0..1" />
+          <End Type="SmartTableSystemModel.Notifications" Role="Notifications" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Restaurants">
+              <PropertyRef Name="restaurant_id" />
+            </Principal>
+            <Dependent Role="Notifications">
+              <PropertyRef Name="restaurant_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Notifications_Reviews">
+          <End Type="SmartTableSystemModel.Reviews" Role="Reviews" Multiplicity="0..1" />
+          <End Type="SmartTableSystemModel.Notifications" Role="Notifications" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Reviews">
+              <PropertyRef Name="review_id" />
+            </Principal>
+            <Dependent Role="Notifications">
+              <PropertyRef Name="review_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Notifications_Users">
+          <End Type="SmartTableSystemModel.Users" Role="Users" Multiplicity="1" />
+          <End Type="SmartTableSystemModel.Notifications" Role="Notifications" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Users">
+              <PropertyRef Name="user_id" />
+            </Principal>
+            <Dependent Role="Notifications">
+              <PropertyRef Name="user_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -814,6 +1264,8 @@
           <EntitySetMapping Name="Bookings">
             <EntityTypeMapping TypeName="SmartTableSystemModel.Bookings">
               <MappingFragment StoreEntitySet="Bookings">
+                <ScalarProperty Name="created_at" ColumnName="created_at" />
+                <ScalarProperty Name="table_id" ColumnName="table_id" />
                 <ScalarProperty Name="cancel_reason" ColumnName="cancel_reason" />
                 <ScalarProperty Name="booking_id" ColumnName="booking_id" />
                 <ScalarProperty Name="user_id" ColumnName="user_id" />
@@ -861,6 +1313,8 @@
           <EntitySetMapping Name="Payments">
             <EntityTypeMapping TypeName="SmartTableSystemModel.Payments">
               <MappingFragment StoreEntitySet="Payments">
+                <ScalarProperty Name="payment_kind" ColumnName="payment_kind" />
+                <ScalarProperty Name="paid_at" ColumnName="paid_at" />
                 <ScalarProperty Name="payment_id" ColumnName="payment_id" />
                 <ScalarProperty Name="booking_id" ColumnName="booking_id" />
                 <ScalarProperty Name="amount" ColumnName="amount" />
@@ -873,6 +1327,9 @@
           <EntitySetMapping Name="Reviews">
             <EntityTypeMapping TypeName="SmartTableSystemModel.Reviews">
               <MappingFragment StoreEntitySet="Reviews">
+                <ScalarProperty Name="approved_by" ColumnName="approved_by" />
+                <ScalarProperty Name="approved_at" ColumnName="approved_at" />
+                <ScalarProperty Name="status" ColumnName="status" />
                 <ScalarProperty Name="review_id" ColumnName="review_id" />
                 <ScalarProperty Name="user_id" ColumnName="user_id" />
                 <ScalarProperty Name="restaurant_id" ColumnName="restaurant_id" />
@@ -955,6 +1412,10 @@
           <EntitySetMapping Name="Restaurants">
             <EntityTypeMapping TypeName="SmartTableSystemModel.Restaurants">
               <MappingFragment StoreEntitySet="Restaurants">
+                <ScalarProperty Name="is_locked" ColumnName="is_locked" />
+                <ScalarProperty Name="debt_amount" ColumnName="debt_amount" />
+                <ScalarProperty Name="debt_months" ColumnName="debt_months" />
+                <ScalarProperty Name="AmenitiesOther" ColumnName="AmenitiesOther" />
                 <ScalarProperty Name="Area" ColumnName="Area" />
                 <ScalarProperty Name="City" ColumnName="City" />
                 <ScalarProperty Name="NearbyLandmark" ColumnName="NearbyLandmark" />
@@ -998,6 +1459,61 @@
                 <ScalarProperty Name="image_url" ColumnName="image_url" />
                 <ScalarProperty Name="restaurant_id" ColumnName="restaurant_id" />
                 <ScalarProperty Name="image_id" ColumnName="image_id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ReviewReplies">
+            <EntityTypeMapping TypeName="SmartTableSystemModel.ReviewReplies">
+              <MappingFragment StoreEntitySet="ReviewReplies">
+                <ScalarProperty Name="updated_at" ColumnName="updated_at" />
+                <ScalarProperty Name="created_at" ColumnName="created_at" />
+                <ScalarProperty Name="reply_text" ColumnName="reply_text" />
+                <ScalarProperty Name="restaurant_id" ColumnName="restaurant_id" />
+                <ScalarProperty Name="review_id" ColumnName="review_id" />
+                <ScalarProperty Name="reply_id" ColumnName="reply_id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ReviewReporting">
+            <EntityTypeMapping TypeName="SmartTableSystemModel.ReviewReporting">
+              <MappingFragment StoreEntitySet="ReviewReporting">
+                <ScalarProperty Name="resolved_by" ColumnName="resolved_by" />
+                <ScalarProperty Name="resolved_at" ColumnName="resolved_at" />
+                <ScalarProperty Name="created_at" ColumnName="created_at" />
+                <ScalarProperty Name="status" ColumnName="status" />
+                <ScalarProperty Name="report_reason" ColumnName="report_reason" />
+                <ScalarProperty Name="report_type" ColumnName="report_type" />
+                <ScalarProperty Name="reported_by_user_id" ColumnName="reported_by_user_id" />
+                <ScalarProperty Name="review_id" ColumnName="review_id" />
+                <ScalarProperty Name="report_id" ColumnName="report_id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="sysdiagrams">
+            <EntityTypeMapping TypeName="SmartTableSystemModel.sysdiagrams">
+              <MappingFragment StoreEntitySet="sysdiagrams">
+                <ScalarProperty Name="definition" ColumnName="definition" />
+                <ScalarProperty Name="version" ColumnName="version" />
+                <ScalarProperty Name="diagram_id" ColumnName="diagram_id" />
+                <ScalarProperty Name="principal_id" ColumnName="principal_id" />
+                <ScalarProperty Name="name" ColumnName="name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Notifications">
+            <EntityTypeMapping TypeName="SmartTableSystemModel.Notifications">
+              <MappingFragment StoreEntitySet="Notifications">
+                <ScalarProperty Name="created_at" ColumnName="created_at" />
+                <ScalarProperty Name="is_read" ColumnName="is_read" />
+                <ScalarProperty Name="link" ColumnName="link" />
+                <ScalarProperty Name="message" ColumnName="message" />
+                <ScalarProperty Name="title" ColumnName="title" />
+                <ScalarProperty Name="type" ColumnName="type" />
+                <ScalarProperty Name="review_id" ColumnName="review_id" />
+                <ScalarProperty Name="booking_id" ColumnName="booking_id" />
+                <ScalarProperty Name="restaurant_id" ColumnName="restaurant_id" />
+                <ScalarProperty Name="user_id" ColumnName="user_id" />
+                <ScalarProperty Name="notification_id" ColumnName="notification_id" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

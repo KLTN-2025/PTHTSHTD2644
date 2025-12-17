@@ -18,20 +18,17 @@ namespace SmartTable.Areas.Admin.Controllers
     {
         private Entities db = new Entities();
 
-        // [GET] /Admin/Dashboard/Index
         public ActionResult Index()
         {
             return View();
         }
 
-        // [GET] /Admin/Dashboard/PartnerLeads
         public ActionResult PartnerLeads()
         {
             var leads = db.PartnerLeads.Where(l => l.Status == "Mới").ToList();
             return View(leads);
         }
 
-        // Thay thế GenerateRandomPassword bằng hàm an toàn
         private string GenerateSecureRandomPassword(int length = 10)
         {
             const string chars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -61,7 +58,6 @@ namespace SmartTable.Areas.Admin.Controllers
             base.Dispose(disposing);
         }
 
-        // --- LOGIC DUYỆT ĐỐI TÁC ---
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult ApprovePartner(int leadId)
@@ -77,7 +73,6 @@ namespace SmartTable.Areas.Admin.Controllers
                     Users partnerUser;
                     string randomPassword = GenerateSecureRandomPassword();
 
-                    // 1. Xử lý User (Tạo mới hoặc Nâng cấp vai trò)
                     if (existingUser != null)
                     {
                         existingUser.role = "business";
@@ -97,10 +92,8 @@ namespace SmartTable.Areas.Admin.Controllers
                         db.Users.Add(partnerUser);
                     }
 
-                    // 2. LƯU THAY ĐỔI LẦN 1 (BẮT BUỘC để có partnerUser.user_id)
                     db.SaveChanges();
 
-                    // 3. TẠO VÀ LIÊN KẾT NHÀ HÀNG MỚI
                     var newRestaurant = new Restaurants
                     {
                         user_id = partnerUser.user_id,
@@ -112,7 +105,6 @@ namespace SmartTable.Areas.Admin.Controllers
                         Image = lead.PhotoLink ?? "https://via.placeholder.com/400x300.png?text=SmartTable",
                         created_at = DateTime.Now,
 
-                        // === CHUYỂN DỮ LIỆU CHI TIẾT TỪ PARTNERLEADS ===
                         CuisineStyle = lead.CuisineStyle,
                         ServiceDescription = lead.ServiceDescription,
                         ServiceTypes = lead.ServiceTypes, 
@@ -132,7 +124,6 @@ namespace SmartTable.Areas.Admin.Controllers
                     };
                     db.Restaurants.Add(newRestaurant);
 
-                    // 4. GỬI EMAIL CHÀO MỪNG (Chỉ gửi nếu là user mới)
                     if (existingUser == null)
                     {
                         string subject = "Chào mừng Đối tác! Tài khoản Smart-Table của bạn đã được duyệt.";

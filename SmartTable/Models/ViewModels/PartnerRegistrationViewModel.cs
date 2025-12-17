@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SmartTable.Models.ViewModels
 {
-    // Lớp này dùng để chứa tất cả dữ liệu từ form đăng ký đối tác
     public class PartnerRegistrationViewModel
     {
         [Required(ErrorMessage = "Email không được để trống")]
@@ -22,7 +21,6 @@ namespace SmartTable.Models.ViewModels
         [Required(ErrorMessage = "Số cơ sở không được để trống")]
         public int BranchCount { get; set; }
 
-        // Mảng để nhận các checkbox
         public string[] ServiceTypes { get; set; }
         public string ServiceTypeOther { get; set; }
 
@@ -43,7 +41,7 @@ namespace SmartTable.Models.ViewModels
         public int TotalSeats { get; set; }
 
         [Required(ErrorMessage = "Số tầng không được để trống")]
-        public string FloorCount { get; set; } // Dùng string vì có thể nhập "3 tầng và 1 sân thượng"
+        public string FloorCount { get; set; } 
 
         [Required(ErrorMessage = "Ngày bắt đầu không được để trống")]
         [DataType(DataType.Date)]

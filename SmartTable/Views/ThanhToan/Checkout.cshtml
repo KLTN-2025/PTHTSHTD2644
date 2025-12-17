@@ -1,59 +1,95 @@
 ﻿@model SmartTable.Models.ViewModels.PaymentViewModel
+@using System
 
 @{
     ViewBag.Title = "Thanh toán đặt cọc";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    decimal deposit = Model.DepositAmount ?? 0m;
-    decimal preOrder = Model.PreOrderTotal ?? 0m;
+    decimal deposit = (Model?.DepositAmount).GetValueOrDefault(0m);
+    decimal preOrder = (Model?.PreOrderTotal).GetValueOrDefault(0m);
 
-    decimal amount = Model.Amount > 0 ? Model.Amount : (deposit + preOrder);
-    decimal totalToPay = amount;     
+    decimal totalToPay = (Model != null && Model.Amount > 0m) ? Model.Amount : (deposit + preOrder);
 
-    string bankId = string.IsNullOrEmpty(Model.BankId) ? "MB" : Model.BankId;
-    string accountNo = string.IsNullOrEmpty(Model.AccountNo) ? "0941326591" : Model.AccountNo;
-    string accountName = string.IsNullOrEmpty(Model.AccountName) ? "SMART TABLE" : Model.AccountName;
+    string bankId = string.IsNullOrEmpty(Model?.BankId) ? "MB" : Model.BankId;
+    string accountNo = string.IsNullOrEmpty(Model?.AccountNo) ? "0941326591" : Model.AccountNo;
+    string accountName = string.IsNullOrEmpty(Model?.AccountName) ? "SMART TABLE" : Model.AccountName;
     string template = "compact2";
 
-    string content = !string.IsNullOrWhiteSpace(Model.TransferContent)
-        ? Model.TransferContent
-        : $"SMARTTABLE-{Model.BookingId}";
+    int bookingId = Model?.BookingId ?? 0;
 
-    string encodedContent = System.Uri.EscapeDataString(content);
-    string encodedAccName = System.Uri.EscapeDataString(accountName);
+    string content = !string.IsNullOrWhiteSpace(Model?.TransferContent)
+        ? Model.TransferContent
+        : $"SMARTTABLE-{bookingId}";
+
+    string encodedContent = Uri.EscapeDataString(content);
+    string encodedAccName = Uri.EscapeDataString(accountName);
 
     string qrUrl =
-$"https://img.vietqr.io/image/{bankId}-{accountNo}-{template}.jpg?amount={totalToPay}&addInfo={encodedContent}&accountName={encodedAccName}";
+        $"https://img.vietqr.io/image/{bankId}-{accountNo}-{template}.jpg?amount={totalToPay}&addInfo={encodedContent}&accountName={encodedAccName}";
 
-    string restaurantName = string.IsNullOrEmpty(Model.RestaurantName) ? "Nhà hàng" : Model.RestaurantName;
-    string restaurantAddress = Model.RestaurantAddress ?? "";
-    string restaurantImage = string.IsNullOrEmpty(Model.RestaurantImage)
+    string restaurantName = string.IsNullOrWhiteSpace(Model?.RestaurantName) ? "Đang cập nhật" : Model.RestaurantName;
+    string restaurantAddress = (Model?.RestaurantAddress ?? "").Trim();
+    string restaurantImage = string.IsNullOrWhiteSpace(Model?.RestaurantImage)
         ? "https://via.placeholder.com/100"
         : Model.RestaurantImage;
-    string customerName = string.IsNullOrEmpty(Model.CustomerName) ? "Khách hàng" : Model.CustomerName;
-    string specialRequest = Model.SpecialRequest ?? "";
-    DateTime bookingTime = Model.BookingTime;
-    int numberOfGuests = Model.NumberOfGuests;
+
+    string customerName = string.IsNullOrWhiteSpace(Model?.CustomerName) ? "Đang cập nhật" : Model.CustomerName;
+    string specialRequest = (Model?.SpecialRequest ?? "").Trim();
+    DateTime bookingTime = Model?.BookingTime ?? DateTime.MinValue;
+    int numberOfGuests = Model?.NumberOfGuests ?? 0;
+
+    string bookingListUrl = Url.Action("DanhSachBanDaDat", "DatBan");
+    string backToBookingUrl = Url.Action("DatBan", "DatBan", new
+    {
+        id = Model?.RestaurantId ?? 0,
+        ReservationDate = (bookingTime != DateTime.MinValue ? bookingTime.Date : DateTime.Today),
+        NumberOfPeople = (numberOfGuests > 0 ? numberOfGuests : 2),
+        ReservationTime = (bookingTime != DateTime.MinValue ? bookingTime.ToString("HH:mm") : "19:00")
+    });
+
+    string returnUrl = bookingListUrl;
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="mb-4 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 font-semibold">
+        @TempData["ErrorMessage"]
+    </div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="mb-4 p-4 rounded-xl border border-green-200 bg-green-50 text-green-700 font-semibold">
+        @TempData["SuccessMessage"]
+    </div>
 }
 
 <div class="bg-gray-50 min-h-screen py-10">
     <div class="container mx-auto max-w-5xl px-4">
 
-        <!-- Bước tiến trình -->
         <div class="flex justify-center mb-10">
             <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2 text-gray-400">
-                    <span class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center font-bold">1</span>
+
+                <!-- STEP 1: clickable -->
+                <a href="@backToBookingUrl"
+                   class="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition"
+                   title="Quay lại đặt bàn">
+                    <span class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center font-bold bg-white">1</span>
                     <span>Đặt bàn</span>
-                </div>
+                </a>
+
                 <div class="w-12 h-0.5 bg-gray-300"></div>
+
+                <!-- STEP 2 -->
                 <div class="flex items-center gap-2 text-blue-600 font-bold">
                     <span class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center">2</span>
                     <span>Thanh toán</span>
                 </div>
+
                 <div class="w-12 h-0.5 bg-gray-300"></div>
+
+                <!-- STEP 3 -->
                 <div class="flex items-center gap-2 text-gray-400">
-                    <span class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center font-bold">3</span>
+                    <span class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center font-bold bg-white">3</span>
                     <span>Hoàn tất</span>
                 </div>
             </div>
@@ -61,122 +97,175 @@ $"https://img.vietqr.io/image/{bankId}-{accountNo}-{template}.jpg?amount={totalT
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-            <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 text-center">
-                <h2 class="text-xl font-bold text-gray-800 mb-2">Thanh toán chuyển khoản / ví điện tử</h2>
-                <p class="text-sm text-gray-500 mb-6">
-                    Vui lòng chọn phương thức thanh toán bên dưới. Hệ thống sẽ ghi nhận cọc sau khi bạn hoàn tất.
+            <!-- CỘT TRÁI -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Chọn phương thức thanh toán</h2>
+                <p class="text-sm text-gray-500 mb-4">
+                    Bạn chọn 1 phương thức bên dưới.
                 </p>
 
-                <div class="bg-blue-50 p-4 rounded-xl inline-block mb-6 border border-blue-100">
-                    <img src="@qrUrl"
-                         alt="Mã QR Thanh Toán"
-                         class="w-64 h-auto rounded-lg shadow-sm mx-auto mix-blend-multiply" />
+                <div class="flex flex-col sm:flex-row gap-3 mb-6">
+                    <a href="@backToBookingUrl"
+                       class="w-full sm:w-1/2 bg-white border border-gray-300 text-gray-800 font-semibold py-3 rounded-xl hover:bg-gray-50 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-arrow-left"
+                           style="color:#1f2937 !important; font-weight:900 !important;"></i>
+                        <span>Quay lại đặt bàn</span>
+                    </a>
+
+
+                    <a href="@bookingListUrl"
+                       class="w-full sm:w-1/2 bg-white border border-gray-300 text-gray-800 font-semibold py-3 rounded-xl hover:bg-gray-50 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-list"
+                           style="color:#1f2937 !important; font-weight:900 !important;"></i>
+                        <span>Lịch sử đặt bàn</span>
+                    </a>
                 </div>
 
-                <div class="text-left space-y-4 bg-gray-50 p-5 rounded-xl border border-gray-200 mb-6">
-                    <div class="flex justify-between">
-                        <span class="text-gray-500 text-sm">Ngân hàng:</span>
-                        <span class="font-bold text-gray-800">MB Bank (Quân Đội)</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500 text-sm">Số tài khoản:</span>
-                        <span class="font-bold text-blue-600 tracking-wider">@accountNo</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500 text-sm">Chủ tài khoản:</span>
-                        <span class="font-bold text-gray-800 uppercase">@accountName</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500 text-sm">Tiền cọc:</span>
-                        <span>@(deposit.ToString("#,##0")) đ</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500 text-sm">Tiền món đặt trước (ước tính):</span>
-                        <span class="font-bold text-gray-800">@preOrder.ToString("#,##0") đ</span>
-                    </div>
-                    @if (!string.IsNullOrEmpty(Model.PreOrderNote))
-                    {
-                        <div class="mt-3">
-                            <span class="block text-xs text-gray-500 mb-1">Chi tiết món đặt trước:</span>
-                            <ul class="text-sm text-gray-700 list-disc list-inside space-y-0.5">
-                                @{
-                                    var lines = Model.PreOrderNote
-                                                     .Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-                                    foreach (var line in lines)
-                                    {
-                                        <li>@line.Trim()</li>
-                                    }
-                                }
-                            </ul>
-                        </div>
-                    }
-                    <div class="flex justify-between border-t border-gray-200 pt-3 mt-2">
-                        <span class="text-gray-500 text-sm">Tổng thanh toán:</span>
-                        <span class="font-bold text-red-600 text-lg">@totalToPay.ToString("#,##0") đ</span>
-                    </div>
-                    <div class="flex justify-between border-t border-gray-200 pt-3 mt-2">
-                        <span class="text-gray-500 text-sm">Nội dung CK:</span>
-                        <span class="font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-100">
-                            @content
-                        </span>
-                    </div>
-                </div>
+                <button type="button"
+                        id="btnToggleBank"
+                        onclick="toggleBankTransfer()"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg transition transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                    <i class="fas fa-university"></i>
+                    <span>Thanh toán chuyển khoản (QR / app ngân hàng)</span>
+                </button>
 
-                <div class="space-y-3 mt-4">
-
-                    <button type="button"
-                            onclick="confirmPayment()"
-                            class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg transition transform hover:-translate-y-1 flex items-center justify-center gap-2">
-                        <i class="fas fa-university"></i>
-                        <span>Thanh toán chuyển khoản (QR / app ngân hàng)</span>
-                    </button>
-
-                    @using (Html.BeginForm("PayWithVnPay", "ThanhToan", FormMethod.Post))
+                <div class="mt-3">
+                    @using (Html.BeginForm("PayWithVnPay", "ThanhToan", FormMethod.Post, new { @class = "w-full" }))
                     {
                         @Html.AntiForgeryToken()
-                        @Html.HiddenFor(m => m.BookingId)
-                        <input type="hidden" name="amount" value="@totalToPay" />
-
+                        <input type="hidden" name="bookingId" value="@bookingId" />
                         <button type="submit"
                                 class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl shadow flex items-center justify-center gap-2">
                             <i class="fas fa-credit-card"></i>
                             <span>Thanh toán qua VNPAY</span>
                         </button>
                     }
-
-                    @using (Html.BeginForm("PayWithMomo", "ThanhToan", FormMethod.Post, new { @class = "w-full" }))
-                    {
-                        @Html.AntiForgeryToken()
-                        @Html.HiddenFor(m => m.BookingId)
-
-                        <button type="submit"
-                                class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 rounded-xl shadow flex items-center justify-center gap-2">
-                            <i class="fas fa-wallet"></i>
-                            <span>Thanh toán qua MoMo</span>
-                        </button>
-                    }
                 </div>
 
-                <p class="text-xs text-gray-400 mt-4">
-                    Sau khi thanh toán, vui lòng chờ hệ thống hoặc nhân viên xác nhận.
-                </p>
+                <!-- MOMO -->
+                <div class="mt-3">
+                    <button type="button"
+                            disabled
+                            title="MoMo đang được phát triển"
+                            class="w-full font-bold py-3 rounded-xl shadow flex items-center justify-center gap-2 cursor-not-allowed bg-gray-300 text-gray-600">
+                        <i class="fas fa-wallet"></i>
+                        <span>Thanh toán qua MoMo (Sắp ra mắt)</span>
+                    </button>
+                </div>
+
+                <div id="bankTransferSection" class="hidden mt-6">
+                    <div class="rounded-2xl border border-gray-100 bg-gray-50 p-6">
+
+                        <h3 class="text-lg font-bold text-gray-800 mb-2 text-center">
+                            Thanh toán chuyển khoản / ví điện tử
+                        </h3>
+                        <p class="text-sm text-gray-500 mb-5 text-center">
+                            Quét QR hoặc chuyển khoản theo thông tin bên dưới. Sau khi chuyển khoản xong, bấm “Gửi yêu cầu xác nhận”.
+                        </p>
+
+                        <div class="bg-blue-50 p-4 rounded-xl mb-6 border border-blue-100 w-full text-center">
+                            <img src="@qrUrl"
+                                 alt="Mã QR Thanh Toán"
+                                 class="w-64 h-auto rounded-lg shadow-sm mx-auto mix-blend-multiply" />
+                        </div>
+
+                        <div class="text-left space-y-4 bg-white p-5 rounded-xl border border-gray-200 mb-6">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500 text-sm">Ngân hàng:</span>
+                                <span class="font-bold text-gray-800">MB Bank (Quân Đội)</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500 text-sm">Số tài khoản:</span>
+                                <span class="font-bold text-blue-600 tracking-wider">@accountNo</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500 text-sm">Chủ tài khoản:</span>
+                                <span class="font-bold text-gray-800 uppercase">@accountName</span>
+                            </div>
+
+                            <div class="flex justify-between">
+                                <span class="text-gray-500 text-sm">Tiền cọc:</span>
+                                <span class="font-semibold text-gray-900">@deposit.ToString("#,##0") đ</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500 text-sm">Tiền món đặt trước:</span>
+                                <span class="font-semibold text-gray-900">@preOrder.ToString("#,##0") đ</span>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model?.PreOrderNote))
+                            {
+                                <div class="mt-3">
+                                    <span class="block text-xs text-gray-500 mb-1">Chi tiết món đặt trước:</span>
+                                    <ul class="text-sm text-gray-700 list-disc list-inside space-y-0.5">
+                                        @{
+                                            var lines = Model.PreOrderNote.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                                            foreach (var line in lines)
+                                            {
+                                                <li>@line.Trim()</li>
+                                            }
+                                        }
+                                    </ul>
+                                </div>
+                            }
+
+                            <div class="flex justify-between border-t border-gray-200 pt-3 mt-2">
+                                <span class="text-gray-500 text-sm">Tổng thanh toán:</span>
+                                <span class="font-bold text-red-600 text-lg">@totalToPay.ToString("#,##0") đ</span>
+                            </div>
+
+                            <div class="flex justify-between border-t border-gray-200 pt-3 mt-2">
+                                <span class="text-gray-500 text-sm">Nội dung CK:</span>
+                                <span class="font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-100">
+                                    @content
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- SUBMIT THẬT -->
+                        @using (Html.BeginForm("ConfirmBankTransfer", "ThanhToan", FormMethod.Post, new { id = "confirmTransferForm" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="bookingId" value="@bookingId" />
+                            <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+                            <button type="submit"
+                                    id="btnConfirmTransfer"
+                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Tôi đã chuyển khoản – Gửi yêu cầu xác nhận</span>
+                            </button>
+                        }
+
+                        <p class="text-xs text-gray-500 mt-4 text-center">
+                            Sau khi gửi yêu cầu, hệ thống sẽ ghi nhận trạng thái <b>Chờ xác nhận</b>.
+                        </p>
+
+                        <div class="mt-4">
+                            <a href="@backToBookingUrl"
+                               class="block w-full text-center bg-white border border-gray-300 text-gray-800 font-semibold py-3 rounded-xl hover:bg-gray-50 transition">
+                                Đổi ý – Quay lại đặt bàn
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
             </div>
 
-            <!-- CHI TIẾT ĐẶT BÀN -->
+            <!-- CỘT PHẢI -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 h-fit sticky top-24">
                 <h3 class="text-lg font-bold text-gray-800 mb-6 border-b pb-4">
-                    Chi tiết đặt bàn #@Model.BookingId
+                    Chi tiết đặt bàn #@bookingId
                 </h3>
 
                 <div class="flex items-center gap-4 mb-6">
-                    <img src="@restaurantImage"
-                         class="w-20 h-20 rounded-lg object-cover shadow-sm" />
+                    <img src="@restaurantImage" class="w-20 h-20 rounded-lg object-cover shadow-sm" />
                     <div>
                         <h4 class="font-bold text-gray-800 text-lg">@restaurantName</h4>
                         @if (!string.IsNullOrEmpty(restaurantAddress))
                         {
                             <p class="text-sm text-gray-500 flex items-center gap-1">
-                                <i class="fas fa-map-marker-alt text-red-500"></i> @restaurantAddress
+                                <i class="fas fa-map-marker-alt" style="color:#e11d48 !important; margin-top:0.25rem;"></i>
+                                @restaurantAddress
                             </p>
                         }
                     </div>
@@ -190,13 +279,13 @@ $"https://img.vietqr.io/image/{bankId}-{accountNo}-{template}.jpg?amount={totalT
                     <div class="flex justify-between">
                         <span>Thời gian:</span>
                         <span class="font-medium text-gray-900">
-                            @bookingTime.ToString("HH:mm - dd/MM/yyyy")
+                            @(bookingTime != DateTime.MinValue && bookingTime.Year >= 2000 ? bookingTime.ToString("HH:mm - dd/MM/yyyy") : "Đang cập nhật")
                         </span>
                     </div>
                     <div class="flex justify-between">
                         <span>Số khách:</span>
                         <span class="font-medium text-gray-900">
-                            @numberOfGuests người
+                            @(numberOfGuests > 0 ? numberOfGuests + " người" : "Đang cập nhật")
                         </span>
                     </div>
                     <div class="flex justify-between">
@@ -206,13 +295,11 @@ $"https://img.vietqr.io/image/{bankId}-{accountNo}-{template}.jpg?amount={totalT
                         </span>
                     </div>
 
-                    @if (!string.IsNullOrEmpty(Model.PreOrderText))
+                    @if (!string.IsNullOrEmpty(Model?.PreOrderText))
                     {
                         <div class="pt-2 mt-2 border-t border-dashed border-gray-200">
                             <span class="block text-gray-600 mb-1 font-semibold">Món đặt trước:</span>
-                            <p class="text-sm text-gray-800 whitespace-pre-line">
-                                @Model.PreOrderText
-                            </p>
+                            <p class="text-sm text-gray-800 whitespace-pre-line">@Model.PreOrderText</p>
                         </div>
                     }
                 </div>
@@ -220,11 +307,11 @@ $"https://img.vietqr.io/image/{bankId}-{accountNo}-{template}.jpg?amount={totalT
                 <hr class="border-dashed border-gray-200 my-6" />
 
                 <div class="flex justify-between items-center mb-2">
-                    <span class="text-gray-600">Phí giữ chỗ (50k/người)</span>
+                    <span class="text-gray-600">Tiền cọc</span>
                     <span class="font-medium">@deposit.ToString("#,##0") đ</span>
                 </div>
                 <div class="flex justify-between items-center mb-2">
-                    <span class="text-gray-600">Tiền món đặt trước (ước tính)</span>
+                    <span class="text-gray-600">Tiền món đặt trước</span>
                     <span class="font-medium">@preOrder.ToString("#,##0") đ</span>
                 </div>
                 <div class="flex justify-between items-center text-xl font-bold text-red-600 mt-4">
@@ -232,8 +319,23 @@ $"https://img.vietqr.io/image/{bankId}-{accountNo}-{template}.jpg?amount={totalT
                     <span>@totalToPay.ToString("#,##0") đ</span>
                 </div>
 
-                <div class="mt-6 bg-yellow-50 border border-yellow-100 p-3 rounded-lg text-xs text-yellow-800">
-                    <strong>Chính sách hoàn tiền:</strong> Hoàn 100% nếu hủy trước 24h. Không hoàn tiền nếu hủy sau đó.
+                <!-- ✅ NÚT QUAY LẠI ĐẶT BÀN / XEM LỊCH SỬ (ở cột phải luôn) -->
+                <div class="mt-5 flex flex-col sm:flex-row gap-3">
+                    <a href="@backToBookingUrl"
+                       class="w-full sm:w-1/2 text-center bg-white border border-gray-300 text-gray-800 font-semibold py-3 rounded-xl hover:bg-gray-50 transition">
+                        Quay lại đặt bàn
+                    </a>
+                    <a href="@bookingListUrl"
+                       class="w-full sm:w-1/2 text-center bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-700 transition">
+                        Lịch sử đặt bàn
+                    </a>
+                </div>
+
+                <div class="mt-6 bg-yellow-50 border border-yellow-200 p-4 rounded-lg text-xs text-yellow-900 leading-relaxed">
+                    <strong>Chính sách thanh toán & hoàn cọc</strong><br />
+                    • <b>Chuyển khoản:</b> gửi yêu cầu → hệ thống ghi nhận <b>Chờ xác nhận</b>. Cọc chỉ hợp lệ khi nhà hàng xác nhận.<br />
+                    • <b>Hoàn cọc:</b> chỉ áp dụng khi <b>không có món đặt trước</b> và hủy <b>trước thời điểm đặt bàn</b>.<br />
+                    • <b>Có món đặt trước:</b> cọc <b>không hoàn</b> theo chính sách hiện tại.
                 </div>
             </div>
 
@@ -241,51 +343,32 @@ $"https://img.vietqr.io/image/{bankId}-{accountNo}-{template}.jpg?amount={totalT
     </div>
 </div>
 
-<!-- MODAL THÀNH CÔNG -->
-<div id="successModal"
-     class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center">
-    <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-md text-center">
-        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">
-            <i class="fas fa-check text-4xl"></i>
-        </div>
-        <h3 class="text-2xl font-bold text-gray-800 mb-2">Thanh toán thành công!</h3>
-        <p class="text-gray-500 mb-6">
-            Cảm ơn bạn đã đặt bàn. Nhà hàng đã nhận được thông tin và sẽ liên hệ sớm nhất.
-        </p>
-        <a href="@Url.Action("Index", "Home")"
-           class="block w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">
-            Về trang chủ
-        </a>
-    </div>
-</div>
-
 @section Scripts {
     <script>
-        function confirmPayment() {
-            const btn = document.querySelector('button[onclick="confirmPayment()"]');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
-            btn.disabled = true;
+        function toggleBankTransfer() {
+            const sec = document.getElementById('bankTransferSection');
+            const btn = document.getElementById('btnToggleBank');
 
-            fetch('@Url.Action("ConfirmPayment", "ThanhToan")', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bookingId: @Model.BookingId })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('successModal').classList.remove('hidden');
-                    } else {
-                        alert("Lỗi: " + data.message);
-                        btn.innerHTML = '<i class="fas fa-university"></i> Thanh toán chuyển khoản (QR / app ngân hàng)';
-                        btn.disabled = false;
-                    }
-                })
-                .catch(err => {
-                    alert("Có lỗi xảy ra: " + err);
-                    btn.innerHTML = '<i class="fas fa-university"></i> Thanh toán chuyển khoản (QR / app ngân hàng)';
-                    btn.disabled = false;
-                });
+            const isHidden = sec.classList.contains('hidden');
+            if (isHidden) {
+                sec.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-university"></i><span>Ẩn QR chuyển khoản</span>';
+                setTimeout(() => sec.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+            } else {
+                sec.classList.add('hidden');
+                btn.innerHTML = '<i class="fas fa-university"></i><span>Thanh toán chuyển khoản (QR / app ngân hàng)</span>';
+            }
         }
+
+        (function () {
+            const form = document.getElementById('confirmTransferForm');
+            const btn = document.getElementById('btnConfirmTransfer');
+            if (!form || !btn) return;
+
+            form.addEventListener('submit', function () {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Đang gửi yêu cầu...</span>';
+            });
+        })();
     </script>
 }

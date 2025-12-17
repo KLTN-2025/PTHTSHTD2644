@@ -1,267 +1,420 @@
 ﻿@model SmartTable.Models.Users
 @{
-    ViewBag.Title = "Đăng ký tài khoản";
-    Layout = "~/Views/Shared/_Layout.cshtml"; 
-}
-
-<style>
-    /* --- Nền gradient nhẹ, tạo cảm giác sang trọng --- */
-    body.register-page-bg {
-        background: linear-gradient(135deg, #fff7e6 0%, #fde8cd 100%);
-        min-height: 100vh;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        padding-top: 60px; /* Hoặc dùng flexbox để căn giữa */
-        padding-bottom: 60px; /* Hoặc dùng flexbox để căn giữa */
-        display: flex; /* Thêm flexbox để căn giữa tốt hơn */
-        align-items: center; /* Căn giữa theo chiều dọc */
-        justify-content: center; /* Căn giữa theo chiều ngang */
-    }
-
-    /* --- Container chính --- */
-    .register-container {
-        max-width: 430px;
-        width: 100%; /* Đảm bảo container chiếm đủ không gian */
-        margin: 0 auto;
-        background-color: #fffdf9;
-        border-radius: 16px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-        padding: 2.5rem;
-        border: 1px solid #f1d6a7;
-        transition: all 0.3s ease;
-    }
-
-        .register-container:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-    .register-title {
-        font-size: 1.9rem;
-        font-weight: 700;
-        color: #a5632d;
-        text-align: center;
-        margin-bottom: 1.5rem;
-    }
-
-    /* --- Input --- */
-    .input-field {
-        position: relative;
-        margin-bottom: 1rem;
-    }
-
-        .input-field i.fas, /* Chỉ áp dụng cho icon FontAwesome */
-        .input-field i.far { /* Thêm far cho mắt */
-            position: absolute;
-            top: 50%;
-            left: 14px;
-            transform: translateY(-50%);
-            color: #b08552;
-            width: 1em; /* Căn chỉnh icon */
-            text-align: center;
-            pointer-events: none; /* Icon không nhận click */
-        }
-
-        .input-field .form-control { /* Áp dụng style cho class .form-control bên trong .input-field */
-            width: 100%;
-            padding: 12px 12px 12px 40px; /* Thêm padding trái cho icon */
-            border: 1px solid #d1bfa3;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            transition: border-color 0.25s, box-shadow 0.25s;
-            box-sizing: border-box; /* Quan trọng */
-            outline: none; /* Bỏ outline mặc định */
-        }
-
-            .input-field .form-control:focus {
-                border-color: #e07a26;
-                box-shadow: 0 0 0 3px rgba(224, 122, 38, 0.15);
-            }
-
-        /* --- Mắt ẩn/hiện mật khẩu --- */
-        .input-field .toggle-password {
-            position: absolute;
-            top: 50%;
-            right: 12px;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: #a8855b;
-            padding: 5px; /* Tăng vùng bấm */
-            left: auto; /* Ghi đè left từ style icon chung */
-            pointer-events: auto; /* Cho phép click vào mắt */
-        }
-
-            .input-field .toggle-password:hover {
-                color: #8c6b4a;
-            }
-        /* Điều chỉnh padding phải cho input password để không bị đè lên mắt */
-        .input-field input#password { /* ID cụ thể của input password */
-            padding-right: 40px;
-        }
-
-
-    /* --- Button đăng ký --- */
-    .register-btn {
-        width: 100%;
-        background: linear-gradient(90deg, #e07a26, #f2b33d);
-        border: none;
-        color: #fff;
-        padding: 12px 0;
-        font-size: 1rem;
-        font-weight: 600;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(224, 122, 38, 0.3);
-        display: inline-flex; /* Để căn icon */
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-    }
-
-        .register-btn:hover {
-            background: linear-gradient(90deg, #f09a3f, #ffd36b);
-            box-shadow: 0 6px 14px rgba(224, 122, 38, 0.4);
-            transform: translateY(-2px); /* Thêm hiệu ứng nhấc nhẹ */
-        }
-
-    /* --- Link đăng nhập --- */
-    .text-small {
-        text-align: center;
-        font-size: 0.9rem;
-        color: #6b4f3b;
-        margin-top: 1.2rem;
-    }
-
-        .text-small a {
-            color: #e07a26;
-            font-weight: 600;
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-
-            .text-small a:hover {
-                color: #c55b00;
-                text-decoration: underline;
-            }
-
-    /* --- Style cho Validation Messages --- */
-    .field-validation-error { /* Lỗi từng field */
-        color: #dc2626; /* Màu đỏ */
-        font-size: 0.8rem;
-        margin-top: 0.25rem;
-        display: block;
-        padding-left: 5px; /* Căn lề nhẹ */
-    }
-
-    .validation-summary-errors { /* Lỗi chung */
-        color: #b91c1c;
-        background-color: #fee2e2;
-        border: 1px solid #fecaca;
-        padding: 0.75rem;
-        border-radius: 8px; /* Giống input */
-        margin-bottom: 1rem;
-    }
-
-        .validation-summary-errors ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-    /* Style cho input bị lỗi */
-    .input-validation-error { /* Class tự động thêm bởi MVC */
-        border-color: #dc2626 !important;
-    }
-
-    .input-field:has(.input-validation-error) i.fas, /* Đổi màu icon khi lỗi */
-    .input-field:has(.input-validation-error) i.far {
-        color: #dc2626;
-    }
-
-    .input-field:has(.input-validation-error) .form-control:focus { /* Focus khi lỗi */
-        border-color: #dc2626 !important;
-        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
-    }
-</style>
-@{
+    ViewBag.Title = "Đăng ký - SmartTable";
     Layout = null;
 }
-<div class="register-container">
-    <h2 class="register-title">Tạo tài khoản mới</h2>
 
-    @* ValidationSummary sẽ được style bằng CSS mới *@
-    @Html.ValidationSummary(true) @* Bỏ class *@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
 
-    @using (Html.BeginForm("Register", "Account", FormMethod.Post))
-    {
-        @Html.AntiForgeryToken()
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80') no-repeat center center;
+            background-size: cover;
+            position: relative;
+            padding: 20px;
+        }
 
-        <div class="input-field">
-            <i class="fas fa-user"></i>
-            @Html.TextBoxFor(m => m.full_name, new { @class = "form-control", placeholder = "Họ và tên", required = "required" })
-        </div>
-        @Html.ValidationMessageFor(m => m.full_name) @* Bỏ class *@
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+        }
 
-        <div class="input-field">
-            <i class="fas fa-envelope"></i>
-            @Html.TextBoxFor(m => m.email, new { @class = "form-control", placeholder = "Địa chỉ email (vd: abc@gmail.com)", type = "email", required = "required" })
-        </div>
-        @Html.ValidationMessageFor(m => m.email) @* Bỏ class *@
+        .register-container {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 420px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.5s ease;
+        }
 
-        <div class="input-field">
-            <i class="fas fa-lock"></i>
-            @Html.PasswordFor(m => m.password_hash, new { @class = "form-control", placeholder = "Mật khẩu (ít nhất 6 ký tự)", id = "password", required = "required" })
-            <i class="far fa-eye toggle-password" id="togglePassword"></i>
-        </div>
-        @Html.ValidationMessageFor(m => m.password_hash) @* Bỏ class *@
-
-        <div class="input-field">
-            <i class="fas fa-phone"></i>
-            @Html.TextBoxFor(m => m.phone, new { @class = "form-control", placeholder = "Số điện thoại (vd: 09...)", type = "tel", required = "required" })
-        </div>
-        @Html.ValidationMessageFor(m => m.phone) @* Bỏ class *@
-
-        @* (Tùy chọn) Thêm Xác nhận mật khẩu nếu cần *@
-        @* <div class="input-field">
-                <i class="fas fa-lock"></i>
-                @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control", placeholder = "Xác nhận mật khẩu", id = "confirmPassword", required = "required" })
-                 <i class="far fa-eye toggle-password" id="toggleConfirmPassword"></i>
-            </div>
-            @Html.ValidationMessageFor(m => m.ConfirmPassword) *@
-
-
-        <button type="submit" class="register-btn mt-4">
-            @* Thêm khoảng cách trên *@
-            <i class="fas fa-user-plus"></i> Đăng ký
-        </button>
-
-        <p class="text-small">
-            Đã có tài khoản? <a href="@Url.Action("Login", "Account")">Đăng nhập ngay</a>
-        </p>
-    }
-</div>
-
-@section Scripts {
-    @Scripts.Render("~/bundles/jqueryval")
-    <script>
-        // Thêm class vào body để áp dụng nền gradient
-        document.body.classList.add('register-page-bg');
-
-        // Toggle hiện / ẩn mật khẩu
-        function setupPasswordToggle(toggleId, inputId) {
-            const toggleButton = document.getElementById(toggleId);
-            const passwordInput = document.getElementById(inputId);
-            if (toggleButton && passwordInput) {
-                toggleButton.addEventListener('click', function () {
-                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                    passwordInput.setAttribute('type', type);
-                    this.classList.toggle('fa-eye');
-                    this.classList.toggle('fa-eye-slash');
-                });
+        keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
 
-        setupPasswordToggle('togglePassword', 'password');
-        // setupPasswordToggle('toggleConfirmPassword', 'confirmPassword'); // Bỏ comment nếu dùng Confirm Password
+        .logo {
+            font-size: 32px;
+            font-weight: 800;
+            color: #2d3436;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #636e72;
+            font-size: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #2d3436;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .input-field {
+            position: relative;
+        }
+
+        .input-field input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+            color: #2d3436;
+        }
+
+        .input-field input:focus {
+            outline: none;
+            border-color: #6c5ce7;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.15);
+        }
+
+        .input-field input.error {
+            border-color: #ff7675;
+        }
+
+        .validation-message {
+            color: #ff7675;
+            font-size: 13px;
+            margin-top: 5px;
+            display: block;
+            min-height: 18px;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(108, 92, 231, 0.3);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+            color: #b2bec3;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #dfe6e9;
+        }
+
+        .divider span {
+            padding: 0 18px;
+            font-size: 14px;
+        }
+
+        .btn-google {
+            width: 100%;
+            padding: 14px;
+            background: white;
+            color: #2d3436;
+            border: 2px solid #dfe6e9;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .btn-google:hover {
+            border-color: #6c5ce7;
+            background: #f8f9fa;
+            transform: translateY(-1px);
+        }
+
+        .btn-google i {
+            color: #4285F4;
+            font-size: 20px;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 25px;
+            color: #636e72;
+            font-size: 15px;
+        }
+
+        .login-link a {
+            color: #6c5ce7;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Error messages */
+        .validation-summary {
+            background: rgba(255, 234, 234, 0.9);
+            color: #ff7675;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border-left: 4px solid #ff7675;
+            font-size: 14px;
+        }
+
+        .validation-summary ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .validation-summary li {
+            margin: 5px 0;
+        }
+
+        /* Responsive */
+        media (max-width: 480px) {
+            .register-container {
+                padding: 30px 25px;
+                border-radius: 16px;
+                max-width: 380px;
+            }
+
+            .logo {
+                font-size: 28px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+                margin-bottom: 25px;
+            }
+
+            .input-field input {
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+
+            .btn-register,
+            .btn-google {
+                padding: 14px;
+                font-size: 15px;
+            }
+        }
+
+        media (max-width: 360px) {
+            .register-container {
+                padding: 25px 20px;
+                max-width: 340px;
+            }
+
+            body {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Form đăng ký  -->
+    <div class="register-container">
+        <!-- Header -->
+        <div style="margin-bottom: 25px;">
+            <div class="logo">SmartTable</div>
+            <div class="subtitle">Hệ thống quản lý đặt bàn nhà hàng</div>
+        </div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="validation-summary">
+                @Html.ValidationSummary(true)
+            </div>
+        }
+
+        @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { id = "registerForm" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="input-group">
+                <label for="full_name">Họ và tên</label>
+                <div class="input-field">
+                    @Html.TextBoxFor(m => m.full_name, new
+                    {
+                        placeholder = "Nhập họ và tên",
+                        required = "required",
+                        @class = ViewData.ModelState["full_name"]?.Errors?.Count > 0 ? "error" : ""
+                    })
+                </div>
+                @Html.ValidationMessageFor(m => m.full_name, "", new { @class = "validation-message" })
+            </div>
+
+            <div class="input-group">
+                <label for="email">Email</label>
+                <div class="input-field">
+                    @Html.TextBoxFor(m => m.email, new
+                    {
+                        placeholder = "Nhập địa chỉ email",
+                        type = "email",
+                        required = "required",
+                        @class = ViewData.ModelState["email"]?.Errors?.Count > 0 ? "error" : ""
+                    })
+                </div>
+                @Html.ValidationMessageFor(m => m.email, "", new { @class = "validation-message" })
+            </div>
+
+            <div class="input-group">
+                <label for="password_hash">Mật khẩu</label>
+                <div class="input-field">
+                    @Html.PasswordFor(m => m.password_hash, new
+                    {
+                        placeholder = "Nhập mật khẩu",
+                        id = "password",
+                        required = "required",
+                        @class = ViewData.ModelState["password_hash"]?.Errors?.Count > 0 ? "error" : ""
+                    })
+                </div>
+                @Html.ValidationMessageFor(m => m.password_hash, "", new { @class = "validation-message" })
+            </div>
+
+            <div class="input-group">
+                <label for="phone">Số điện thoại</label>
+                <div class="input-field">
+                    @Html.TextBoxFor(m => m.phone, new
+                    {
+                        placeholder = "Nhập số điện thoại",
+                        type = "tel",
+                        required = "required",
+                        @class = ViewData.ModelState["phone"]?.Errors?.Count > 0 ? "error" : ""
+                    })
+                </div>
+                @Html.ValidationMessageFor(m => m.phone, "", new { @class = "validation-message" })
+            </div>
+
+            <button type="submit" class="btn-register">
+                Đăng ký
+            </button>
+
+            <div class="divider">
+                <span>Hoặc</span>
+            </div>
+
+            <button type="button" class="btn-google" onclick="handleGoogleRegister()">
+                <i class="fab fa-google"></i> Đăng ký bằng Google
+            </button>
+
+            <div class="login-link">
+                Đã có tài khoản? <a href="@Url.Action("Login", "Account")">Đăng nhập ngay</a>
+            </div>
+        }
+    </div>
+
+    <script>
+        document.querySelectorAll('.input-field input').forEach(input => {
+            input.addEventListener('blur', function () {
+                if (this.value.trim() === '') {
+                    this.classList.add('error');
+                } else {
+                    this.classList.remove('error');
+                }
+            });
+
+            input.addEventListener('input', function () {
+                this.classList.remove('error');
+            });
+        });
+
+        document.getElementById('registerForm')?.addEventListener('submit', function (e) {
+            const inputs = this.querySelectorAll('input[required]');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('error');
+                    isValid = false;
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+                const firstError = this.querySelector('.error');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
+
+        function handleGoogleRegister() {
+            alert('Chức năng đăng ký bằng Google đang được phát triển.');
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const firstError = document.querySelector('.error');
+            if (firstError) {
+                firstError.focus();
+            }
+
+            if (!firstError) {
+                const firstInput = document.querySelector('input[required]');
+                if (firstInput) {
+                    firstInput.focus();
+                }
+            }
+        });
     </script>
-}
+</body>
+</html>

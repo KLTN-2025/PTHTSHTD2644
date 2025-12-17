@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace SmartTable.Models.ViewModels
 {
@@ -15,16 +16,28 @@ namespace SmartTable.Models.ViewModels
 
         public DateTime BookingTime { get; set; }
         public int NumberOfGuests { get; set; }
+
         public string SpecialRequest { get; set; }
-
-        public string BookingStatus { get; set; }
-
         public string CancelReason { get; set; }
 
-        public decimal? DepositAmount { get; set; }
-
-       
+        public string BookingStatus { get; set; }
         public string PaymentStatus { get; set; }
 
+        public decimal? DepositAmount { get; set; }       
+        public decimal DepositPaidAmount { get; set; }     
+
+        public bool HasPreOrder { get; set; }
+        public List<PreOrderItemVm> PreOrderItems { get; set; } = new List<PreOrderItemVm>();
+        public decimal PreOrderTotalAmount { get; set; }   
+        public decimal PreOrderPaidAmount { get; set; }  
+
+        public decimal TotalCustomerPaidAmount { get; set; }
+
+        public class PreOrderItemVm
+        {
+            public string Name { get; set; }
+            public int Quantity { get; set; }
+            public decimal UnitPrice { get; set; }
+        }
     }
 }

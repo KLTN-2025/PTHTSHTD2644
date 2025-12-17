@@ -1,0 +1,191 @@
+﻿@using System
+@using System.Collections.Generic
+@using System.Globalization
+@using SmartTable.Models.ViewModels
+@model AdminRevenueViewModel
+
+@{
+    ViewBag.Title = "Doanh thu Admin";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var rows = Model.Rows ?? new List<AdminRevenueRow>();
+}
+
+@functions{
+    decimal GetDec(object obj, string prop)
+    {
+        if (obj == null) return 0m;
+
+        var pi = obj.GetType().GetProperty(prop);
+        if (pi == null) return 0m;
+
+        var v = pi.GetValue(obj, null);
+        if (v == null) return 0m;
+
+        try
+        {
+            if (v is decimal) return (decimal)v;
+            if (v is int) return Convert.ToDecimal((int)v);
+            if (v is long) return Convert.ToDecimal((long)v);
+            if (v is double) return Convert.ToDecimal((double)v);
+            if (v is float) return Convert.ToDecimal((float)v);
+
+            if (v is IConvertible) return Convert.ToDecimal(v, CultureInfo.InvariantCulture);
+        }
+        catch { /* ignore */ }
+
+        decimal parsed;
+        var s = Convert.ToString(v);
+        if (decimal.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out parsed)) return parsed;
+
+        if (decimal.TryParse(s, NumberStyles.Any, new CultureInfo("vi-VN"), out parsed)) return parsed;
+
+        return 0m;
+    }
+
+    string Vnd(decimal v) { return v.ToString("#,##0") + " đ"; }
+}
+
+<div class="space-y-6">
+
+    <div class="bg-white rounded-xl shadow-sm border p-4">
+        <form method="get" action="@Url.Action("Index")" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+                <label class="text-xs font-semibold text-gray-600">Từ ngày</label>
+                <input type="date" name="from" value="@Model.FromDate.ToString("yyyy-MM-dd")"
+                       class="mt-1 w-full border rounded-lg px-3 py-2" />
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-gray-600">Đến ngày</label>
+                <input type="date" name="to" value="@Model.ToDate.ToString("yyyy-MM-dd")"
+                       class="mt-1 w-full border rounded-lg px-3 py-2" />
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-gray-600">Nhà hàng</label>
+                @Html.DropDownList("restaurantId",
+                    (IEnumerable<SelectListItem>)ViewBag.Restaurants,
+                    "Tất cả nhà hàng",
+                    new { @class = "mt-1 w-full border rounded-lg px-3 py-2" })
+            </div>
+            <div class="flex items-end gap-2">
+                <button class="w-full bg-blue-600 text-white rounded-lg px-4 py-2 font-semibold hover:bg-blue-700">
+                    Lọc dữ liệu
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="bg-white rounded-xl shadow-sm border p-4">
+            <div class="text-xs text-gray-500">Doanh thu nhà hàng (gross)</div>
+            <div class="text-2xl font-bold">@Vnd(Model.TotalGrossRevenue)</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4">
+            <div class="text-xs text-gray-500">Phí phải thu</div>
+            <div class="text-2xl font-bold text-amber-600">@Vnd(Model.TotalFeesDue)</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4">
+            <div class="text-xs text-gray-500">Phí thực thu</div>
+            <div class="text-2xl font-bold text-emerald-600">@Vnd(Model.TotalFeesCollected)</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4">
+            <div class="text-xs text-gray-500">Nợ phát sinh</div>
+            <div class="text-2xl font-bold text-red-600">@Vnd(Model.TotalDebtAdded)</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4">
+            <div class="text-xs text-gray-500">Còn lại cho nhà hàng</div>
+            <div class="text-2xl font-bold">@Vnd(Model.TotalNetToRestaurant)</div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <div class="px-4 py-3 border-b">
+            <div class="font-semibold text-gray-900">Bảng Doanh thu Admin (tách cọc / món / hoàn / phí)</div>
+            <div class="text-xs text-gray-500">Tính theo paid_at. Field mới có thì hiển thị, chưa có thì fallback.</div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Kỳ</th>
+                        <th class="px-4 py-3 text-left">Nhà hàng</th>
+                        <th class="px-4 py-3 text-left">Doanh nghiệp</th>
+                        <th class="px-4 py-3 text-left">Gói</th>
+
+                        <th class="px-4 py-3 text-right">Thu cọc</th>
+                        <th class="px-4 py-3 text-right">Thu món</th>
+
+                        <th class="px-4 py-3 text-right">Hoàn cọc</th>
+                        <th class="px-4 py-3 text-right">Hoàn món</th>
+
+                        <th class="px-4 py-3 text-right">Gross</th>
+
+                        <th class="px-4 py-3 text-right">Phí giữ chỗ</th>
+                        <th class="px-4 py-3 text-right">Phí gói</th>
+                        <th class="px-4 py-3 text-right">Tổng phí</th>
+
+                        <th class="px-4 py-3 text-right">Phí thực thu</th>
+                        <th class="px-4 py-3 text-right">Nợ</th>
+                        <th class="px-4 py-3 text-right">Còn lại</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y">
+                    @if (rows.Any())
+                    {
+                        foreach (var r in rows)
+                        {
+                            var depositPaid = GetDec(r, "DepositPaid");
+                            if (depositPaid == 0m) { depositPaid = r.DepositNet; }
+
+                            var prePaid = GetDec(r, "PreOrderPaid");
+                            if (prePaid == 0m) { prePaid = r.PreOrderNet; }
+
+                            var refundDeposit = GetDec(r, "RefundDepositAbs");
+                            var refundPre = GetDec(r, "RefundPreOrderAbs");
+
+                            if (refundDeposit == 0m && refundPre == 0m && r.RefundAbs > 0m)
+                            {
+                                refundDeposit = r.RefundAbs;
+                                refundPre = 0m;
+                            }
+
+                            var holdFee = GetDec(r, "BookingHoldFeeDue");
+                            if (holdFee == 0m) { holdFee = r.BookingFeeDue; }
+
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3">@r.PeriodLabel</td>
+                                <td class="px-4 py-3 font-semibold text-gray-900">@r.RestaurantName</td>
+                                <td class="px-4 py-3">@r.BusinessNameOrEmail</td>
+                                <td class="px-4 py-3">@r.ServicePackage</td>
+
+                                <td class="px-4 py-3 text-right font-semibold">@Vnd(depositPaid)</td>
+                                <td class="px-4 py-3 text-right font-semibold">@Vnd(prePaid)</td>
+
+                                <td class="px-4 py-3 text-right text-red-600">@Vnd(refundDeposit)</td>
+                                <td class="px-4 py-3 text-right text-red-600">@Vnd(refundPre)</td>
+
+                                <td class="px-4 py-3 text-right font-bold">@Vnd(r.GrossRevenue)</td>
+
+                                <td class="px-4 py-3 text-right">@Vnd(holdFee)</td>
+                                <td class="px-4 py-3 text-right">@Vnd(r.PlanFeeDue)</td>
+                                <td class="px-4 py-3 text-right font-semibold">@Vnd(r.FeesDue)</td>
+
+                                <td class="px-4 py-3 text-right text-emerald-600 font-semibold">@Vnd(r.FeesCollected)</td>
+                                <td class="px-4 py-3 text-right text-red-600 font-semibold">@Vnd(r.DebtAdded)</td>
+                                <td class="px-4 py-3 text-right">@Vnd(r.NetToRestaurant)</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="15" class="px-4 py-8 text-center text-gray-500">Chưa có dữ liệu trong khoảng lọc.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

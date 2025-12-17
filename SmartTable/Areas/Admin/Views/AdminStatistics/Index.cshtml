@@ -1,0 +1,371 @@
+﻿@using System
+@using System.Linq
+@using System.Collections.Generic
+@using System.Web.Helpers
+@using SmartTable.Models.ViewModels
+@model SmartTable.Models.ViewModels.AdminStatisticsViewModel
+
+@{
+    ViewBag.Title = "Thống kê hệ thống (Admin)";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+
+    var today = DateTime.Today;
+
+    var fromDate = (Model != null) ? Model.FromDate : today.AddDays(-7);
+    var toDate = (Model != null) ? Model.ToDate : today;
+
+    if (fromDate == DateTime.MinValue)
+    {
+        fromDate = today.AddDays(-7);
+    }
+
+    if (toDate == DateTime.MinValue)
+    {
+        toDate = today;
+    }
+
+    if (toDate < fromDate)
+    {
+        var tmp = fromDate;
+        fromDate = toDate;
+        toDate = tmp;
+    }
+
+    var daily = Model?.DailyStats ?? new System.Collections.Generic.List<DailyStatItem>();
+    var hourly = Model?.HourlyStats ?? new System.Collections.Generic.List<HourlyStatItem>();
+    var rest = Model?.RestaurantStats ?? new System.Collections.Generic.List<RestaurantStatItem>();
+    var topMenu = Model?.TopMenuItems ?? new System.Collections.Generic.List<MenuItemStatItem>();
+    var topCus = Model?.TopCustomers ?? new System.Collections.Generic.List<CustomerStatItem>();
+
+    var peak = Model?.PeakHour;
+
+    decimal totalDeposit = Model?.TotalDeposit ?? 0m;
+    decimal totalPreOrder = Model?.TotalPreOrder ?? 0m;
+    var totalRevenue = totalDeposit + totalPreOrder;
+
+    var dailyLabels = daily.Select(x => x.Date.ToString("dd/MM")).ToList();
+    var dailyBookings = daily.Select(x => x.BookingCount).ToList();
+    var dailyRevenue = daily.Select(x => Convert.ToDouble(x.DepositAmount + x.PreOrderAmount)).ToList();
+
+    var hourlyLabels = hourly.Select(x => x.Label).ToList();
+    var hourlyBookings = hourly.Select(x => x.BookingCount).ToList();
+
+    var restLabels = rest.Take(10).Select(x => x.RestaurantName).ToList();
+    var restRevenue = rest.Take(10).Select(x => Convert.ToDouble(x.DepositAmount + x.PreOrderAmount)).ToList();
+
+    var topMenuLabels = topMenu.Select(x => x.MenuItemName).ToList();
+    var topMenuRevenue = topMenu.Select(x => Convert.ToDouble(x.Revenue)).ToList();
+}
+
+<div class="space-y-6">
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <form method="get" action="@Url.Action("Index")" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+                <label class="text-xs font-semibold text-gray-600">Từ ngày</label>
+                <input type="date" name="from" value="@fromDate.ToString("yyyy-MM-dd")"
+                       class="mt-1 w-full border rounded-lg px-3 py-2" />
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-gray-600">Đến ngày</label>
+                <input type="date" name="to" value="@toDate.ToString("yyyy-MM-dd")"
+                       class="mt-1 w-full border rounded-lg px-3 py-2" />
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-gray-600">Nhà hàng</label>
+                @Html.DropDownList(
+                    "restaurantId",
+                    (IEnumerable<SelectListItem>)ViewBag.Restaurants,
+                    "Tất cả nhà hàng",
+                    new { @class = "mt-1 w-full border rounded-lg px-3 py-2" }
+                )
+            </div>
+            <div class="flex items-end gap-2">
+                <button class="w-full bg-blue-600 text-white rounded-lg px-4 py-2 font-semibold hover:bg-blue-700">
+                    Lọc dữ liệu
+                </button>
+            </div>
+        </form>
+
+        <div class="flex flex-wrap gap-2 mt-3">
+            <a class="px-3 py-1.5 text-sm rounded-lg border hover:bg-gray-50"
+               href="@Url.Action("Index", new { from = today.AddDays(-7).ToString("yyyy-MM-dd"), to = today.ToString("yyyy-MM-dd"), restaurantId = Model?.RestaurantId })">7 ngày</a>
+            <a class="px-3 py-1.5 text-sm rounded-lg border hover:bg-gray-50"
+               href="@Url.Action("Index", new { from = today.AddDays(-30).ToString("yyyy-MM-dd"), to = today.ToString("yyyy-MM-dd"), restaurantId = Model?.RestaurantId })">30 ngày</a>
+            <a class="px-3 py-1.5 text-sm rounded-lg border hover:bg-gray-50"
+               href="@Url.Action("Index", new { from = today.AddDays(-180).ToString("yyyy-MM-dd"), to = today.ToString("yyyy-MM-dd"), restaurantId = Model?.RestaurantId })">180 ngày</a>
+            <a class="px-3 py-1.5 text-sm rounded-lg border hover:bg-gray-50"
+               href="@Url.Action("Index", new { from = today.AddYears(-1).ToString("yyyy-MM-dd"), to = today.ToString("yyyy-MM-dd"), restaurantId = Model?.RestaurantId })">1 năm</a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl shadow-sm border p-4">
+            <div class="text-xs text-gray-500">Doanh nghiệp</div>
+            <div class="text-2xl font-bold text-gray-900">@(Model?.TotalBusinesses ?? 0)</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4">
+            <div class="text-xs text-gray-500">Nhà hàng</div>
+            <div class="text-2xl font-bold text-gray-900">@(Model?.TotalRestaurants ?? 0)</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4">
+            <div class="text-xs text-gray-500">Booking trong range</div>
+            <div class="text-2xl font-bold text-gray-900">@(Model?.TotalBookingsInRange ?? 0)</div>
+            <div class="text-xs text-gray-500 mt-1">
+                Paid: <b>@(Model?.PaidBookingsInRange ?? 0)</b> | Hủy: <b>@(Model?.CanceledBookingsInRange ?? 0)</b>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border p-4">
+            <div class="text-xs text-gray-500">Doanh thu (cọc + đặt trước)</div>
+            <div class="text-2xl font-bold text-gray-900">@totalRevenue.ToString("#,##0") đ</div>
+            <div class="text-xs text-gray-500 mt-1">
+                Cọc: @totalDeposit.ToString("#,##0") đ | Preorder: @totalPreOrder.ToString("#,##0") đ
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <div class="flex items-center gap-2 font-semibold text-gray-900">
+                    <i class="fas fa-chart-bar text-blue-500"></i>
+                    <span>Biểu đồ thống kê</span>
+                </div>
+            </div>
+
+            <button id="btnToggleCharts" type="button"
+                    class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition flex items-center gap-2">
+                <i class="fas fa-eye"></i>
+                <span>Xem biểu đồ</span>
+            </button>
+        </div>
+
+        <div id="chartWrap" class="hidden mt-4 space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="border rounded-xl p-3">
+                    <div class="text-sm font-semibold text-gray-900 mb-2">Booking theo ngày</div>
+                    <div id="chartDailyBookings"></div>
+                    <div id="msgDailyBookings" class="hidden text-sm text-gray-500 py-6 text-center">Chưa có dữ liệu.</div>
+                </div>
+                <div class="border rounded-xl p-3">
+                    <div class="text-sm font-semibold text-gray-900 mb-2">Doanh thu theo ngày</div>
+                    <div id="chartDailyRevenue"></div>
+                    <div id="msgDailyRevenue" class="hidden text-sm text-gray-500 py-6 text-center">Chưa có dữ liệu.</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="border rounded-xl p-3">
+                    <div class="text-sm font-semibold text-gray-900 mb-2">Giờ cao điểm</div>
+                    <div class="text-xs text-gray-500 mb-2">
+                        Peak:
+                        <b>@(peak?.BestHourLabel ?? "-")</b>
+                        — @(peak?.BestHourBookings ?? 0) booking
+                        — @((peak?.BestHourRevenue ?? 0m).ToString("#,##0")) đ
+                    </div>
+                    <div id="chartHourly"></div>
+                    <div id="msgHourly" class="hidden text-sm text-gray-500 py-6 text-center">Chưa có dữ liệu.</div>
+                </div>
+
+                <div class="border rounded-xl p-3">
+                    <div class="text-sm font-semibold text-gray-900 mb-2">Tỷ trọng doanh thu theo nhà hàng</div>
+                    <div id="chartRestaurantShare"></div>
+                    <div id="msgRestaurantShare" class="hidden text-sm text-gray-500 py-6 text-center">Chưa có dữ liệu.</div>
+                </div>
+            </div>
+
+            <div class="border rounded-xl p-3">
+                <div class="text-sm font-semibold text-gray-900 mb-2">Top món đặt trước (Paid)</div>
+                <div id="chartTopMenu"></div>
+                <div id="msgTopMenu" class="hidden text-sm text-gray-500 py-6 text-center">Chưa có dữ liệu.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div class="px-4 py-3 border-b">
+                <div class="font-semibold text-gray-900">Top nhà hàng</div>
+                <div class="text-xs text-gray-500">Theo doanh thu (cọc + preorder) trong range</div>
+            </div>
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Nhà hàng</th>
+                        <th class="px-4 py-3 text-center">Booking</th>
+                        <th class="px-4 py-3 text-right">Doanh thu</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    @if (rest.Any())
+                    {
+                        foreach (var r in rest.Take(15))
+                        {
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3">@r.RestaurantName</td>
+                                <td class="px-4 py-3 text-center">@r.BookingCount</td>
+                                <td class="px-4 py-3 text-right font-semibold">@r.TotalAmount.ToString("#,##0") đ</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="3" class="px-4 py-6 text-center text-gray-500">Chưa có dữ liệu.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div class="px-4 py-3 border-b">
+                <div class="font-semibold text-gray-900">Top khách hàng</div>
+                <div class="text-xs text-gray-500">Theo tổng giá trị trong range</div>
+            </div>
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Khách</th>
+                        <th class="px-4 py-3 text-center">Booking</th>
+                        <th class="px-4 py-3 text-right">Tổng</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    @if (topCus.Any())
+                    {
+                        foreach (var c in topCus.Take(15))
+                        {
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3">
+                                    <div class="font-semibold text-gray-900">@c.CustomerName</div>
+                                    <div class="text-xs text-gray-500">@c.Phone</div>
+                                </td>
+                                <td class="px-4 py-3 text-center">@c.BookingCount</td>
+                                <td class="px-4 py-3 text-right font-semibold">@c.TotalAmount.ToString("#,##0") đ</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="3" class="px-4 py-6 text-center text-gray-500">Chưa có dữ liệu.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <script>
+        const chartData = {
+            dailyLabels: @Html.Raw(Json.Encode(dailyLabels)),
+            dailyBookings: @Html.Raw(Json.Encode(dailyBookings)),
+            dailyRevenue: @Html.Raw(Json.Encode(dailyRevenue)),
+
+            hourlyLabels: @Html.Raw(Json.Encode(hourlyLabels)),
+            hourlyBookings: @Html.Raw(Json.Encode(hourlyBookings)),
+
+            restLabels: @Html.Raw(Json.Encode(restLabels)),
+            restRevenue: @Html.Raw(Json.Encode(restRevenue)),
+
+            topMenuLabels: @Html.Raw(Json.Encode(topMenuLabels)),
+            topMenuRevenue: @Html.Raw(Json.Encode(topMenuRevenue))
+        };
+
+        let rendered = false;
+
+        function showMsg(chartId, msgId) {
+            const el = document.getElementById(chartId);
+            const msg = document.getElementById(msgId);
+            if (el) el.innerHTML = "";
+            if (msg) msg.classList.remove("hidden");
+        }
+
+        function renderChartsOnce() {
+            if (rendered) return;
+            rendered = true;
+
+            if (!chartData.dailyLabels || chartData.dailyLabels.length === 0) {
+                showMsg("chartDailyBookings", "msgDailyBookings");
+            } else {
+                new ApexCharts(document.querySelector("#chartDailyBookings"), {
+                    chart: { type: "bar", height: 280 },
+                    series: [{ name: "Bookings", data: chartData.dailyBookings || [] }],
+                    xaxis: { categories: chartData.dailyLabels }
+                }).render();
+            }
+
+            if (!chartData.dailyLabels || chartData.dailyLabels.length === 0) {
+                showMsg("chartDailyRevenue", "msgDailyRevenue");
+            } else {
+                new ApexCharts(document.querySelector("#chartDailyRevenue"), {
+                    chart: { type: "line", height: 280 },
+                    series: [{ name: "Doanh thu", data: chartData.dailyRevenue || [] }],
+                    xaxis: { categories: chartData.dailyLabels }
+                }).render();
+            }
+
+            if (!chartData.hourlyLabels || chartData.hourlyLabels.length === 0) {
+                showMsg("chartHourly", "msgHourly");
+            } else {
+                new ApexCharts(document.querySelector("#chartHourly"), {
+                    chart: { type: "bar", height: 280 },
+                    series: [{ name: "Bookings", data: chartData.hourlyBookings || [] }],
+                    xaxis: { categories: chartData.hourlyLabels }
+                }).render();
+            }
+
+            if (!chartData.restLabels || chartData.restLabels.length === 0) {
+                showMsg("chartRestaurantShare", "msgRestaurantShare");
+            } else {
+                new ApexCharts(document.querySelector("#chartRestaurantShare"), {
+                    chart: { type: "pie", height: 320 },
+                    series: chartData.restRevenue || [],
+                    labels: chartData.restLabels
+                }).render();
+            }
+
+            if (!chartData.topMenuLabels || chartData.topMenuLabels.length === 0) {
+                showMsg("chartTopMenu", "msgTopMenu");
+            } else {
+                new ApexCharts(document.querySelector("#chartTopMenu"), {
+                    chart: { type: "bar", height: 320 },
+                    series: [{ name: "Doanh thu", data: chartData.topMenuRevenue || [] }],
+                    xaxis: { categories: chartData.topMenuLabels }
+                }).render();
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const btn = document.getElementById("btnToggleCharts");
+            const wrap = document.getElementById("chartWrap");
+            if (!btn || !wrap) return;
+
+            let isVisible = false;
+
+            btn.addEventListener("click", function () {
+                isVisible = !isVisible;
+
+                const btnIcon = btn.querySelector("i");
+                const btnText = btn.querySelector("span");
+
+                if (isVisible) {
+                    wrap.classList.remove("hidden");
+                    btnText.textContent = "Ẩn biểu đồ";
+                    if (btnIcon) btnIcon.className = "fas fa-eye-slash";
+                    btn.classList.remove("bg-blue-600", "hover:bg-blue-700");
+                    btn.classList.add("bg-red-600", "hover:bg-red-700");
+                    requestAnimationFrame(renderChartsOnce);
+                } else {
+                    wrap.classList.add("hidden");
+                    btnText.textContent = "Xem biểu đồ";
+                    if (btnIcon) btnIcon.className = "fas fa-eye";
+                    btn.classList.remove("bg-red-600", "hover:bg-red-700");
+                    btn.classList.add("bg-blue-600", "hover:bg-blue-700");
+                }
+            });
+        });
+    </script>
+}

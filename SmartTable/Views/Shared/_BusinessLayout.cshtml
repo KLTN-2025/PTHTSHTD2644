@@ -1,11 +1,31 @@
-﻿@*
-    File: /Views/Shared/_BusinessLayout.cshtml
-    Layout chính cho khu vực "Đối tác - Business"
-*@
+﻿@using SmartTable.Models
+@using System.Linq
+
 @{
-    // THÊM: Lấy user từ Session 1 lần (nếu có)
-    var currentUser = Session["user"] as SmartTable.Models.Users;
+    var currentUser = Session["user"] as Users;
+    int unreadBiz = 0;
+
+    if (currentUser != null)
+    {
+        try
+        {
+            using (var _db = new Entities())
+            {
+                int receiverId = currentUser.user_id;
+
+                unreadBiz = _db.Notifications.AsNoTracking()
+                    .Count(n =>
+                        n.user_id == receiverId
+                        && n.is_read == false
+                        && n.type != null
+                        && n.type.StartsWith("BIZ_")
+                    );
+            }
+        }
+        catch { unreadBiz = 0; }
+    }
 }
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -26,20 +46,13 @@
             font-family: 'Roboto', sans-serif;
         }
 
-        .menu-link-business {
-            color: rgb(55 65 81); /* text-gray-700 */
-            font-weight: 500; /* font-medium */
-            font-size: 0.875rem; /* text-sm */
-            transition-property: color; /* transition-colors */
-            transition-duration: 200ms; /* duration-200 */
+        .bell-icon {
+            font-size: 22px !important;
+            color: #374151 !important;
         }
 
-            .menu-link-business:hover {
-                color: rgb(37 99 235); /* hover:text-blue-600 */
-            }
-
         .btn-login {
-            background-color: rgb(37 99 235); /* blue-600 */
+            background-color: rgb(37 99 235);
             color: white;
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
@@ -50,7 +63,7 @@
         }
 
             .btn-login:hover {
-                background-color: rgb(29 78 216); /* blue-700 */
+                background-color: rgb(29 78 216);
             }
 
         .profile-btn-content {
@@ -68,43 +81,68 @@
     <header class="bg-white text-gray-800 shadow-sm sticky top-0 z-50 border-b border-gray-200">
         <div class="container mx-auto max-w-7xl px-6 py-3 flex justify-between items-center h-16">
 
-            <a href="@Url.Action("Index", "Business")" class="text-2xl font-bold tracking-tight">
+            <a href="@Url.Action("Index", "BusinessHome")" class="text-2xl font-bold tracking-tight">
                 <span class="text-blue-600">Smart-Table</span>
                 <span class="text-red-500 font-medium text-xl">for Business</span>
             </a>
-
-            <nav class="flex items-center space-x-6 font-medium text-sm">
-                <a href="@Url.Action("Index", "BusinessHome")" class="menu-link-business">Trang chủ</a>
-                <a href="@Url.Action("Index", "Business")#benefits" class="menu-link-business">Lợi ích</a>
-            </nav>
 
             <div class="flex items-center space-x-3 ml-auto">
                 @if (currentUser == null)
                 {
                     <a href="@Url.Action("RegisterPartner", "Business")"
                        class="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-full shadow-sm hover:from-orange-600 hover:to-red-600 transition text-xs transform hover:scale-105">
-                        <i class="fas fa-user-plus mr-1"></i> <span>Đăng ký</span> 
+                        <i class="fas fa-user-plus mr-1"></i><span>Đăng ký</span>
                     </a>
-                    <a href="@Url.Action("Login", "Business")" class="btn-login space-x-1.5 transform hover:scale-105">
-                        <i class="fas fa-sign-in-alt"></i> <span>Đăng nhập</span>
+
+                    <a href="@Url.Action("Login", "Business")"
+                       class="btn-login space-x-1.5 transform hover:scale-105">
+                        <i class="fas fa-sign-in-alt"></i><span>Đăng nhập</span>
                     </a>
                 }
                 else
                 {
+                    <a href="@Url.Action("Business", "ThongBao")"
+                       class="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition duration-200"
+                       title="Thông báo doanh nghiệp">
+                        <i class="fas fa-bell bell-icon"></i>
+
+                        @if (unreadBiz > 0)
+                        {
+                            <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">
+                                @(unreadBiz > 99 ? "99+" : unreadBiz.ToString())
+                            </span>
+                        }
+                    </a>
+
                     <div class="relative">
-                        <button id="profileMenuToggleDesktop" class="flex items-center space-x-2 font-semibold text-red-500 profile-btn-content">
+                        <button id="profileMenuToggleDesktop" type="button"
+                                class="flex items-center space-x-2 font-semibold text-red-500 profile-btn-content">
                             <i class="fas fa-user-circle text-xl"></i>
-                            <span>@currentUser.full_name</span>
+                            <span>@(string.IsNullOrWhiteSpace(currentUser.full_name) ? "Doanh nghiệp" : currentUser.full_name)</span>
                             <i class="fas fa-chevron-down text-xs ml-1"></i>
                         </button>
 
-                        <ul id="dropdownMenuDesktop" class="hidden absolute bg-white border rounded-lg shadow-xl mt-3 py-1 right-0 w-48 text-gray-800 z-10 text-sm">
-                            <li><a href="@Url.Action("Profile", "BusinessHome")" class="flex items-center px-3 py-1.5 hover:bg-gray-100 transition"><i class="fas fa-user-edit w-4 text-center mr-2 text-blue-500"></i><span>Hồ sơ của tôi</span></a></li>
-                            <li><a href="@Url.Action("Logout", "Account")" class="flex items-center px-3 py-1.5 hover:bg-gray-100 transition text-red-600"><i class="fas fa-sign-out-alt w-4 text-center mr-2"></i><span>Đăng xuất</span></a></li>
+                        <ul id="dropdownMenuDesktop"
+                            class="hidden absolute bg-white border rounded-lg shadow-xl mt-3 py-1 right-0 w-48 text-gray-800 z-10 text-sm">
+                            <li>
+                                <a href="@Url.Action("Profile", "BusinessHome")"
+                                   class="flex items-center px-3 py-1.5 hover:bg-gray-100 transition">
+                                    <i class="fas fa-user-edit" style="width:16px;text-align:center;margin-right:8px;color:#2563eb !important;font-size:14px;"></i>
+                                    <span>Hồ sơ của tôi</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="@Url.Action("Logout", "Account")"
+                                   class="flex items-center px-3 py-1.5 hover:bg-gray-100 transition text-red-600">
+                                    <i class="fas fa-sign-out-alt" style="width:16px;text-align:center;margin-right:8px;color:#dc2626 !important;font-size:14px;"></i>
+                                    <span>Đăng xuất</span>
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 }
             </div>
+
         </div>
     </header>
 
@@ -123,5 +161,6 @@
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/main")
     @RenderSection("Scripts", required: false)
+
 </body>
 </html>

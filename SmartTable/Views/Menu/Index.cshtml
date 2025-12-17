@@ -19,7 +19,6 @@
             </div>
         </div>
 
-        @* Thông báo *@
         @if (TempData["Error"] != null)
         {
             <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 text-sm">
@@ -33,7 +32,6 @@
             </div>
         }
 
-        @* Nút thêm món *@
         <div class="mb-6">
             <button class="bg-amber-500 text-white px-5 py-2.5 rounded-lg hover:bg-amber-600 text-sm font-semibold shadow-sm"
                     onclick="openAddModal();">
@@ -41,7 +39,6 @@
             </button>
         </div>
 
-        @* Modal Thêm / Sửa *@
         <div id="addMenuItemModal"
              class="fixed inset-0 bg-black/40 z-40 hidden items-center justify-center">
             <div class="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-md relative">
@@ -133,7 +130,6 @@
             </div>
         </div>
 
-        @* Bảng danh sách món *@
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-100 text-gray-700 text-xs uppercase">
@@ -210,7 +206,6 @@
                                 <td class="px-4 py-3 text-center">
                                     <div class="flex items-center justify-center gap-2">
 
-                                        @* Bật / tắt bán *@
                                         @using (Html.BeginForm("ToggleAvailable", "Menu",
                                                 FormMethod.Post,
                                                 new { @class = "inline-block" }))
@@ -238,7 +233,6 @@
                                             }
                                         }
 
-                                        @* Sửa *@
                                         <button type="button"
                                                 class="inline-flex items-center px-3 py-1.5 rounded-full
                                                        border border-blue-300 text-blue-700 text-xs font-semibold
@@ -253,7 +247,6 @@
                                             <i class="fas fa-edit mr-1"></i> Sửa
                                         </button>
 
-                                        @* Xóa *@
                                         @using (Html.BeginForm("Delete", "Menu", FormMethod.Post,
                                                 new { @class = "inline-block", onsubmit = "return confirm('Bạn có chắc muốn xóa món ăn này?');" }))
                                         {

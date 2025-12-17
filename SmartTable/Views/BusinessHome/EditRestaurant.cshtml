@@ -34,7 +34,9 @@
         }
     </style>
 }
-
+<a href="/BusinessHome" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 transition">
+    <i class="fas fa-arrow-left mr-1"></i> Quay lại Dashboard
+</a>
 <div class="p-6">
     <h1 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">
         <i class="fas fa-store text-blue-600 mr-2"></i> Chỉnh sửa thông tin nhà hàng
@@ -62,7 +64,6 @@
         @Html.HiddenFor(m => m.restaurant_id)
 
 <div class="space-y-8 bg-white p-6 rounded-lg shadow-md border border-gray-100">
-    <!-- 1. Thông tin cơ bản -->
     <div class="grid md:grid-cols-2 gap-6 border-b pb-6">
         <h3 class="md:col-span-2 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
             1. Thông tin cơ bản
@@ -87,7 +88,6 @@
             @Html.TextBoxFor(m => m.address, new { @class = "w-full p-2 border rounded-lg", required = "required" })
         </div>
 
-        <!-- ✅ THÊM THÀNH PHỐ & KHU VỰC -->
         <div>
             <label class="block text-sm font-medium text-gray-700">Thành phố</label>
             @Html.TextBoxFor(m => m.City, new { @class = "w-full p-2 border rounded-lg", placeholder = "VD: TP. Hồ Chí Minh, Hà Nội..." })
@@ -97,7 +97,6 @@
             <label class="block text-sm font-medium text-gray-700">Khu vực / Quận</label>
             @Html.TextBoxFor(m => m.Area, new { @class = "w-full p-2 border rounded-lg", placeholder = "VD: Quận 1, Quận 3, Phú Nhuận..." })
         </div>
-        <!-- ✅ HẾT PHẦN THÊM -->
 
         <div>
             <label class="block text-sm font-medium text-gray-700">Website</label>
@@ -124,7 +123,6 @@
     </div>
 
 
-    <!-- 2. Thông tin liên hệ & Hợp tác -->
     <div class="grid md:grid-cols-3 gap-6 border-b pb-6">
         <h3 class="md:col-span-3 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
             2. Thông tin liên hệ & Hợp tác
@@ -156,7 +154,6 @@
         </div>
     </div>
 
-    <!-- 3. Dịch vụ & Ẩm thực -->
     <div class="grid md:grid-cols-2 gap-6 border-b pb-6">
         <h3 class="md:col-span-2 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
             3. Dịch vụ & Ẩm thực
@@ -188,7 +185,6 @@
         </div>
     </div>
 
-    <!-- 4. Vận hành & Giờ giấc -->
     <div class="grid md:grid-cols-3 gap-6 border-b pb-6">
         <h3 class="md:col-span-3 text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
             4. Vận hành & Giờ giấc
@@ -235,13 +231,11 @@
         </div>
     </div>
 
-    <!-- 5. Vị trí trên bản đồ -->
     <div class="border-b pb-6">
         <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
             5. Vị trí trên bản đồ
         </h3>
 
-        <!-- Địa chỉ + nút lấy tọa độ -->
         <div class="grid md:grid-cols-3 gap-6 mb-4">
             <div class="md:col-span-2">
                 <label class="block text-sm font-bold text-gray-700">
@@ -266,7 +260,6 @@
                 </p>
             </div>
 
-            <!-- Lat / Lng -->
             <div class="space-y-3">
                 <div>
                     <label class="block text-sm font-bold text-blue-600">Latitude (Vĩ độ)</label>
@@ -297,7 +290,6 @@
     </div>
 
 
-    <!-- 6. Tiện ích & mô tả -->
     <div class="pt-6 border-b pb-6">
         <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
             6. Tiện ích & mô tả
@@ -330,7 +322,6 @@
         </div>
     </div>
 
-    <!-- 7. Ảnh view (Gallery) -->
     <div class="pt-6 border-b pb-6">
         <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
             7. Ảnh view nhà hàng
@@ -361,8 +352,9 @@
             <p class="text-xs text-gray-400 mt-2">Chưa có ảnh view nào.</p>
         }
     </div>
-
-    <!-- Nút -->
+    <a href="/BusinessHome" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 transition">
+        <i class="fas fa-arrow-left mr-1"></i> Quay lại Dashboard
+    </a>
     <div class="pt-6 border-t mt-6 flex justify-between">
         <a href="@Url.Action("Profile", "BusinessHome")"
            class="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition inline-flex items-center">
@@ -388,11 +380,9 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // Biến toàn cục để dùng lại trong hàm lấy tọa độ
         var editMap;
         var editMarker;
 
-        // Cập nhật ô input lat / lng
         function updateLatLngInputs(lat, lng) {
             var latInput = document.getElementById('latitudeStr');
             var lngInput = document.getElementById('longitudeStr');
@@ -401,7 +391,6 @@
             if (lngInput) lngInput.value = parseFloat(lng).toFixed(7);
         }
 
-        // Lấy tọa độ từ địa chỉ (Nominatim)
         async function getLatLngFromAddress() {
             var addressInput = document.getElementById('addressInput');
             if (!addressInput) {
@@ -443,10 +432,8 @@
                     return;
                 }
 
-                // Cập nhật input
                 updateLatLngInputs(lat, lng);
 
-                // Cập nhật map + marker nếu đã khởi tạo
                 if (editMap && editMarker) {
                     editMarker.setLatLng([lat, lng]);
                     editMap.setView([lat, lng], 16);
@@ -459,12 +446,10 @@
             }
         }
 
-        // Khởi tạo Leaflet map
         document.addEventListener('DOMContentLoaded', function () {
             var lat = @latInit;
             var lng = @lngInit;
 
-            // Fallback nếu chưa có tọa độ
             if (isNaN(lat) || isNaN(lng)) {
                 lat = 10.776889;   // HCM
                 lng = 106.700806;
@@ -488,17 +473,14 @@
                 icon: RestaurantIcon
             }).addTo(editMap);
 
-            // Sync ban đầu
             updateLatLngInputs(lat, lng);
 
-            // Kéo marker
             editMarker.on('dragend', function () {
                 var position = editMarker.getLatLng();
                 updateLatLngInputs(position.lat, position.lng);
                 editMap.panTo(position);
             });
 
-            // Click lên map
             editMap.on('click', function (e) {
                 editMarker.setLatLng(e.latlng);
                 updateLatLngInputs(e.latlng.lat, e.latlng.lng);

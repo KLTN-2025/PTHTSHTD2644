@@ -39,15 +39,22 @@
     }
     else
     {
-        <!-- THẺ THỐNG KÊ NHANH -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
         <h3 class="text-gray-500 text-sm font-medium">Nhà hàng đang quản lý</h3>
         <p class="text-2xl font-bold text-blue-600 mt-2">@Model.name</p>
         <p class="text-sm text-gray-500 mt-1 flex items-start gap-2">
-            <i class="fas fa-map-marker-alt text-red-500 mt-0.5"></i>
+            <i class="fas fa-map-marker-alt"
+               style="
+           color:#ef4444 !important;
+           font-size:14px;
+           margin-top:2px;
+           flex-shrink:0;
+       ">
+            </i>
             <span>@Model.address</span>
         </p>
+
     </div>
 
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
@@ -74,57 +81,102 @@
     </div>
 </div>
 
-        <!-- CÁC TÁC VỤ NHANH -->
         <div class="mt-10 p-6 bg-white rounded-xl shadow-sm border border-gray-100">
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Các tác vụ nhanh</h2>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-                <!-- QUẢN LÝ ĐẶT BÀN -->
-                <a href="@Url.Action("Bookings", "BusinessHome")"
+                <a href="@Url.Action("Index", "BusinessBookings")"
                    class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-blue-50 hover:border-blue-400 transition">
-                    <i class="fas fa-calendar-alt text-3xl text-blue-600 mb-2"></i>
+                    <i class="fas fa-calendar-alt"
+                       style="font-size:28px;color:#2563eb !important;margin-bottom:8px;display:inline-block;">
+                    </i>
                     <span class="text-sm font-medium text-gray-700">Quản lý Đặt bàn</span>
                     <span class="text-xs text-gray-500 mt-1">Xem & xác nhận các lượt đặt chỗ</span>
                 </a>
 
-                <!-- CẬP NHẬT MENU -->
                 <a href="@Url.Action("Index", "Menu")"
                    class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-blue-50 transition">
-                    <i class="fas fa-list text-3xl text-red-600 mb-2"></i>
+                    <i class="fas fa-list"
+                       style="font-size:28px;color:#dc2626 !important;margin-bottom:8px;display:inline-block;">
+                    </i>
                     <span class="text-sm font-medium text-gray-700">Cập nhật Menu</span>
                 </a>
 
-                <!-- QUẢN LÝ BÀN  -->
                 <a href="@Url.Action("Index", "BusinessTables")"
-                   class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-blue-50 transition">
-                    <i class="fas fa-list text-3xl text-red-600 mb-2"></i>
-                    <span class="text-sm font-medium text-gray-700">Quản lý bàn</span>
+                                   class="flex flex-col items-center justify-center
+                          p-4 border border-gray-200 rounded-lg
+                          text-center shadow-sm
+                          hover:bg-blue-50 transition">
+
+                                    <i class="fas fa-table"
+                                       style="
+                           font-size:28px;
+                           color:#2563eb !important;
+                           margin-bottom:8px;
+                           display:inline-block;
+                       ">
+                    </i>
+
+                    <span class="text-sm font-medium text-gray-700">
+                        Quản lý bàn
+                    </span>
                 </a>
 
-                <!--Thống kê  -->
-                <a href="@Url.Action("Statistics", "BusinessHome")"
+
+                <a href="@Url.Action("Index", "BusinessStatistics")"
                    class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-blue-50 hover:border-blue-400 transition">
-                    <i class="fas fa-calendar-alt text-3xl text-blue-600 mb-2"></i>
-                    <span class="text-sm font-medium text-gray-700">Thống kê doanh thu </span>
-                    <span class="text-xs text-gray-500 mt-1">Xem doanh thu nhà hàng </span>
+                    <i class="fas fa-calendar-alt"
+                       style="
+                           font-size:28px;
+                           color:#2563eb !important;
+                           margin-bottom:8px;
+                           display:inline-block;
+                       ">
+                    </i>
+                    <span class="text-sm font-medium text-gray-700">Thống kê doanh thu</span>
+                    <span class="text-xs text-gray-500 mt-1">Xem doanh thu nhà hàng</span>
                 </a>
 
 
+                <a href="@Url.Action("Index", "BusinessReview")"
+                   class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-yellow-50 hover:border-yellow-400 transition">
+                    <i class="fas fa-star"
+                                       style="
+                       font-size:28px;
+                       color:#facc15 !important;
+                       margin-bottom:8px;
+                       display:inline-block;
+                   ">
+                    </i>                    <span class="text-sm font-medium text-gray-700">Quản lý đánh giá</span>
+                    <span class="text-xs text-gray-500 mt-1">Duyệt & xem thống kê rating</span>
+                </a>
 
-                <!-- THÔNG TIN CƠ SỞ -->
                 <a href="@Url.Action("Profile", "BusinessHome")"
                    class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-orange-50 hover:border-orange-400 transition">
-                    <i class="fas fa-info-circle text-3xl text-orange-500 mb-2"></i>
+                    <i class="fas fa-info-circle"
+                                           style="
+                           font-size:28px;
+                           color:#f97316 !important;
+                           margin-bottom:8px;
+                           display:inline-block;
+                       ">
+                    </i>
                     <span class="text-sm font-medium text-gray-700">Thông tin Cơ sở</span>
                     <span class="text-xs text-gray-500 mt-1">Xem tổng quan hồ sơ đăng ký</span>
                 </a>
-                <!-- QUẢN LÝ NHÀ HÀNG (CHỈNH SỬA THÔNG TIN) -->
                 <a href="@Url.Action("EditRestaurant", "BusinessHome", new { id = Model.restaurant_id })"
                    class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg text-center shadow-sm hover:bg-green-50 hover:border-green-400 transition">
-                    <i class="fas fa-store-alt text-3xl text-green-600 mb-2"></i>
-                    <span class="text-sm font-medium text-gray-700">Quản lý Nhà hàng</span>
-                    <span class="text-xs text-gray-500 mt-1">Cập nhật thông tin, không gian, tiện ích</span>
-                </a>
+                    <i class="fas fa-store-alt"
+                       style="
+                       font-size:28px;
+                       color:#16a34a !important;
+                       margin-bottom:8px;
+                       display:inline-block;
+                   ">
+                    </i>
+                        <span class="text-sm font-medium text-gray-700">Quản lý Nhà hàng</span>
+                        <span class="text-xs text-gray-500 mt-1">Cập nhật thông tin, không gian, tiện ích</span>
+</a>
 
             </div>
         </div>

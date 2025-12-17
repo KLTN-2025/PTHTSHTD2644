@@ -8,12 +8,10 @@ using System;
 using System.Device.Location; 
 using System.Globalization;
 
-// Controller này phục vụ các chức năng CÔNG CỘNG
 public class PublicRestaurantController : Controller 
 {
     private Entities db = new Entities(); 
 
-    // Hàm tiện ích tính khoảng cách giữa 2 tọa độ (Km)
     private double CalculateDistance(double lat1, double lng1, double lat2, double lng2)
     {
         var coord1 = new GeoCoordinate(lat1, lng1);
@@ -27,20 +25,17 @@ public class PublicRestaurantController : Controller
         return degree * Math.PI / 180;
     }
 
-    // GET: /PublicRestaurant/Nearby (Hiển thị trang Map và Danh sách nhà hàng gần đó)
     public ActionResult Nearby()
     {
-        return View(); // View sẽ nằm ở Views/Restaurant/Nearby.cshtml
+        return View(); 
     }
 
-    // GET: /Restaurant/Details/5 (Hiển thị trang chi tiết nhà hàng công cộng)
     public ActionResult Details(int? id)
     {
         if (id == null)
         {
             return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
         }
-        // Chỉ lấy nhà hàng đã được duyệt
         Restaurants restaurant = db.Restaurants
                                     .Include(r => r.Reviews)
                                     .Include(r => r.MenuItems)
@@ -56,14 +51,12 @@ public class PublicRestaurantController : Controller
     }
 
 
-    // GET: /PublicRestaurant/GetNearbyMapData (Action AJAX lấy dữ liệu Nhà hàng gần đó)
     [HttpGet]
     public JsonResult GetNearbyMapData(double lat, double lng, double radiusKm = 5)
     {
-        // Lọc: Chỉ lấy nhà hàng ĐÃ ĐƯỢC DUYỆT (is_approved == true)
         var allRestaurants = db.Restaurants
             .Where(r => r.latitude != null && r.longitude != null && r.is_approved == true)
-            .AsNoTracking() // Dùng AsNoTracking để tối ưu tốc độ truy vấn
+            .AsNoTracking() 
             .ToList();
 
         var nearbyRestaurants = allRestaurants
@@ -73,7 +66,6 @@ public class PublicRestaurantController : Controller
                 r.name,
                 r.address,
                 r.Image,
-                // Fix lỗi: Đảm bảo sử dụng giá trị double? của Model
                 latitude = r.latitude,
                 longitude = r.longitude,
                 distanceKm = CalculateDistance(lat, lng, r.latitude.Value, r.longitude.Value)

@@ -21,5 +21,7 @@ namespace SmartTable.Models.Vnpay
 
         // Tên người thanh toán
         public string Name { get; set; }
+        public string TxnRef { get; set; }
+
     }
 }

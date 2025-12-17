@@ -125,11 +125,38 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
-    <Content Include="Views\BusinessHome\Statistics.cshtml" />
+    <Compile Include="Areas\Admin\Controllers\AdminRevenueController.cs" />
+    <Compile Include="Areas\Admin\Controllers\AdminStatisticsController.cs" />
+    <Compile Include="Areas\Admin\Helpers\BillingHelper.cs" />
+    <Compile Include="Areas\Admin\Models\ViewModels\AdminRevenueViewModel.cs" />
+    <Compile Include="Areas\Admin\Models\ViewModels\AdminStatisticsViewModel.cs" />
+    <Compile Include="Controllers\BusinessBookingsController.cs" />
+    <Compile Include="Controllers\BusinessRefundController.cs" />
+    <Compile Include="Controllers\BusinessStatisticsController .cs" />
+    <Compile Include="Controllers\Filters\ValidateAntiForgeryTokenJsonAttribute.cs" />
+    <Compile Include="Controllers\NhaHangUyTinController.cs" />
+    <Compile Include="Controllers\ThongBaoController.cs" />
+    <Compile Include="Models\Notifications.cs">
+      <DependentUpon>SmartTableSystem2.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\sysdiagrams.cs">
+      <DependentUpon>SmartTableSystem2.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\ViewModels\TrustedRestaurantItemViewModel.cs" />
+    <Compile Include="Services\NotificationService.cs" />
+    <Compile Include="Services\StatisticsService.cs" />
+    <Compile Include="Services\TableManagementService.cs" />
+    <Content Include="Areas\Admin\Views\AdminStatistics\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\AdminRevenue\Index.cshtml" />
+    <None Include="Views\BusinessHome\Review.cshtml" />
+    <Content Include="Views\BusinessStatistics\Index.cshtml" />
     <Content Include="Views\BusinessTables\Index.cshtml" />
     <Content Include="Views\BusinessTables\Create.cshtml" />
     <Content Include="Views\BusinessTables\Edit.cshtml" />
     <Content Include="Areas\Admin\Views\Users\ChangePassword.cshtml" />
+    <Content Include="Views\BusinessReview\Index.cshtml" />
+    <Content Include="Views\BusinessReview\Statistics.cshtml" />
+    <Content Include="Views\BusinessRefund\Index.cshtml" />
     <None Include="Views\Menu\Index.cshtml" />
     <Content Include="Content\Account\register.css" />
     <Compile Include="Areas\Admin\AdminAreaRegistration.cs" />
@@ -139,6 +166,7 @@
     <Compile Include="Areas\Admin\Controllers\UsersController.cs" />
     <Compile Include="Areas\Admin\Models\ViewModels\AdminChangePasswordViewModel.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\BusinessReviewController.cs" />
     <Compile Include="Controllers\BusinessTablesController.cs" />
     <Compile Include="Controllers\DatBanController.cs" />
     <Compile Include="Controllers\BusinessController.cs" />
@@ -149,8 +177,8 @@
     <Compile Include="Controllers\Filters\AuthorizeUserAttribute.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\MenuController.cs" />
-    <Compile Include="Controllers\PaymentController.cs" />
     <Compile Include="Controllers\PublicRestaurantController.cs" />
+    <Compile Include="Controllers\ReviewController.cs" />
     <Compile Include="Controllers\ThanhToanController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -183,6 +211,13 @@
     <Compile Include="Models\Restaurants.cs">
       <DependentUpon>SmartTableSystem2.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\ReviewReplies.cs">
+      <DependentUpon>SmartTableSystem2.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\ReviewReply.cs" />
+    <Compile Include="Models\ReviewReporting.cs">
+      <DependentUpon>SmartTableSystem2.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\Reviews.cs">
       <DependentUpon>SmartTableSystem2.tt</DependentUpon>
     </Compile>
@@ -210,16 +245,23 @@
     <Compile Include="Models\ViewModels\BookingHistoryItemViewModel.cs" />
     <Compile Include="Models\ViewModels\BookingViewModel.cs" />
     <Compile Include="Models\ViewModels\BusinessBookingItemViewModel.cs" />
+    <Compile Include="Models\ViewModels\LoginViewModel.cs" />
     <Compile Include="Models\ViewModels\PartnerRegistrationViewModel.cs" />
     <Compile Include="Models\ViewModels\PaymentViewModel.cs" />
     <Compile Include="Models\ViewModels\RestaurantFilterViewModel.cs" />
+    <Compile Include="Models\ViewModels\ReviewDisplayViewModel.cs" />
+    <Compile Include="Models\ViewModels\ReviewManageViewModel.cs" />
+    <Compile Include="Models\ViewModels\ReviewViewModel.cs" />
     <Compile Include="Models\ViewModels\SmartTableDetailViewModel.cs" />
     <Compile Include="Models\ViewModels\StatisticsViewModelController.cs" />
+    <Compile Include="Models\ViewModels\TableManagementViewModel.cs" />
     <Compile Include="Models\Vnpay\PaymentInformationModel.cs" />
     <Compile Include="Models\Vnpay\PaymentResponseModel.cs" />
     <Compile Include="Models\Vnpay\Services\IVnPayService.cs" />
     <Compile Include="Models\Vnpay\Services\VnPayService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="Views\ThongBao\Index.cshtml" />
+    <Content Include="Views\ThongBao\Business.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\Account\login.css" />
@@ -351,7 +393,9 @@
     <Content Include="Views\Home\Search.cshtml" />
     <Content Include="Views\DatBan\datban.cshtml" />
     <Content Include="Views\DatBan\DanhSachBanDaDat.cshtml" />
-    <Content Include="Views\BusinessHome\Bookings.cshtml" />
+    <Content Include="Views\BusinessBookings\Bookings.cshtml" />
+    <Content Include="Views\Shared\PaymentError.cshtml" />
+    <Content Include="Views\NhaHangUyTin\Index.cshtml" />
     <None Include="Views\Shared\_BusinessLayout.cshtml" />
     <Content Include="Views\Shared\_HeaderSearchBar.cshtml" />
     <Content Include="Views\ThanhToan\Checkout.cshtml" />
@@ -359,9 +403,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Views\Chat\" />
-    <Folder Include="Views\ThongBaoUser\" />
-    <Folder Include="Views\ThongBao\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

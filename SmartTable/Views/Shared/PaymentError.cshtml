@@ -1,0 +1,10 @@
+﻿@{
+    ViewBag.Title = "Payment Error";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="max-w-xl mx-auto p-6">
+    <h2 class="text-xl font-bold text-red-600">Thanh toán lỗi</h2>
+    <p class="mt-3 text-gray-700">@ViewBag.Message</p>
+    <a class="mt-4 inline-block text-blue-600" href="@Url.Action("Index","Home")">Về trang chủ</a>
+</div>

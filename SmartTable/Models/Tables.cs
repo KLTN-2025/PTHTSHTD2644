@@ -14,6 +14,12 @@ namespace SmartTable.Models
     
     public partial class Tables
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+        public Tables()
+        {
+            this.Bookings = new HashSet<Bookings>();
+        }
+    
         public int table_id { get; set; }
         public Nullable<int> restaurant_id { get; set; }
         public string table_number { get; set; }
@@ -22,5 +28,7 @@ namespace SmartTable.Models
         public Nullable<bool> is_available { get; set; }
     
         public virtual Restaurants Restaurants { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Bookings> Bookings { get; set; }
     }
 }

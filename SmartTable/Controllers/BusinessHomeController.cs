@@ -1,13 +1,12 @@
 ﻿using SmartTable.Filters;
 using SmartTable.Models;
-using SmartTable.Models.ViewModels;   
+using SmartTable.Models.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Mvc;
 
@@ -18,26 +17,27 @@ namespace SmartTable.Controllers
     {
         private readonly Entities db = new Entities();
 
-        // Helper: Lấy user_id hiện tại an toàn
-        private int? GetCurrentUserId()
-        {
-            if (Session["user_id"] == null) return null;
-            return Convert.ToInt32(Session["user_id"]);
-        }
-
-        // Helper: Kiểm tra role là business
-        private bool IsBusiness()
-        {
-            return Session["role"] != null && Session["role"].ToString() == "business";
-        }
-
-        // Giới hạn & whitelist cho file ảnh
+        private const decimal DEPOSIT_PER_GUEST = 50000m;
         private const int MaxImageSizeBytes = 5 * 1024 * 1024; // 5MB
-
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
         private static readonly string[] AllowedContentTypes = { "image/jpeg", "image/png", "image/webp" };
 
-        // Kiểm tra file ảnh hợp lệ
+        // ================== SESSION HELPERS ==================
+        private int? GetCurrentUserId()
+        {
+            if (Session["user_id"] == null) return null;
+            int id;
+            return int.TryParse(Session["user_id"].ToString(), out id) ? (int?)id : null;
+        }
+
+        private bool IsBusiness()
+        {
+            var role = (Session["role"] ?? Session["Role"] ?? "").ToString().Trim();
+            return role.Equals("business", StringComparison.OrdinalIgnoreCase)
+                || role.Equals("Business", StringComparison.OrdinalIgnoreCase);
+        }
+
+        // ================== UPLOAD HELPERS ==================
         private bool ValidateImage(HttpPostedFileBase file, out string errorMessage)
         {
             errorMessage = null;
@@ -55,7 +55,7 @@ namespace SmartTable.Controllers
             }
 
             var ext = Path.GetExtension(file.FileName);
-            if (string.IsNullOrEmpty(ext) || !AllowedExtensions.Contains(ext.ToLower()))
+            if (string.IsNullOrEmpty(ext) || !AllowedExtensions.Contains(ext.ToLowerInvariant()))
             {
                 errorMessage = "Định dạng file không được hỗ trợ. Chỉ chấp nhận: JPG, PNG, WEBP.";
                 return false;
@@ -70,25 +70,19 @@ namespace SmartTable.Controllers
             return true;
         }
 
-        // Helper: Upload file 
         private string UploadFile(HttpPostedFileBase file, string fileName, string subFolder = "")
         {
             try
             {
                 string error;
-                if (!ValidateImage(file, out error))
-                {
-                    return null;
-                }
+                if (!ValidateImage(file, out error)) return null;
 
                 string relativeFolder = "~/Content/Images/Restaurants/" +
                                         (string.IsNullOrEmpty(subFolder) ? "" : subFolder + "/");
                 string physicalFolder = Server.MapPath(relativeFolder);
 
                 if (!Directory.Exists(physicalFolder))
-                {
                     Directory.CreateDirectory(physicalFolder);
-                }
 
                 string physicalPath = Path.Combine(physicalFolder, fileName);
                 file.SaveAs(physicalPath);
@@ -102,7 +96,6 @@ namespace SmartTable.Controllers
         }
 
         // ================== DASHBOARD BUSINESS ==================
-        // [GET] /BusinessHome/Index
         public ActionResult Index()
         {
             if (!IsBusiness())
@@ -113,14 +106,12 @@ namespace SmartTable.Controllers
                 return RedirectToAction("Login", "Account");
 
             var restaurant = db.Restaurants.FirstOrDefault(r => r.user_id == userId.Value);
-
             if (restaurant == null)
             {
                 ViewBag.ErrorMessage = "Tài khoản của bạn chưa được liên kết với nhà hàng nào. Vui lòng liên hệ Admin để hoàn tất quá trình thiết lập.";
                 return View((Restaurants)null);
             }
 
-            // ====== LƯỢT ĐẶT BÀN HÔM NAY ======
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
 
@@ -128,16 +119,14 @@ namespace SmartTable.Controllers
                 .Where(b => b.restaurant_id == restaurant.restaurant_id
                             && b.booking_time >= today
                             && b.booking_time < tomorrow
-                            && b.status != "Đã hủy")
+                            && (b.status == null || !b.status.Contains("hủy")))
                 .Count();
 
             ViewBag.TodayReservationCount = todayReservationCount;
-
             return View(restaurant);
         }
 
-        // ================== TRANG PROFLE NHÀ HÀNG ==================
-        // [GET] /BusinessHome/Profile
+        // ================== PROFILE ==================
         public ActionResult Profile()
         {
             if (!IsBusiness())
@@ -160,7 +149,7 @@ namespace SmartTable.Controllers
             return View(restaurant);
         }
 
-        // [GET] /BusinessHome/EditRestaurant/{id}
+        // ================== EDIT RESTAURANT ==================
         [HttpGet]
         public ActionResult EditRestaurant(int id)
         {
@@ -175,13 +164,9 @@ namespace SmartTable.Controllers
                                .Include(r => r.RestaurantImages)
                                .FirstOrDefault(r => r.restaurant_id == id);
 
-            // Security: chỉ cho phép chỉnh sửa nhà hàng thuộc user hiện tại
             if (restaurant == null || restaurant.user_id != userId.Value)
-            {
                 return HttpNotFound();
-            }
 
-            // Danh sách tiện ích cho view
             ViewBag.AvailableAmenities = new List<string>
             {
                 "Karaoke riêng", "Karaoke chung", "Tivi/Máy chiếu",
@@ -191,7 +176,6 @@ namespace SmartTable.Controllers
             return View(restaurant);
         }
 
-        // [POST] /BusinessHome/EditRestaurant
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult EditRestaurant(
@@ -241,7 +225,6 @@ namespace SmartTable.Controllers
                 return RedirectToAction("Profile");
             }
 
-            // Cập nhật thông tin text
             originalRestaurant.name = model.name;
             originalRestaurant.address = model.address;
             originalRestaurant.Website = model.Website;
@@ -263,6 +246,7 @@ namespace SmartTable.Controllers
 
             originalRestaurant.opening_hours = model.opening_hours;
             originalRestaurant.max_tables = model.max_tables;
+
             originalRestaurant.FloorCount = model.FloorCount;
             originalRestaurant.BusyHours = model.BusyHours;
             originalRestaurant.SlowHours = model.SlowHours;
@@ -272,41 +256,27 @@ namespace SmartTable.Controllers
 
             originalRestaurant.AmenitiesOther = model.AmenitiesOther;
 
-            // Amenities Checkbox
             var amenityList = new List<string>();
             if (AmenitiesCheckbox != null && AmenitiesCheckbox.Any())
-            {
                 amenityList.AddRange(AmenitiesCheckbox.Where(a => a != "false"));
-            }
-            originalRestaurant.Amenities = amenityList.Any()
-                ? string.Join(", ", amenityList)
-                : null;
 
-            // Tọa độ
+            originalRestaurant.Amenities = amenityList.Any() ? string.Join(", ", amenityList) : null;
+
             if (!string.IsNullOrWhiteSpace(latitudeStr) &&
                 double.TryParse(latitudeStr, NumberStyles.Any, CultureInfo.InvariantCulture, out double lat))
-            {
                 originalRestaurant.latitude = lat;
-            }
 
             if (!string.IsNullOrWhiteSpace(longitudeStr) &&
                 double.TryParse(longitudeStr, NumberStyles.Any, CultureInfo.InvariantCulture, out double lng))
-            {
                 originalRestaurant.longitude = lng;
-            }
 
-            // Ảnh đại diện
             if (uploadedImage != null && uploadedImage.ContentLength > 0)
             {
                 string fileName = $"main_{originalRestaurant.restaurant_id}_{Guid.NewGuid()}.jpg";
                 string savePath = UploadFile(uploadedImage, fileName);
-                if (savePath != null)
-                {
-                    originalRestaurant.Image = savePath;
-                }
+                if (savePath != null) originalRestaurant.Image = savePath;
             }
 
-            // Xóa ảnh view
             if (DeleteImages != null && DeleteImages.Length > 0)
             {
                 var imagesToDelete = originalRestaurant.RestaurantImages
@@ -321,20 +291,14 @@ namespace SmartTable.Controllers
                         {
                             string physicalPath = Server.MapPath("~" + img.image_url);
                             if (System.IO.File.Exists(physicalPath))
-                            {
                                 System.IO.File.Delete(physicalPath);
-                            }
                         }
-                        catch
-                        {
-                        }
+                        catch { }
                     }
-
                     db.RestaurantImages.Remove(img);
                 }
             }
 
-            // Thêm ảnh view mới
             if (viewImages != null)
             {
                 foreach (var file in viewImages)
@@ -367,324 +331,9 @@ namespace SmartTable.Controllers
             return RedirectToAction("Profile");
         }
 
-        // ================== DOANH NGHIỆP QUẢN LÝ ĐẶT BÀN ==================
-        // [GET] /BusinessHome/Bookings
-        [HttpGet]
-        public ActionResult Bookings(string statusFilter = null)
-        {
-            if (!IsBusiness())
-                return RedirectToAction("Index", "Home");
-
-            var userId = GetCurrentUserId();
-            if (userId == null)
-                return RedirectToAction("Login", "Account");
-
-            var query = db.Bookings
-                          .Include(b => b.Restaurants)
-                          .Include(b => b.Users)
-                          .Include(b => b.Payments)
-                          .Where(b => b.Restaurants != null &&
-                                      b.Restaurants.user_id == userId.Value);
-
-            if (!string.IsNullOrEmpty(statusFilter))
-            {
-                query = query.Where(b => b.status == statusFilter);
-            }
-
-            var bookingList = query
-                .OrderByDescending(b => b.booking_time)
-                .ThenByDescending(b => b.booking_id)
-                .ToList();
-
-            var list = new List<BusinessBookingItemViewModel>();
-
-            foreach (var b in bookingList)
-            {
-                var lastPayment = b.Payments
-                                   .OrderByDescending(p => p.payment_id)
-                                   .FirstOrDefault();
-
-                decimal? depositAmount = null;
-                string paymentStatus = "Chưa thanh toán";
-
-                if (lastPayment != null)
-                {
-                    depositAmount = lastPayment.amount;
-                    paymentStatus = string.IsNullOrEmpty(lastPayment.status)
-                        ? "Chưa cập nhật"
-                        : lastPayment.status;
-                }
-
-                var vm = new BusinessBookingItemViewModel
-                {
-                    BookingId = b.booking_id,
-                    RestaurantName = b.Restaurants != null ? b.Restaurants.name : "Nhà hàng",
-                    RestaurantAddress = b.Restaurants != null ? b.Restaurants.address : "",
-                    RestaurantImage = (b.Restaurants != null && !string.IsNullOrEmpty(b.Restaurants.Image))
-                                      ? b.Restaurants.Image
-                                      : "https://via.placeholder.com/120",
-
-                    CustomerName = b.Users != null ? b.Users.full_name : "Khách lẻ",
-                    CustomerPhone = b.Users != null ? b.Users.phone : "",
-
-                    BookingTime = b.booking_time,
-                    NumberOfGuests = b.number_of_guests,
-                    SpecialRequest = b.special_request,
-
-                    BookingStatus = string.IsNullOrEmpty(b.status) ? "Chờ xác nhận" : b.status,
-                    DepositAmount = depositAmount,
-                    PaymentStatus = paymentStatus,
-
-                    CancelReason = b.cancel_reason
-                };
-
-                list.Add(vm);
-            }
-
-            ViewBag.StatusFilter = statusFilter;
-            return View("Bookings", list);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult CancelBooking(int bookingId, string cancelReason)
-        {
-            if (!IsBusiness())
-                return RedirectToAction("Index", "Home");
-
-            var userId = GetCurrentUserId();
-            if (userId == null)
-                return RedirectToAction("Login", "Account");
-
-            var booking = db.Bookings
-                            .Include(b => b.Restaurants)
-                            .FirstOrDefault(b => b.booking_id == bookingId &&
-                                                 b.Restaurants.user_id == userId.Value);
-
-            if (booking == null)
-            {
-                TempData["ErrorMessage"] = "Không tìm thấy thông tin đặt bàn hoặc bạn không có quyền.";
-                return RedirectToAction("Bookings");
-            }
-
-            booking.status = "Đã hủy";
-
-            booking.cancel_reason = string.IsNullOrWhiteSpace(cancelReason)
-                ? "Doanh nghiệp hủy, không ghi rõ lý do."
-                : cancelReason.Trim();
-
-            db.SaveChanges();
-
-            TempData["SuccessMessage"] = $"Đã hủy đặt bàn #{booking.booking_id}.";
-            return RedirectToAction("Bookings");
-        }
-
-        // [POST] /BusinessHome/ConfirmPayment
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult ConfirmPayment(int bookingId)
-        {
-            if (!IsBusiness())
-                return RedirectToAction("Index", "Home");
-
-            var userId = GetCurrentUserId();
-            if (userId == null)
-                return RedirectToAction("Login", "Account");
-
-            var booking = db.Bookings
-                            .Include(b => b.Restaurants)
-                            .Include(b => b.Payments)
-                            .FirstOrDefault(b => b.booking_id == bookingId &&
-                                                 b.Restaurants.user_id == userId.Value);
-
-            if (booking == null)
-            {
-                TempData["ErrorMessage"] = "Không tìm thấy thông tin đặt bàn hoặc bạn không có quyền.";
-                return RedirectToAction("Bookings");
-            }
-
-            var lastPayment = booking.Payments
-                                     .OrderByDescending(p => p.payment_id)
-                                     .FirstOrDefault();
-
-            if (lastPayment == null)
-            {
-                lastPayment = new Payments
-                {
-                    booking_id = booking.booking_id,
-                    amount = 0,
-                    payment_method = "Chuyển khoản / Doanh nghiệp xác nhận",
-                    status = "Đã thanh toán (doanh nghiệp xác nhận)",
-                    transaction_id = Guid.NewGuid().ToString()
-                };
-                db.Payments.Add(lastPayment);
-            }
-            else
-            {
-                lastPayment.status = "Đã thanh toán (doanh nghiệp xác nhận)";
-            }
-
-            booking.status = "Đã cọc thành công";
-
-            db.SaveChanges();
-
-            TempData["SuccessMessage"] = $"Đã xác nhận thanh toán cho mã đặt bàn #{booking.booking_id}.";
-            return RedirectToAction("Bookings");
-        }
-
-        // ================== THỐNG KÊ ==================
-
-        private const decimal DEPOSIT_PER_GUEST = 50000m;
-
-        private decimal CalculateDeposit(Bookings b)
-        {
-            if (b == null) return 0m;
-
-            int guests = b.number_of_guests;   
-            if (guests <= 0) return 0m;
-
-            return guests * DEPOSIT_PER_GUEST;
-        }
-
-        [HttpGet]
-        public ActionResult Statistics()
-        {
-            if (!IsBusiness())
-                return RedirectToAction("Index", "Home");
-
-            var userId = GetCurrentUserId();
-            if (userId == null)
-                return RedirectToAction("Login", "Account");
-
-            var bookings = db.Bookings
-                             .Include(b => b.Restaurants)
-                             .Include(b => b.Payments) 
-                             .Where(b => b.Restaurants != null &&
-                                         b.Restaurants.user_id == userId.Value)
-                             .ToList();
-
-            // Chuẩn hoá dữ liệu cho từng booking
-            var bookingStats = bookings.Select(b => new
-            {
-                Booking = b,
-                Deposit = CalculateDeposit(b),                         
-                PreOrder = ExtractPreOrderTotal(b.special_request)   
-            }).ToList();
-
-            var vm = new StatisticsViewModel();
-
-            // 1. Tổng số lượt đặt
-            vm.TotalBookings = bookingStats.Count;
-
-            // 2. Tổng tiền cọc
-            vm.TotalDeposit = bookingStats
-                .Select(x => (decimal?)x.Deposit)
-                .Sum() ?? 0m;
-
-            // 3. Tổng tiền món đặt trước
-            vm.TotalPreOrderAmount = bookingStats
-                .Select(x => (decimal?)x.PreOrder)
-                .Sum() ?? 0m;
-
-            // 4. Thống kê theo nhà hàng
-            vm.RestaurantStats = bookingStats
-                .GroupBy(x => new { x.Booking.restaurant_id, x.Booking.Restaurants.name })
-                .Select(g => new RestaurantStatistics
-                {
-                    RestaurantId = g.Key.restaurant_id ?? 0,
-                    RestaurantName = g.Key.name,
-                    BookingCount = g.Count(),
-                    DepositAmount = g.Select(x => (decimal?)x.Deposit).Sum() ?? 0m,
-                    PreOrderAmount = g.Select(x => (decimal?)x.PreOrder).Sum() ?? 0m
-                })
-                .OrderByDescending(r => r.BookingCount)
-                .ToList();
-
-            // 5. Thống kê theo ngày
-            vm.DailyStats = bookingStats
-                .GroupBy(x => x.Booking.booking_time.Date)
-                .Select(g => new DailyStatistics
-                {
-                    Date = g.Key,
-                    BookingCount = g.Count(),
-                    DepositAmount = g.Select(x => (decimal?)x.Deposit).Sum() ?? 0m,
-                    PreOrderAmount = g.Select(x => (decimal?)x.PreOrder).Sum() ?? 0m
-                })
-                .OrderByDescending(d => d.Date)
-                .ToList();
-
-            return View(vm);
-        }
-
-        // Parse tổng tiền món đặt trước từ 
-        private decimal ExtractPreOrderTotal(string specialRequest)
-        {
-            if (string.IsNullOrWhiteSpace(specialRequest))
-                return 0m;
-
-            try
-            {
-                var rawText = specialRequest.Trim();
-
-                var lines = rawText
-                    .Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-
-                string[] keywords =
-                {
-            "tổng tiền món",
-            "tien mon",
-            "tong tien mon",
-            "món đặt trước",
-            "mon dat truoc",
-            "tổng món",
-            "tong mon"
-        };
-
-                string totalLine = null;
-
-                foreach (var line in lines)
-                {
-                    var lower = line.ToLowerInvariant();
-                    if (keywords.Any(k => lower.Contains(k)))
-                    {
-                        totalLine = line;
-                        break;
-                    }
-                }
-
-                string textForNumber = totalLine ?? rawText;
-
-                var matches = Regex.Matches(textForNumber, @"\d[\d\.]*");
-                if (matches.Count == 0)
-                    return 0m;
-
-                decimal maxValue = 0m;
-
-                foreach (Match m in matches)
-                {
-                    var s = m.Value.Replace(".", "").Replace(",", "");
-                    if (decimal.TryParse(s, out var val))
-                    {
-                        if (val > maxValue) maxValue = val;
-                    }
-                }
-
-                return maxValue;
-            }
-            catch
-            {
-                return 0m;
-            }
-        }
-
-
-        // ================== DISPOSE ==================
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                db.Dispose();
-            }
+            if (disposing) db.Dispose();
             base.Dispose(disposing);
         }
     }

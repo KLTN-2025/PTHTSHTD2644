@@ -4,14 +4,14 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="53ed1e20e7b2495d8c524b16d37d9793" Name="Diagram1" ZoomLevel="69">
+      <Diagram DiagramId="53ed1e20e7b2495d8c524b16d37d9793" Name="Diagram1" ZoomLevel="87">
         <EntityTypeShape EntityType="SmartTableSystemModel.Bookings" Width="1.5" PointX="22.75" PointY="22.75" IsExpanded="true" />
         <EntityTypeShape EntityType="SmartTableSystemModel.LoyaltyPoints" Width="1.5" PointX="17.625" PointY="21.5" IsExpanded="true" />
         <EntityTypeShape EntityType="SmartTableSystemModel.MenuItems" Width="1.5" PointX="19.875" PointY="23.875" IsExpanded="true" />
         <EntityTypeShape EntityType="SmartTableSystemModel.Orders" Width="1.5" PointX="25.125" PointY="22.75" IsExpanded="true" />
         <EntityTypeShape EntityType="SmartTableSystemModel.Payments" Width="1.5" PointX="22.75" PointY="28" IsExpanded="true" />
-        <EntityTypeShape EntityType="SmartTableSystemModel.Reviews" Width="1.5" PointX="19.875" PointY="20.375" IsExpanded="true" />
-        <EntityTypeShape EntityType="SmartTableSystemModel.Tables" Width="1.5" PointX="20.5" PointY="28.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="SmartTableSystemModel.Reviews" Width="1.5" PointX="20.25" PointY="19.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="SmartTableSystemModel.Tables" Width="1.5" PointX="19.75" PointY="27.5" IsExpanded="true" />
         <EntityTypeShape EntityType="SmartTableSystemModel.Users" Width="1.5" PointX="15.375" PointY="20.25" IsExpanded="true" />
         <AssociationConnector Association="SmartTableSystemModel.FK_Bookings_User" ManuallyRouted="false" />
         <AssociationConnector Association="SmartTableSystemModel.FK_Orders_Bookings" ManuallyRouted="false" />
@@ -26,8 +26,21 @@
         <AssociationConnector Association="SmartTableSystemModel.FK_Restaurants_User" />
         <AssociationConnector Association="SmartTableSystemModel.FK_Reviews_Restaurants" />
         <AssociationConnector Association="SmartTableSystemModel.FK_Tables_Restaurants" />
-        <EntityTypeShape EntityType="SmartTableSystemModel.RestaurantImages" Width="1.5" PointX="19.875" PointY="32" />
+        <EntityTypeShape EntityType="SmartTableSystemModel.RestaurantImages" Width="1.5" PointX="19.75" PointY="30.125" />
         <AssociationConnector Association="SmartTableSystemModel.FK_RestaurantImages_Restaurants" />
+        <EntityTypeShape EntityType="SmartTableSystemModel.ReviewReplies" Width="1.5" PointX="25.5" PointY="18.875" />
+        <EntityTypeShape EntityType="SmartTableSystemModel.ReviewReporting" Width="1.5" PointX="22.5" PointY="18" />
+        <AssociationConnector Association="SmartTableSystemModel.FK_ReviewReplies_Restaurants" />
+        <AssociationConnector Association="SmartTableSystemModel.FK_ReviewReplies_Reviews" />
+        <AssociationConnector Association="SmartTableSystemModel.FK_ReviewReporting_Reviews" />
+        <AssociationConnector Association="SmartTableSystemModel.FK_ReviewReporting_Users" />
+        <EntityTypeShape EntityType="SmartTableSystemModel.sysdiagrams" Width="1.5" PointX="18" PointY="17" />
+        <AssociationConnector Association="SmartTableSystemModel.FK_Bookings_Tables" />
+        <EntityTypeShape EntityType="SmartTableSystemModel.Notifications" Width="1.5" PointX="25" PointY="26.625" />
+        <AssociationConnector Association="SmartTableSystemModel.FK_Notifications_Bookings" />
+        <AssociationConnector Association="SmartTableSystemModel.FK_Notifications_Restaurants" />
+        <AssociationConnector Association="SmartTableSystemModel.FK_Notifications_Reviews" />
+        <AssociationConnector Association="SmartTableSystemModel.FK_Notifications_Users" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

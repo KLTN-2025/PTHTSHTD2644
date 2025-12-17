@@ -38,7 +38,6 @@
             Hồ sơ của tôi (Thông tin Nhà hàng)
         </span>
 
-        <!-- Nút quay lại Dashboard -->
         <a href="@Url.Action("Index", "BusinessHome")"
            class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 transition">
             <i class="fas fa-arrow-left mr-1"></i> Quay lại Dashboard
@@ -61,7 +60,6 @@
     {
         <div class="bg-white p-6 rounded-lg shadow-xl max-w-6xl mx-auto space-y-8">
 
-            <!-- 1. Thông tin cơ bản -->
             <div class="grid md:grid-cols-3 gap-6">
                 <div class="md:col-span-2 space-y-3">
                     <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-3">
@@ -94,7 +92,6 @@
                     @DisplayData("Số bàn tối đa", Model.max_tables)
                     @DisplayData("Giờ mở cửa", Model.opening_hours)
 
-                    <!-- Thông tin liên hệ -->
                     @DisplayData("Tên người liên hệ", Model.ContactName)
                     @DisplayData("Số điện thoại liên hệ", Model.ContactPhone)
                     @DisplayData("Vai trò người liên hệ", Model.ContactRole)
@@ -118,7 +115,6 @@
                 </div>
             </div>
 
-            <!-- 2. Dịch vụ & vận hành -->
             <div class="pt-6 border-t space-y-4">
                 <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-3">Dịch vụ & Vận hành</h3>
 
@@ -149,7 +145,6 @@
                 </div>
             </div>
 
-            <!-- 3. Ảnh view gallery -->
             @if (Model.RestaurantImages != null && Model.RestaurantImages.Any())
             {
                 <div class="pt-6 border-t">
@@ -167,7 +162,6 @@
                 </div>
             }
 
-            <!-- 4. Nút hành động -->
             <div class="pt-6 border-t mt-6 flex justify-between items-center">
                 <a href="@Url.Action("Index", "BusinessHome")"
                    class="inline-flex items-center text-gray-600 hover:text-gray-900">

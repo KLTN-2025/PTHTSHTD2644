@@ -2,25 +2,23 @@
 using SmartTable.Models;
 using SmartTable.Models.ViewModels;
 using System;
-using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
 
-
 namespace SmartTable.Areas.Admin.Controllers
 {
-    [AuthorizeAdmin] 
+    [AuthorizeAdmin]
     public class UsersController : Controller
     {
         private Entities db = new Entities();
 
-        // GET: Admin/Users
         public ActionResult Index()
         {
             var users = db.Users.ToList();
             ViewBag.Title = "Quản lý Người dùng";
             return View(users);
         }
+
         [HttpGet]
         public ActionResult ChangePassword(int id)
         {
@@ -41,17 +39,13 @@ namespace SmartTable.Areas.Admin.Controllers
 
             return View(vm);
         }
+
         private string HashPassword(string password)
         {
             if (string.IsNullOrWhiteSpace(password)) return null;
-
-            using (var sha = System.Security.Cryptography.SHA256.Create())
-            {
-                var bytes = System.Text.Encoding.UTF8.GetBytes(password);
-                var hashBytes = sha.ComputeHash(bytes);
-                return BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
-            }
+            return BCrypt.Net.BCrypt.HashPassword(password);
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult ChangePassword(AdminChangePasswordViewModel model)
@@ -77,7 +71,6 @@ namespace SmartTable.Areas.Admin.Controllers
                 return View(model);
             }
 
-            // 🔥 DÙNG FIELD ĐÚNG: password_hash
             user.password_hash = HashPassword(model.NewPassword);
 
             db.Entry(user).State = System.Data.Entity.EntityState.Modified;
@@ -87,7 +80,6 @@ namespace SmartTable.Areas.Admin.Controllers
             return RedirectToAction("Index");
         }
 
-        // POST: Admin/Users/Delete
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(int id)
@@ -120,10 +112,9 @@ namespace SmartTable.Areas.Admin.Controllers
 
         protected override void Dispose(bool disposing)
         {
-            db.Dispose();
+            if (disposing)
+                db.Dispose();
             base.Dispose(disposing);
         }
-
-
     }
 }

@@ -1,10 +1,9 @@
 ﻿@model SmartTable.Models.Users
 @{
     ViewBag.Title = "Thông Tin Tài Khoản";
-    Layout = "~/Views/Shared/_ProfileLayout.cshtml"; // Sử dụng layout Profile mới
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
 }
 
-@* Phần CSS tùy chỉnh (font chữ) được đưa vào section styles *@
 @section styles {
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
@@ -12,8 +11,8 @@
             font-family: 'Playfair Display', serif;
         }
         .error-message {
-            color: #dc2626; /* text-red-600 */
-            font-size: 0.875rem; /* text-sm */
+            color: #dc2626; 
+            font-size: 0.875rem; 
         }
     </style>
 }
@@ -41,7 +40,7 @@
     {
         @Html.AntiForgeryToken()
         @Html.HiddenFor(m => m.user_id)
-        @Html.HiddenFor(m => m.email) @* Giữ lại email để post, nhưng không hiển thị *@
+        @Html.HiddenFor(m => m.email) 
 
         <div class="grid grid-cols-1 md:grid-cols-3 items-center">
             <label for="full_name" class="text-sm font-medium text-gray-600">Tên:</label>
@@ -69,7 +68,7 @@
         
         <hr class="my-4" />
 
-        <div>
+        @*<div>
             <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu mới (Để trống nếu không đổi)</label>
              <div class="relative">
                 <i class="fas fa-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
@@ -87,12 +86,12 @@
                  <i class="fas fa-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                 <input type="password" name="confirmPassword" id="confirmPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10" placeholder="••••••••" />
             </div>
-        </div>
+        </div>*@
 
         <div class="flex justify-end pt-4 border-t mt-8">
             <button type="submit" class="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg shadow hover:bg-red-700 transition-colors">
                 Cập nhật
             </button>
         </div>
-    } @* <-- Đóng @using (Html.BeginForm) *@
+    } 
 </div>

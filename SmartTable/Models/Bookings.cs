@@ -19,6 +19,7 @@ namespace SmartTable.Models
         {
             this.Orders = new HashSet<Orders>();
             this.Payments = new HashSet<Payments>();
+            this.Notifications = new HashSet<Notifications>();
         }
     
         public int booking_id { get; set; }
@@ -29,6 +30,8 @@ namespace SmartTable.Models
         public string status { get; set; }
         public string special_request { get; set; }
         public string cancel_reason { get; set; }
+        public Nullable<int> table_id { get; set; }
+        public System.DateTime created_at { get; set; }
     
         public virtual Users Users { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
@@ -36,5 +39,8 @@ namespace SmartTable.Models
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Payments> Payments { get; set; }
         public virtual Restaurants Restaurants { get; set; }
+        public virtual Tables Tables { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Notifications> Notifications { get; set; }
     }
 }

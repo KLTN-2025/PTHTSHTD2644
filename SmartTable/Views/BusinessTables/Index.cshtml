@@ -1,118 +1,278 @@
-﻿@model IEnumerable<SmartTable.Models.Tables>
+﻿@model SmartTable.Models.ViewModels.RestaurantTableStatusViewModel
 @{
     ViewBag.Title = "Quản lý bàn";
     Layout = "~/Views/Shared/_BusinessLayout.cshtml";
 }
 
 <div class="bg-gray-50 min-h-screen py-8">
-    <div class="container mx-auto max-w-5xl px-4">
+    <div class="container mx-auto max-w-7xl px-4">
+        @Html.AntiForgeryToken()
 
+        <!-- Header -->
         <div class="flex items-center justify-between mb-6">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800">Quản lý bàn</h1>
-                <p class="text-sm text-gray-500 mt-1">
-                    Thiết lập sơ đồ bàn & sức chứa để hệ thống kiểm tra còn chỗ khi khách đặt.
-                </p>
-                @if (ViewBag.RestaurantName != null)
-                {
-                    <p class="text-xs text-gray-400 mt-1">
-                        Nhà hàng: <span class="font-semibold text-gray-700">@ViewBag.RestaurantName</span>
-                    </p>
-                }
-            </div>
-
-            <a href="@Url.Action("Create", "BusinessTables")"
-               class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg shadow hover:bg-red-700">
-                <i class="fas fa-plus mr-2"></i> Thêm bàn mới
+            <h1 class="text-3xl font-bold text-gray-900">
+                Quản lý bàn - @Model.RestaurantName
+            </h1>
+            <a href="@Url.Action("Create")" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <i class="fas fa-plus mr-2"></i>Thêm bàn
             </a>
         </div>
 
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="mb-4 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm flex items-center gap-2">
-                <i class="fas fa-check-circle"></i>
-                <span>@TempData["SuccessMessage"]</span>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-600">
+                <p class="text-gray-600 text-sm">Tổng bàn</p>
+                <p class="text-2xl font-bold text-blue-600">@Model.TotalTables</p>
             </div>
-        }
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm flex items-center gap-2">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span>@TempData["ErrorMessage"]</span>
+            <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-600">
+                <p class="text-gray-600 text-sm">Trống</p>
+                <p class="text-2xl font-bold text-green-600">@Model.AvailableTables</p>
             </div>
-        }
-
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <table class="min-w-full text-sm">
-                <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
-                    <tr>
-                        <th class="px-4 py-3 text-left">Mã bàn</th>
-                        <th class="px-4 py-3 text-center">Sức chứa</th>
-                        <th class="px-4 py-3 text-left">Loại bàn</th>
-                        <th class="px-4 py-3 text-center">Trạng thái</th>
-                        <th class="px-4 py-3 text-center">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    @if (Model != null && Model.Any())
-                    {
-                        foreach (var t in Model)
-                        {
-                            var isAvailable = t.is_available ?? true;
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3 font-semibold text-gray-800">@t.table_number</td>
-                                <td class="px-4 py-3 text-center">@t.capacity</td>
-                                <td class="px-4 py-3">
-                                    @(string.IsNullOrEmpty(t.type) ? "-" : t.type)
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold
-                                        @(isAvailable ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500")">
-                                        @(isAvailable ? "Đang mở" : "Tạm khóa")
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <a href="@Url.Action("Edit", "BusinessTables", new { id = t.table_id })"
-                                       class="inline-flex items-center px-2 py-1 text-xs text-blue-600 hover:text-blue-800">
-                                        <i class="fas fa-edit mr-1"></i>Sửa
-                                    </a>
-
-                                    @using (Html.BeginForm("Toggle", "BusinessTables", FormMethod.Post, new { @class = "inline-block ml-2" }))
-                                    {
-                                        @Html.AntiForgeryToken()
-                                        @Html.Hidden("id", t.table_id)
-                                        <button type="submit"
-                                                class="text-xs px-2 py-1 rounded border
-                                                       @(isAvailable ? "border-gray-300 text-gray-600 hover:bg-gray-100" : "border-green-500 text-green-600 hover:bg-green-50")">
-                                            @(isAvailable ? "Khóa" : "Mở")
-                                        </button>
-                                    }
-
-                                    @using (Html.BeginForm("Delete", "BusinessTables", FormMethod.Post, new { @class = "inline-block ml-2" }))
-                                    {
-                                        @Html.AntiForgeryToken()
-                                        @Html.Hidden("id", t.table_id)
-                                        <button type="submit"
-                                                onclick="return confirm('Bạn chắc chắn muốn xóa bàn này?');"
-                                                class="text-xs text-red-600 hover:text-red-800">
-                                            <i class="fas fa-trash-alt mr-1"></i>Xóa
-                                        </button>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="5" class="px-4 py-6 text-center text-gray-500 text-sm">
-                                Chưa có bàn nào. Vui lòng nhấn <strong>“Thêm bàn mới”</strong> để cấu hình sơ đồ bàn.
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-orange-600">
+                <p class="text-gray-600 text-sm">Đang sử dụng</p>
+                <p class="text-2xl font-bold text-orange-600">@Model.OccupiedTables</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-purple-600">
+                <p class="text-gray-600 text-sm">Đã đặt</p>
+                <p class="text-2xl font-bold text-purple-600">@Model.ReservedTables</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-red-600">
+                <p class="text-gray-600 text-sm">Bảo trì</p>
+                <p class="text-2xl font-bold text-red-600">@Model.MaintenanceTables</p>
+            </div>
         </div>
 
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div class="flex items-center justify-between mb-2">
+                <p class="text-sm font-semibold text-gray-700">Tỉ lệ chiếm chỗ</p>
+                <p class="text-sm font-bold text-gray-900">@string.Format("{0:0.0}%", Model.OccupancyRate)</p>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all" style="width: @string.Format("{0:0.0}%", Model.OccupancyRate)"></div>
+            </div>
+        </div>
+
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <p class="text-xs text-yellow-800"><strong>Debug:</strong> Bàn trống: @Model.AvailableTables | Đang dùng: @Model.OccupiedTables | Đã đặt: @Model.ReservedTables</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            @if (Model.Tables == null || Model.Tables.Count == 0)
+            {
+                <div class="text-center py-12">
+                    <p class="text-gray-600 text-lg">Chưa có bàn nào. <a href="@Url.Action("Create")" class="text-blue-600 hover:underline">Thêm bàn mới</a></p>
+                </div>
+            }
+            else
+            {
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    @foreach (var table in Model.Tables)
+                    {
+                        string statusColor;
+                        string statusIcon;
+                        string statusText;
+
+                        if (table.CurrentStatus == "available")
+                        {
+                            statusColor = "bg-green-100 text-green-700 border-green-300";
+                            statusIcon = "fa-check-circle";
+                            statusText = "Trống";
+                        }
+                        else if (table.CurrentStatus == "occupied")
+                        {
+                            statusColor = "bg-orange-100 text-orange-700 border-orange-300";
+                            statusIcon = "fa-user";
+                            statusText = "Đang dùng";
+                        }
+                        else if (table.CurrentStatus == "reserved")
+                        {
+                            statusColor = "bg-purple-100 text-purple-700 border-purple-300";
+                            statusIcon = "fa-calendar-check";
+                            statusText = "Đã đặt";
+                        }
+                        else if (table.CurrentStatus == "maintenance")
+                        {
+                            statusColor = "bg-red-100 text-red-700 border-red-300";
+                            statusIcon = "fa-tools";
+                            statusText = "Bảo trì";
+                        }
+                        else
+                        {
+                            statusColor = "bg-gray-100 text-gray-700 border-gray-300";
+                            statusIcon = "fa-question-circle";
+                            statusText = "Không xác định";
+                        }
+
+                        <div class="@statusColor border-2 rounded-lg p-4 text-center hover:shadow-md transition duration-200">
+                            <p class="font-bold text-lg">Bàn @table.TableNumber</p>
+                            <p class="text-xs opacity-75">Sức chứa: @table.Capacity người</p>
+
+                            <div class="my-3 flex items-center justify-center gap-1">
+                                <i class="fas @statusIcon"></i>
+                                <span class="text-xs font-semibold">@statusText</span>
+                            </div>
+                            @if (table.CurrentStatus == "occupied" || table.CurrentStatus == "reserved")
+                            {
+                                <div class="text-xs opacity-75 mb-2">
+                                    @if (!string.IsNullOrEmpty(table.CurrentCustomerName))
+                                    {
+                                        <p><i class="fas fa-user mr-1"></i>@table.CurrentCustomerName</p>
+                                    }
+                                    @if (table.UsageDurationMinutes.HasValue && table.CurrentStatus == "occupied")
+                                    {
+                                        <p><i class="fas fa-clock mr-1"></i>Sử dụng: @table.UsageDurationMinutes phút</p>
+                                    }
+                                </div>
+                            }
+
+                            <div class="text-xs text-gray-600 mb-2">
+                                <p>BookingID: @(table.CurrentBookingId ?? 0)</p>
+                                <p>Status: @table.CurrentStatus</p>
+                            </div>
+
+                            <div class="mt-3 flex gap-1 text-xs">
+                                <button onclick="editTable(@table.TableId)" class="flex-1 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition" title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+
+                                <button onclick="checkIn(@table.TableId, @(table.CurrentBookingId ?? 0))"
+                                        class="flex-1 px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                                        @(table.CurrentBookingId == null || table.CurrentBookingId == 0 ? "disabled" : "")
+                                        title="Khách vừa tới">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                </button>
+
+                                <button onclick="checkOut(@table.TableId)"
+                                        class="flex-1 px-2 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 transition"
+                                        @(table.CurrentStatus != "occupied" ? "disabled" : "")
+                                        title="Khách đã rời">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                </button>
+
+                                <button onclick="deleteTable(@table.TableId)" class="flex-1 px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
     </div>
 </div>
+
+<script>
+    function getCsrfToken() {
+        var token = document.querySelector('input[name="__RequestVerificationToken"]');
+        return token ? token.value : '';
+    }
+
+    function editTable(tableId) {
+        window.location.href = '@Url.Action("Edit")/' + tableId;
+    }
+
+    function deleteTable(tableId) {
+        if (confirm('Bạn chắc chắn muốn xóa bàn này?')) {
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("Delete")';
+
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'id';
+            input.value = tableId;
+            form.appendChild(input);
+
+            var tokenInput = document.createElement('input');
+            tokenInput.type = 'hidden';
+            tokenInput.name = '__RequestVerificationToken';
+            tokenInput.value = getCsrfToken();
+            form.appendChild(tokenInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    function getCsrfToken() {
+    var el = document.querySelector('input[name="__RequestVerificationToken"]');
+    return el ? el.value : '';
+  }
+
+  function checkIn(tableId, bookingId) {
+    console.log('🔍 Check-in called:', { tableId, bookingId });
+
+    if (!bookingId || bookingId === 0) {
+      alert('❌ Lỗi: Không có booking cho bàn này.');
+      return;
+    }
+    if (!confirm('✅ Xác nhận khách vừa tới?')) return;
+
+    var token = getCsrfToken();
+    if (!token) {
+      alert('❌ Thiếu CSRF token. Hãy đảm bảo có @Html.AntiForgeryToken() trong view.');
+      return;
+    }
+
+    var body = new URLSearchParams();
+    body.append('__RequestVerificationToken', token);
+    body.append('tableId', tableId);
+    body.append('bookingId', bookingId);
+
+    fetch('@Url.Action("CheckIn", "BusinessTables")', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+      body: body.toString(),
+      credentials: 'same-origin'
+    })
+    .then(function (res) {
+      console.log('📥 Response status:', res.status);
+      if (!res.ok) return res.text().then(t => { console.error(t); throw new Error('HTTP Error: ' + res.status); });
+      return res.json();
+    })
+    .then(function (data) {
+      console.log('✅ Response data:', data);
+      alert((data.success ? '✅ ' : '❌ ') + (data.message || ''));
+      if (data.success) setTimeout(function () { location.reload(); }, 300);
+    })
+    .catch(function (err) {
+      console.error('❌ Error:', err);
+      alert('❌ Lỗi: ' + err.message);
+    });
+  }
+
+   function checkOut(tableId) {
+  console.log('🔍 Check-out called:', tableId);
+  if (!confirm('✅ Xác nhận khách đã thanh toán và rời bàn?')) return;
+
+  var token = getCsrfToken();
+  if (!token) {
+    alert('❌ Thiếu CSRF token. Hãy đảm bảo có @Html.AntiForgeryToken() trong view.');
+    return;
+  }
+
+  var body = new URLSearchParams();
+  body.append('__RequestVerificationToken', token);
+  body.append('tableId', tableId);
+
+  fetch('@Url.Action("CheckOut", "BusinessTables")', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+    body: body.toString(),
+    credentials: 'same-origin'
+  })
+  .then(function (res) {
+    console.log('📥 Response status:', res.status);
+    if (!res.ok) return res.text().then(t => { console.error(t); throw new Error('HTTP Error: ' + res.status); });
+    return res.json();
+  })
+  .then(function (data) {
+    console.log('✅ Response data:', data);
+    alert((data.success ? '✅ ' : '❌ ') + (data.message || ''));
+    if (data.success) setTimeout(function () { location.reload(); }, 300);
+  })
+  .catch(function (err) {
+    console.error('❌ Error:', err);
+    alert('❌ Lỗi: ' + err.message);
+  });
+}
+</script>

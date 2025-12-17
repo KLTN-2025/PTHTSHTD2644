@@ -10,7 +10,6 @@ using Newtonsoft.Json;
 
 namespace SmartTable.Models
 {
-    // HTTP helper to call OpenRouter / DeepSeek. Does NOT declare model classes or use MVC types.
     public static class DeepSeekHelper
     {
         private static readonly HttpClient client = new HttpClient();
@@ -93,7 +92,6 @@ namespace SmartTable.Models
             }
         }
 
-        // internal result class to avoid tuples / ValueTuple dependency
         private class RetryResult
         {
             public bool Success { get; set; }

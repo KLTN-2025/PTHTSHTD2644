@@ -15,7 +15,7 @@ namespace SmartTable.Models
     public partial class LoyaltyPoints
     {
         public int user_id { get; set; }
-        public Nullable<int> points { get; set; }
+        public int points { get; set; }
     
         public virtual Users Users { get; set; }
     }

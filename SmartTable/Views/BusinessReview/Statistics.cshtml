@@ -1,0 +1,144 @@
+﻿@model SmartTable.Models.ViewModels.ReviewMetricsViewModel
+@{
+    ViewBag.Title = "Thống kê đánh giá";
+    Layout = "~/Views/Shared/_BusinessLayout.cshtml";
+}
+
+<div class="bg-gray-50 min-h-screen py-8">
+    <div class="container mx-auto max-w-6xl px-4">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">
+                Thống kê đánh giá - @ViewBag.RestaurantName
+            </h1>
+            <a href="@Url.Action("Index", "BusinessReview")"
+               class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                <i class="fas fa-arrow-left mr-2"></i>Quay lại
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-blue-600">
+                <p class="text-gray-600 text-sm font-medium">Điểm trung bình</p>
+                <p class="text-3xl font-bold text-blue-600 mt-2">@Model.AverageRating.ToString("0.0")</p>
+                <p class="text-xs text-gray-500 mt-1">Từ @Model.TotalReviews đánh giá</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-yellow-500">
+                <p class="text-gray-600 text-sm font-medium">Báo cáo chưa xử lý</p>
+                <p class="text-3xl font-bold text-yellow-600 mt-2">@Model.PendingReportCount</p>
+                <p class="text-xs text-gray-500 mt-1">Cần xem xét</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-600">
+                <p class="text-gray-600 text-sm font-medium">Tỉ lệ phản hồi</p>
+                <p class="text-3xl font-bold text-green-600 mt-2">@Model.ReplyRate.ToString("0.0")%</p>
+                <p class="text-xs text-gray-500 mt-1">@Model.RepliedReviewsCount/@Model.TotalReviews đã trả lời</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-purple-600">
+                <p class="text-gray-600 text-sm font-medium">Báo cáo (7 ngày)</p>
+                <p class="text-3xl font-bold text-purple-600 mt-2">@Model.RecentReportsCount</p>
+                <p class="text-xs text-gray-500 mt-1">Hôm nay và tuần trước</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Phân bổ điểm đánh giá</h3>
+                <div class="space-y-4">
+                    @{
+                        var ratingData = new[] {
+                            new { Stars = 5, Count = Model.Count5Star, Percentage = Model.TotalReviews > 0 ? (Model.Count5Star * 100.0 / Model.TotalReviews) : 0.0 },
+                            new { Stars = 4, Count = Model.Count4Star, Percentage = Model.TotalReviews > 0 ? (Model.Count4Star * 100.0 / Model.TotalReviews) : 0.0 },
+                            new { Stars = 3, Count = Model.Count3Star, Percentage = Model.TotalReviews > 0 ? (Model.Count3Star * 100.0 / Model.TotalReviews) : 0.0 },
+                            new { Stars = 2, Count = Model.Count2Star, Percentage = Model.TotalReviews > 0 ? (Model.Count2Star * 100.0 / Model.TotalReviews) : 0.0 },
+                            new { Stars = 1, Count = Model.Count1Star, Percentage = Model.TotalReviews > 0 ? (Model.Count1Star * 100.0 / Model.TotalReviews) : 0.0 }
+                        };
+                    }
+
+                    @foreach (var item in ratingData)
+                    {
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-medium text-gray-700">@string.Concat(Enumerable.Repeat("⭐", item.Stars))</span>
+                                    <span class="text-xs text-gray-500">@item.Count đánh giá</span>
+                                </div>
+                                <span class="text-xs font-bold text-gray-600">@item.Percentage.ToString("0.0")%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-yellow-400 h-2 rounded-full" style="width: @item.Percentage%"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Tóm tắt hiệu suất</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between pb-3 border-b">
+                        <span class="text-gray-600">Tổng đánh giá</span>
+                        <span class="text-lg font-bold text-gray-900">@Model.TotalReviews</span>
+                    </div>
+                    <div class="flex items-center justify-between pb-3 border-b">
+                        <span class="text-gray-600">Đánh giá tích cực (4-5 sao)</span>
+                        <span class="text-lg font-bold text-green-600">
+                            @(Model.Count4Star + Model.Count5Star)
+                            <span class="text-xs text-gray-500">(@((Model.TotalReviews > 0 ? ((Model.Count4Star + Model.Count5Star) * 100.0 / Model.TotalReviews) : 0).ToString("0.0"))%)</span>
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between pb-3 border-b">
+                        <span class="text-gray-600">Đánh giá trung lập (3 sao)</span>
+                        <span class="text-lg font-bold text-gray-600">
+                            @Model.Count3Star
+                            <span class="text-xs text-gray-500">(@((Model.TotalReviews > 0 ? (Model.Count3Star * 100.0 / Model.TotalReviews) : 0).ToString("0.0"))%)</span>
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Đánh giá tiêu cực (1-2 sao)</span>
+                        <span class="text-lg font-bold text-red-600">
+                            @(Model.Count1Star + Model.Count2Star)
+                            <span class="text-xs text-gray-500">(@((Model.TotalReviews > 0 ? ((Model.Count1Star + Model.Count2Star) * 100.0 / Model.TotalReviews) : 0).ToString("0.0"))%)</span>
+                        </span>
+                    </div>
+                </div>
+
+                <a href="@Url.Action("Index", "BusinessReview", new { ratingFilter = "1" })"
+                   class="mt-4 w-full px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 border border-red-200">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>Xem đánh giá 1 sao
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h3 class="font-bold text-blue-900 mb-2">
+                <i class="fas fa-lightbulb mr-2"></i>Khuyến nghị
+            </h3>
+            @if (Model.AverageRating < 3)
+            {
+                <p class="text-blue-800 text-sm">
+                    ⚠️ Điểm trung bình của bạn dưới 3.0. Hãy xem lại những đánh giá 1-2 sao và phản hồi khách hàng để cải thiện.
+                </p>
+            }
+            else if (Model.ReplyRate < 50)
+            {
+                <p class="text-blue-800 text-sm">
+                    💬 Bạn chưa phản hồi cho hơn 50% đánh giá. Hãy tăng tương tác bằng cách trả lời từng đánh giá.
+                </p>
+            }
+            else if (Model.PendingReportCount > 0)
+            {
+                <p class="text-blue-800 text-sm">
+                    🚨 Có <strong>@Model.PendingReportCount</strong> báo cáo chưa được xử lý. Vui lòng kiểm tra những đánh giá bị báo cáo.
+                </p>
+            }
+            else
+            {
+                <p class="text-blue-800 text-sm">
+                    ✅ Nhà hàng của bạn đang hoạt động tốt! Tiếp tục duy trì chất lượng và phản hồi khách hàng.
+                </p>
+            }
+        </div>
+    </div>
+</div>

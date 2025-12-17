@@ -41,7 +41,7 @@
     string preTime = null;
     if (ViewBag.PreSelectedTime != null)
     {
-        preTime = ViewBag.PreSelectedTime.ToString(); // "HH:mm"
+        preTime = ViewBag.PreSelectedTime.ToString(); 
     }
 
     string startHourStr = "09:00";
@@ -310,6 +310,7 @@
                                                         <label class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 cursor-pointer">
                                                             <input type="checkbox"
                                                                    class="preorder-check rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                                   data-id="@item.menu_item_id"
                                                                    data-name="@item.name"
                                                                    data-price="@item.price" />
                                                             <span>Chọn món</span>
@@ -507,6 +508,8 @@
         var bookingForm = document.getElementById('bookingForm');
         if (bookingForm) {
             bookingForm.addEventListener('submit', function (e) {
+
+                // Validate time như bạn đang làm...
                 var time = document.getElementById('selectedTimeInput').value;
                 if (!time) {
                     e.preventDefault();
@@ -517,6 +520,47 @@
                     }
                     return;
                 }
+
+                bookingForm.querySelectorAll('.preorder-hidden').forEach(el => el.remove());
+
+                var idx = 0;
+                document.querySelectorAll('.preorder-row').forEach(function (row) {
+                    var cb = row.querySelector('.preorder-check');
+                    if (cb && cb.checked) {
+                        var menuId = parseInt(cb.getAttribute('data-id') || '0', 10);
+                        if (!menuId) return;
+
+                        var qtyInput = row.querySelector('.preorder-qty');
+                        var qty = 1;
+                        if (qtyInput) {
+                            var parsed = parseInt(qtyInput.value, 10);
+                            if (!isNaN(parsed) && parsed > 0) qty = parsed;
+                        }
+
+                        var i1 = document.createElement('input');
+                        i1.type = 'hidden';
+                        i1.name = 'menu_item_ids';
+                        i1.value = menuId;
+                        i1.className = 'preorder-hidden';
+                        bookingForm.appendChild(i1);
+
+                        var i2 = document.createElement('input');
+                        i2.type = 'hidden';
+                        i2.name = 'quantities';
+                        i2.value = qty;
+                        i2.className = 'preorder-hidden';
+                        bookingForm.appendChild(i2);
+
+                        var i3 = document.createElement('input');
+                        i3.type = 'hidden';
+                        i3.name = 'notes';
+                        i3.value = '';
+                        i3.className = 'preorder-hidden';
+                        bookingForm.appendChild(i3);
+
+                        idx++;
+                    }
+                });
 
                 var lines = [];
                 document.querySelectorAll('.preorder-row').forEach(function (row) {
@@ -536,15 +580,13 @@
                 });
 
                 var noteField = document.getElementById('pre_order_note');
-                if (noteField) {
-                    noteField.value = lines.join("; ");
-                }
+                if (noteField) noteField.value = lines.join("; ");
 
-                updatePreOrderSummary();
+                updatePreOrderSummary(); 
             });
         }
-
         updatePreOrderSummary();
+
     </script>
 
     <style>

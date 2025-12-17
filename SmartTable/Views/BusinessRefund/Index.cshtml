@@ -1,0 +1,87 @@
+﻿@using System
+@{
+    ViewBag.Title = "Hoàn cọc (Demo)";
+    Layout = "~/Views/Shared/_BusinessLayout.cshtml";
+
+    var bookingId = (ViewBag.BookingId == null) ? 0 : Convert.ToInt32(ViewBag.BookingId);
+
+    decimal depositAmount = 0m;
+    if (ViewBag.DepositAmount != null)
+    {
+        depositAmount = Convert.ToDecimal(ViewBag.DepositAmount);
+    }
+
+    var returnUrl = (ViewBag.ReturnUrl as string) ?? Url.Action("Bookings", "BusinessHome");
+}
+
+<div class="bg-gray-50 min-h-screen py-8">
+    <div class="container mx-auto max-w-3xl px-4">
+
+        <a href="@returnUrl"
+           class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 transition">
+            <i class="fas fa-arrow-left mr-1"></i> Quay lại
+        </a>
+
+        <div class="mt-4 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h1 class="text-xl font-bold text-gray-900">Hoàn cọc (Demo)</h1>
+                <p class="text-sm text-gray-500 mt-1">
+                    Màn hình demo để thấy hệ thống có luồng “hoàn cọc”.
+                    (VNPAY demo không hoàn thật, chỉ ghi nhận trạng thái trong hệ thống.)
+                </p>
+            </div>
+
+            <div class="p-5 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="p-4 rounded-xl border bg-gray-50">
+                        <div class="text-xs text-gray-500">Mã booking</div>
+                        <div class="text-lg font-bold text-gray-900">#@bookingId</div>
+                    </div>
+
+                    <div class="p-4 rounded-xl border bg-gray-50">
+                        <div class="text-xs text-gray-500">Tiền cọc (tạm tính)</div>
+                        <div class="text-lg font-bold text-gray-900">@depositAmount.ToString("#,##0") đ</div>
+                    </div>
+                </div>
+
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm flex items-center gap-2">
+                        <i class="fas fa-check-circle"></i>
+                        <span>@TempData["SuccessMessage"]</span>
+                    </div>
+                }
+
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm flex items-center gap-2">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>@TempData["ErrorMessage"]</span>
+                    </div>
+                }
+
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <form method="post" action="@Url.Action("ConfirmRefund", "Refund")" class="inline-block">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="bookingId" value="@bookingId" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+                        <button type="submit"
+                                class="w-full sm:w-auto px-4 py-2 rounded-lg bg-amber-500 text-white font-semibold hover:bg-amber-600 transition">
+                            Xác nhận hoàn cọc 
+                        </button>
+                    </form>
+
+                    <a href="@returnUrl"
+                       class="w-full sm:w-auto px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition text-center">
+                        Hủy
+                    </a>
+                </div>
+
+                <div class="text-xs text-gray-500">
+                    Gợi ý demo: Sau khi bấm “Xác nhận hoàn cọc”, hệ thống sẽ lưu 1 dòng vào bảng Payments với trạng thái “Đã hoàn cọc (demo)”.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

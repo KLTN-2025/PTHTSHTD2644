@@ -1,40 +1,43 @@
-﻿@model SmartTable.Models.ViewModels.RestaurantFilterViewModel
+﻿@using System.Globalization
+@using System.Linq
+@using SmartTable.Models
+@model SmartTable.Models.ViewModels.RestaurantFilterViewModel
 @{
     ViewBag.Title = "Đặt bàn nhà hàng - SmartTable";
 }
 
-<!-- Hero Section -->
 <div class="relative bg-gradient-to-b from-white via-blue-50/60 to-white py-16 md:py-24 -mt-6">
     <div class="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
 
     <div class="container mx-auto max-w-5xl px-4 relative z-10 text-center">
-       
 
-        <!-- Title -->
+
         <h1 class="text-3xl md:text-5xl leading-tight font-extrabold text-gray-900 font-display">
             Khám phá nhà hàng yêu thích
             <br />
             <span class="text-blue-600">Đặt bàn chỉ trong vài giây</span>
         </h1>
 
-        
 
-        <!-- Search Bar + Bộ lọc -->
+
         @using (Html.BeginForm("Search", "Home", FormMethod.Get))
         {
             <div class="bg-white mt-10 p-4 rounded-2xl shadow-lg max-w-4xl mx-auto border border-gray-200 space-y-4">
 
-                <!-- HÀNG 1: Từ khóa + Nút -->
                 <div class="flex flex-col md:flex-row gap-3">
-                    <!-- Keyword -->
                     <div class="relative flex-grow">
-                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <i class="fas fa-search absolute left-4 top-1/2"
+                           style="
+                               transform: translateY(-50%);
+                               font-size: 14px;
+                               color: #4b5563 !important; 
+                           ">
+                        </i>                        
                         <input name="SearchKeyword" value="@Model.SearchKeyword"
                                placeholder="Nhập tên nhà hàng, món ăn..."
                                class="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-800 focus:ring-blue-200 focus:border-blue-400 outline-none" />
                     </div>
 
-                    <!-- Search button -->
                     <div class="flex items-stretch">
                         <button class="w-full md:w-auto px-8 py-3 rounded-xl bg-blue-600 text-white font-semibold shadow-md hover:bg-blue-700 active:scale-95 transition">
                             Tìm kiếm
@@ -42,10 +45,8 @@
                     </div>
                 </div>
 
-                <!--Bộ lọc -->
                 <div class="flex flex-wrap gap-3 text-sm items-end">
 
-                    <!-- Thành phố -->
                     <div class="w-full sm:w-[48%] md:w-auto md:min-w-[160px]">
                         <label class="block text-xs font-semibold text-gray-500 mb-1">Thành phố</label>
                         <select name="City"
@@ -61,7 +62,6 @@
                         </select>
                     </div>
 
-                    <!-- Khu vực -->
                     <div class="w-full sm:w-[48%] md:w-auto md:min-w-[160px]">
                         <label class="block text-xs font-semibold text-gray-500 mb-1">Khu vực</label>
                         <input name="Area"
@@ -70,7 +70,6 @@
                                class="w-full px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-800 focus:ring-blue-200 focus:border-blue-400 outline-none" />
                     </div>
 
-                    <!-- Loại hình -->
                     <div class="w-full sm:w-[48%] md:w-auto md:min-w-[150px]">
                         <label class="block text-xs font-semibold text-gray-500 mb-1">Loại hình</label>
                         <select name="RestaurantType"
@@ -86,7 +85,6 @@
                         </select>
                     </div>
 
-                    <!-- Giá trung bình -->
                     <div class="w-full sm:w-[48%] md:w-auto md:min-w-[150px]">
                         <label class="block text-xs font-semibold text-gray-500 mb-1">Giá trung bình</label>
                         <select name="AveragePrice"
@@ -100,21 +98,20 @@
                         </select>
                     </div>
 
-                   
-                    
+
+
                 </div>
             </div>
         }
 
-        
+
     </div>
 </div>
 
 
-<!-- Body -->
 <div class="container mx-auto max-w-7xl px-4 py-12">
 
-    <!-- Title -->
+    
     <div class="mb-8">
         <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <span class="w-1 h-6 bg-blue-600 rounded-full"></span>
@@ -125,7 +122,6 @@
         </p>
     </div>
 
-    <!-- Empty -->
     @if (Model.Results == null || !Model.Results.Any())
     {
         <div class="bg-gray-50 py-20 rounded-3xl border border-gray-200 flex flex-col items-center">
@@ -141,24 +137,41 @@
     }
     else
     {
-        <!-- Restaurant Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
             @foreach (var item in Model.Results)
             {
+                var approvedReviews = (item.Reviews ?? new List<Reviews>())
+                    .Where(r => r.status == "approved" || r.status == null)
+                    .ToList();
+
+                var reviewCount = approvedReviews.Count;
+                double avgRating = reviewCount > 0 ? approvedReviews.Average(r => (double)r.rating) : 0;
+                string avgRatingStr = avgRating > 0 ? avgRating.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) : "0.0";
+
                 <a href="@Url.Action("RestaurantDetails", "Home", new { id = item.restaurant_id })"
                    class="group bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all overflow-hidden flex flex-col">
 
-                    <!-- Ảnh nhà hàng -->
                     <div class="relative h-52 overflow-hidden">
                         <img src="@(item.Image ?? "https://via.placeholder.com/500")"
                              alt="@item.name"
                              class="w-full h-full object-cover group-hover:scale-105 duration-700 ease-out" />
-                    </div>
 
-                    <!-- Nội dung -->
+                        @if (reviewCount > 0)
+                        {
+                            <div class="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5">
+                                <i class="fas fa-star review-star-color"></i>                                <span class="font-bold text-amber-500 text-sm">@avgRatingStr</span>
+                                <span class="text-xs text-gray-500">(@reviewCount)</span>
+                            </div>
+                        }
+                    </div>
+                    <style>
+
+                        .review-star-color {
+                            color: #f59e0b !important;
+                        }
+                    </style>
                     <div class="p-4 flex flex-col gap-2 flex-1">
 
-                        <!-- Tên + địa chỉ -->
                         <div>
                             <h3 class="text-base md:text-lg font-bold text-gray-900 group-hover:text-blue-600 line-clamp-1">
                                 @item.name
@@ -168,7 +181,6 @@
                             </p>
                         </div>
 
-                        <!-- Giờ mở cửa + Loại hình -->
                         @if (!string.IsNullOrEmpty(item.opening_hours))
                         {
                             <p class="mt-0.5 text-xs text-gray-500 line-clamp-1">
@@ -177,7 +189,6 @@
                             </p>
                         }
 
-                        @* Loại hình / món chính *@
                         @if (!string.IsNullOrEmpty(item.CuisineStyle))
                         {
                             <p class="mt-0.5 text-xs text-gray-500 line-clamp-1">
@@ -186,7 +197,42 @@
                             </p>
                         }
 
-                        <!-- Trạng thái + CTA -->
+                        <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
+                            <div style="display:flex; gap:2px;">
+                                @{
+                                    int ratingValue = (int)Math.Round(avgRating);
+
+                                    for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= ratingValue)
+                                        {
+                                            <i class="fas fa-star"
+                                               style="font-size:12px; color:#facc15 !important; fill:#facc15 !important;"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-star"
+                                               style="font-size:12px; color:#d1d5db !important; fill:#d1d5db !important;"></i>
+                                        }
+                                    }
+                                }
+                            </div>
+
+                            @if (reviewCount == 0)
+                            {
+                                <span style="font-size:12px; color:#9ca3af;">Chưa có đánh giá</span>
+                            }
+                            else
+                            {
+                                <span style="font-size:12px; color:#4b5563;">
+                                    @reviewCount đánh giá
+                                </span>
+                            }
+                        </div>
+
+
+
+
                         <div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-green-50 text-[11px] md:text-xs text-green-700 font-medium">
                                 <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
